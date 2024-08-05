@@ -17,7 +17,7 @@ if mountpoint -q "/srv/tc-proxy"; then
 fi
 if pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
     echo "[  ] VM detected. Sending poweroff command..."
-    ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "poweroff"
+    sudo ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "poweroff"
     TIMEOUT=60
     INTERVAL=5
     ELAPSED=0

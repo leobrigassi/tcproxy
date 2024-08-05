@@ -106,7 +106,7 @@ if mountpoint -q "/srv/tc-proxy"; then
 fi
 if pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
     echo "[  ] VM detected. Sending poweroff command..."
-    ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "poweroff"
+    sudo ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "poweroff"
     TIMEOUT=60
     INTERVAL=5
     ELAPSED=0
@@ -165,15 +165,15 @@ done
 
 echo "[  ] Provisioning VM..."
 sleep 10
-ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | passwd' >/dev/null 2>&1
+sudo ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | passwd' >/dev/null 2>&1
 sudo mkdir -p /srv/tc-proxy >/dev/null
 chmod +x mount-time-capsule-proxy.sh >/dev/null
 
 # Configure /etc/fstab
-ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab" >/dev/null 2>&1
+sudo ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab" >/dev/null 2>&1
 # ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && cp /etc/fstab /etc/fstab.new && sed '6d' /etc/fstab.new" >/dev/null 2>&1
-ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab' >/dev/null 2>&1
-ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | smbpasswd -a root' >/dev/null 2>&1
+sudo ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab' >/dev/null 2>&1
+sudo ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | smbpasswd -a root' >/dev/null 2>&1
 
 # Configure mount-time-capsule-proxy.sh
 if grep -q "#line_3_updated_on_first_run" < "$TCP_SERVICE_MOUNT_FILE"; then
@@ -203,7 +203,7 @@ echo "TCP_SERVICE_PATH=/etc/systemd/system" >> $TCP_ENV
 TC_PASSWORD=""
 
 # Test VM mount
-if ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''
+if sudo ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''
 then
     echo "[  ] VM connected to Time Capsule..."
 else
