@@ -22,7 +22,7 @@ sudo apt install qemu-system-aarch64 qemu-kvm smbclient
 
 To prepare your x86_64 system apt install:
 ```
-sudo apt install qemu-system-x86_64 qemu-kvm smbclient
+sudo apt install qemu-system-x86 qemu-kvm smbclient
 ```
 
 **User Inputs:**
