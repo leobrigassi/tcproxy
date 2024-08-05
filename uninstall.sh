@@ -50,7 +50,7 @@ if [[ "$UNINSTALL" =~ ^[Yy]$ ]]; then
                 echo "[  ] VM powered down."
             fi
         fi
-        echo "[OK] Uninstall completed. It is now safe to delete the time-capsule-proxy directory and all its content.
+        echo "[OK] Uninstall completed. It is now safe to delete the time-capsule-proxy directory and all its content."
     else
         echo "[ERROR] Directory time-capsule-proxy not detected. Please run from time-capsule-proxy. Process aborted."
         exit 1
