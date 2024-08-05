@@ -83,12 +83,11 @@ chmod +x vm-down.sh
 echo "[  ] Deflating VM disk..."
 if [[ $arch == x86_64* ]]; then
     sudo tar -xf timecapsule_proxy_x86.tar.gz
-    sudo rm timecapsule_proxy_aarch64.tar.gz
-fi
-if [[ $arch == aarch64* ]]; then
+elif [[ $arch == aarch64* ]]; then
     sudo tar -xf timecapsule_proxy_aarch64.tar.gz
-    sudo rm timecapsule_proxy_x86.tar.gz
 fi
+sudo rm timecapsule_proxy_aarch64.tar.gz
+sudo rm timecapsule_proxy_x86.tar.gz
 
 # stopping previously installed VMs and mounts
 if mountpoint -q "/srv/tc-proxy"; then
