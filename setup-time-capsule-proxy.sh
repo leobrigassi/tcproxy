@@ -120,7 +120,7 @@ if pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
                 echo "[  ] VM process killed."
             else
                 echo "[ERROR] Failed to kill VM process. Installation stopped."
-                break
+                exit 1
             fi
         fi
     done
