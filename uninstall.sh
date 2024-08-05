@@ -7,8 +7,8 @@ Close any app or terminal window using /srv/tc-proxy before continuing.
 [INPUT] Continue? (y/N): " UNINSTALL
 if [[ "$UNINSTALL" =~ ^[Yy]$ ]]; then
     echo "[  ] Removing systemd services..."
-    sudo systemctl enable time-capsule-proxy.service >/dev/null 2>&1 &&
-    sudo systemctl start time-capsule-proxy.service >/dev/null 2>&1 &&
+    sudo systemctl stop time-capsule-proxy.service >/dev/null 2>&1 &&
+    sudo systemctl disable time-capsule-proxy.service >/dev/null 2>&1 &&
     sudo rm /etc/systemd/system/time-capsule-proxy.service
     current_dir=$(pwd | awk -F'/' '{print $NF}')
     if [ $current_dir == "time-capsule-proxy" ]; then
