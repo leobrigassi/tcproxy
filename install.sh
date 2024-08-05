@@ -2,9 +2,9 @@
 # Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
 current_dir=$(pwd | awk -F'/' '{print $NF}')
 if [ $current_dir == "time-capsule-proxy" ]; then
-    echo "[  ] Extracting in time-capsule-proxy directory."
+    echo "[  ] Extracting in time-capsule-proxy directory..."
 else
-    echo "[  ] Creating Time_Capsule_Proxy directory."
+    echo "[  ] Creating and extracting in time-capsule-proxy directory..."
     mkdir -p time-capsule-proxy &&
     cd time-capsule-proxy >/dev/null 2>&1
 fi

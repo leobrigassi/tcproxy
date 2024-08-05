@@ -31,10 +31,10 @@ if ! which smbclient >/dev/null 2>&1; then
 fi
 
 # Prompt User Inputs
-read -p "[INFO] The current script will install a local VM to allow mount of Time_Capsule as a NAS on linux with kernels 5.15 or above. 
+read -p "[INFO] This script will install a local VM to allow mount of Time Capsule or AirPort Extreme as a NAS on linux with kernels 5.15 or above. 
 Any previous setup will be OVERWRITTEN. Continue? (y/N): " INSTALL
 if [[ "$INSTALL" =~ ^[Yy]$ ]]; then
-    echo "[  ] installing..."
+    echo "[  ] Installing..."
 else
     echo "[INFO] Installation Aborted. No change has been performed."
     exit 1
