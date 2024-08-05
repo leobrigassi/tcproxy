@@ -16,6 +16,7 @@ chmod +x setup-time-capsule-proxy.sh
 chmod +x mount-time-capsule-proxy.sh
 chmod +x enable-service-at-startup.sh
 chmod +x install.sh
+chmod +x uninstall.sh
 chmod +x vm-ssh.sh
 chmod +x vm-restart.sh
 chmod +x vm-down.sh

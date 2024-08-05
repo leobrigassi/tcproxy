@@ -75,6 +75,7 @@ TCP_SERVICE_MOUNT_FILE=$TIME_CAPSULE_PROXY_PATH/mount-time-capsule-proxy.sh
 chmod +x mount-time-capsule-proxy.sh
 chmod +x enable-service-at-startup.sh
 chmod +x install.sh
+chmod +x uninstall.sh
 chmod +x vm-ssh.sh
 chmod +x vm-restart.sh
 chmod +x vm-down.sh
@@ -227,12 +228,6 @@ sudo kill "$TAIL_PID" >/dev/null 2>&1
 exec 2>&3
 
 # Startup service setup
-# chmod +x enable-service-at-startup.sh
-# chmod +x restart-time-capsule-proxy.sh
-# chmod +x install.sh
-# chmod +x vm-ssh.sh
-# chmod +x vm-up.sh
-# chmod +x vm-down.sh
 if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
     ./enable-service-at-startup.sh
 else
