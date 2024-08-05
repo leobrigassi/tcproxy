@@ -1,6 +1,7 @@
 #!/bin/bash
 # Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-if [ "$(basename $(pwd))" == "time-capsule-proxy" ]; then
+current_dir=$(pwd | awk -F'/' '{print $NF}')
+if [ $current_dir == "time-capsule-proxy" ]; then
     echo "Extracting in time-capsule-proxy directory."
 else
     echo "[ ] Creating Time_Capsule_Proxy directory."
