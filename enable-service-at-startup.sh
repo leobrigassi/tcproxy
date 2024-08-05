@@ -22,7 +22,7 @@ RemainAfterExit=true
 [Install]
 WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
 
-echo "[INFO] Scanning for previously installed daemons..."
+echo "[  ] Scanning for previously installed daemons..."
 sudo systemctl stop time-capsule-proxy.service >/dev/null 2>&1
 sudo systemctl disable time-capsule-proxy.service >/dev/null 2>&1
 sudo rm $TCP_SERVICE_PATH/time-capsule-proxy.service >/dev/null 2>&1
@@ -31,4 +31,4 @@ sudo systemctl daemon-reload
 sudo systemctl enable time-capsule-proxy.service >/dev/null 2>&1
 sudo systemctl start time-capsule-proxy.service >/dev/null 2>&1
 
-echo "[OK] Service enabled. Will lauch automatically when system starts up and network is detected online."
+echo "[OK] Service enabled at boot."
