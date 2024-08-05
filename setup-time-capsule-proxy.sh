@@ -35,7 +35,7 @@ read -p "[INFO] This script will install a local VM to allow mount of Time Capsu
 
 Any previous setup will be OVERWRITTEN. 
 Close any app or terminal window using /srv/tc-proxy before continuing. 
-Continue? (y/N): " INSTALL
+[INPUT] Continue? (y/N): " INSTALL
 if [[ "$INSTALL" =~ ^[Yy]$ ]]; then
     echo "[  ] Installing..."
 else
