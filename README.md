@@ -81,6 +81,7 @@ Follow the prompts to enter your Time Capsule credentials.
 * `vm-down.sh`: Script to unmount the samba share on the host and poweroff the VM.
 * `vm-restart.sh`: Script to restart the VM and remount the samba share.
 * `vm-ssh.sh`: Script to SSH into the VM for debuggin purposes.
+* `uninstall.sh`: Script to remove systemd startup script, unmount the samba share and powerdown the VM. Then it will be safe to remove the folder time-capsule-proxy.
 
 **Note:**
 
