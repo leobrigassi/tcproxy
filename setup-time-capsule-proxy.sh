@@ -32,7 +32,10 @@ fi
 
 # Prompt User Inputs
 read -p "[INFO] This script will install a local VM to allow mount of Time Capsule or AirPort Extreme as a NAS on linux with kernels 5.15 or above. 
-Any previous setup will be OVERWRITTEN. Continue? (y/N): " INSTALL
+
+Any previous setup will be OVERWRITTEN. 
+Close any app or terminal window using /srv/tc-proxy before continuing. 
+Continue? (y/N): " INSTALL
 if [[ "$INSTALL" =~ ^[Yy]$ ]]; then
     echo "[  ] Installing..."
 else
@@ -77,16 +80,14 @@ chmod +x vm-restart.sh
 chmod +x vm-down.sh
 
 # Deflate VM
-if [ ! -f "data.img" ]; then
-  echo "[  ] Deflating VM disk..."
-    if [[ $arch == x86_64* ]]; then
-        sudo tar -xf timecapsule_proxy_x86.tar.gz
-        sudo rm timecapsule_proxy_aarch64.tar.gz
-    fi
-    if [[ $arch == aarch64* ]]; then
-        sudo tar -xf timecapsule_proxy_aarch64.tar.gz
-        sudo rm timecapsule_proxy_x86.tar.gz
-    fi
+echo "[  ] Deflating VM disk..."
+if [[ $arch == x86_64* ]]; then
+    sudo tar -xf timecapsule_proxy_x86.tar.gz
+    sudo rm timecapsule_proxy_aarch64.tar.gz
+fi
+if [[ $arch == aarch64* ]]; then
+    sudo tar -xf timecapsule_proxy_aarch64.tar.gz
+    sudo rm timecapsule_proxy_x86.tar.gz
 fi
 
 # stopping previously installed VMs and mounts
