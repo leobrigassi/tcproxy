@@ -168,15 +168,14 @@ ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls" > /de
 SUDOREQUIREDEXIT=$?
 if [ $SUDOREQUIREDEXIT -eq 0 ]; then
   SUDOREQUIRED=""
-  echo "SUDOREQUIRED=" >> $TCP_ENV
 else
-  SUDOREQUIRED="sudo "
-  $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls" > /dev/null 2>&1
+  sudo ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls" > /dev/null 2>&1
   SUDOREQUIREDEXIT=$?
   if [ $SUDOREQUIREDEXIT -eq 0 ]; then
-  echo "SUDOREQUIRED=sudo " >> $TCP_ENV
+  SUDOREQUIRED="sudo "
+  echo "[INFO] SSH privileges have been elevated."
   else
-  echo [ERROR] Cannot SSH in the VM. Installation aborted. Error code $SUDOREQUIREDEXIT
+  echo "[ERROR] Cannot SSH in the VM. Installation aborted. Error code $SUDOREQUIREDEXIT"
   exit 1
   fi
 fi
@@ -218,6 +217,7 @@ echo "TIME_CAPSULE_PROXY_SERVICE=/etc/systemd/system/time-capsule-proxy.service"
 echo "TCP_SERVICE_TEMP_FILE=$TCP_SERVICE_TEMP_FILE" >> $TCP_ENV
 echo "TCP_SERVICE_MOUNT_FILE=$TCP_SERVICE_MOUNT_FILE" >> $TCP_ENV
 echo "TCP_SERVICE_PATH=/etc/systemd/system" >> $TCP_ENV
+echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
 TC_PASSWORD=""
 
 # Test VM mount
