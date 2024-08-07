@@ -466,8 +466,9 @@ elif [[ $1 == "-t" ]]; then
 else 
     if [[ $1 == "" ]]; then
         if ! read -t 1 WEB_INSTALL; then 
-        create_tcproxy_folder
-        github_download
+        create_tcproxy_folder  >/dev/null 2>&1
+        echo "WEB_INSTALL=TRUE" >> .tcproxy.env
+        github_download  >/dev/null 2>&1
         elif tcproxy_env_check; then
             current_directory_check
             tcproxy_up
