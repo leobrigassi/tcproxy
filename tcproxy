@@ -415,12 +415,19 @@ save_ENVs_to_file() {
 #Arguments selection
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then 
     tcproxy_env_check
+    echo "debug"
     check_system_requirements
+    echo "debug"
     prompt_user_inputs
+    echo "debug"
     # current_directory_check
+    echo "debug"
     create_tcproxy_folder
+    echo "debug"
     github_download >/dev/null 2>&1
+    echo "debug"
     define_tcproxy_env_vars
+    echo "debug"
     deflating_vm
     stopping_installed_VMs_and_mounts
     load_VM
