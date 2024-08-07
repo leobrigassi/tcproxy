@@ -26,7 +26,7 @@ source .tcproxy.env >/dev/null 2>&1
 current_directory_check() {
     current_dir=$(pwd | awk -F'/' '{print $NF}')
     if [[ $current_dir == "tcproxy" ]]; then
-        # return 0
+        return 0
     else
         tcproxy_log "Please run again from tcproxy/ folder"
         # return 1
@@ -36,9 +36,7 @@ current_directory_check() {
 create_tcproxy_folder() {
     current_dir=$(pwd | awk -F'/' '{print $NF}')
     if [[ $current_dir == "tcproxy" ]]; then
-        tcproxy_log "[  ] Overwriting files in tcproxy/ directory..."
     else
-        tcproxy_log "[  ] Creating and extracting in tcproxy/ directory..."
         mkdir -p tcproxy &&
         cd tcproxy >/dev/null 2>&1
     fi
@@ -102,7 +100,7 @@ prompt_user_inputs() {
 echo "GNU tcproxy $TCPROXY_VERSION - Mount Time Capsule / AirPort Extreme on kernels 5.15 or above.
 
 Close any app or terminal window using /srv/tc-proxy before continuing."
-# if tcproxy_env_check >/dev/null 2>&1; then echo "[ATTENTION]: installation detected will be OVERWRITTEN."; fi
+if tcproxy_env_check >/dev/null 2>&1; then echo "[ATTENTION]: installation detected will be OVERWRITTEN."; fi
 read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         tcproxy_log "[  ] Installing..."
@@ -416,15 +414,11 @@ save_ENVs_to_file() {
 #Arguments selection
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     create_tcproxy_folder
-    echo "debug"
+    define_tcproxy_env_vars
     tcproxy_env_check
-    echo "debug"
     check_system_requirements
-    echo "debug"
     prompt_user_inputs
-    echo "debug"
     # current_directory_check
-    echo "debug"
     github_download >/dev/null 2>&1
     echo "debug"
     define_tcproxy_env_vars
@@ -463,6 +457,8 @@ elif [[ $1 == "--uninstall" ]]; then
     stopping_installed_VMs_and_mounts
     remove_system_service
     remove_tcproxy_env
+elif [[ $1 == "-t" ]]; then
+    tcproxy_log "[  ] Installing..."
 else 
     if [[ $1 == "" ]]; then
         if tcproxy_env_check; then
