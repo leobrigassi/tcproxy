@@ -3,7 +3,7 @@
 TCPROXY_VERSION=v2.0.0_beta1.0
 TCPROXY_BRANCH=v2.0.0
 
-install() {
+tcproxy_install() {
     current_dir=$(pwd | awk -F'/' '{print $NF}')
     if [ $current_dir == "tcproxy" ]; then
         echo "[  ] Extracting in tcproxy/ directory..."
@@ -21,3 +21,6 @@ install() {
 
     downloadTC >/dev/null 2>&1
 }
+
+#Arguments selection
+if [[ $1 == "--install" ]]; then tcproxy_install; fi
