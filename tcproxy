@@ -49,6 +49,7 @@ github_download() {
     wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz &&
     tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz &&
     chmod +x tcproxy
+    (cd tcproxy >/dev/null 2>&1; ./tcproxy -i)
 }
 
 check_system_requirements() {
@@ -310,7 +311,7 @@ tcproxy_systemd_setup() {
         TIME_CAPSULE_PROXY_SERVICE=/etc/systemd/system/tcproxy.service
         touch "$TCP_SERVICE_TEMP_FILE"
         echo "[Unit]
-Description='tcproxy load VM and mount on /srv/tcproxy'
+Description=tcproxy load VM and mount on /srv/tcproxy
 After=network-online.target
 Wants=network-online.target
 
@@ -401,7 +402,7 @@ save_ENVs_to_file() {
     echo "TC_PASSWORD=$TC_PASSWORD" >> $TCP_ENV
     echo "TIME_CAPSULE_PROXY_SERVICE=$TIME_CAPSULE_PROXY_SERVICE" >> $TCP_ENV
     echo "TCP_SERVICE_TEMP_FILE=$TCP_SERVICE_TEMP_FILE" >> $TCP_ENV
-    echo "TCP_SERVICE_MOUNT_FILE='$TCP_SERVICE_MOUNT_FILE'" >> $TCP_ENV
+    echo "TCP_SERVICE_MOUNT_FILE=$TCP_SERVICE_MOUNT_FILE" >> $TCP_ENV
     echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
     echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
