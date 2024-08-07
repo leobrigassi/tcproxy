@@ -471,7 +471,7 @@ else
             (cd tcproxy >/dev/null 2>&1; ./tcproxy -i)
         else $WEB_INSTALL=FALSE
         fi
-        echo $WEB_INSTALL
+        echo "$WEB_INSTALL"
         if tcproxy_env_check; then
             current_directory_check
             tcproxy_up
