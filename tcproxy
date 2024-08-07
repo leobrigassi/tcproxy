@@ -102,7 +102,7 @@ prompt_user_inputs() {
 echo "GNU tcproxy $TCPROXY_VERSION - Mount Time Capsule / AirPort Extreme on kernels 5.15 or above.
 
 Close any app or terminal window using /srv/tc-proxy before continuing."
-if tcproxy_env_check >/dev/null 2>&1; then echo "[ATTENTION]: installation detected will be OVERWRITTEN."; fi
+# if tcproxy_env_check >/dev/null 2>&1; then echo "[ATTENTION]: installation detected will be OVERWRITTEN."; fi
 read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         tcproxy_log "[  ] Installing..."
@@ -345,6 +345,7 @@ remove_system_service() {
             sudo rm /etc/systemd/system/tcproxy.service >/dev/null 2>&1
         fi
 }
+
 install_system_service() {
         sudo cp $TCP_SERVICE_TEMP_FILE $TIME_CAPSULE_PROXY_SERVICE >/dev/null 2>&1
         sudo systemctl daemon-reload
