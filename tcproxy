@@ -25,7 +25,7 @@ source .tcproxy.env >/dev/null 2>&1
 
 current_directory_check() {
     current_dir=$(pwd | awk -F'/' '{print $NF}')
-    if [[ $current_dir == "tcproxy" ]] >/dev/null 2>&1; then
+    if [[ $current_dir == "tcproxy" ]]; then
         # return 0
     else
         tcproxy_log "Please run again from tcproxy/ folder"
@@ -35,7 +35,7 @@ current_directory_check() {
 
 create_tcproxy_folder() {
     current_dir=$(pwd | awk -F'/' '{print $NF}')
-    if [ $current_dir == "tcproxy" ]; then
+    if [[ $current_dir == "tcproxy" ]]; then
         tcproxy_log "[  ] Overwriting files in tcproxy/ directory..."
     else
         tcproxy_log "[  ] Creating and extracting in tcproxy/ directory..."
