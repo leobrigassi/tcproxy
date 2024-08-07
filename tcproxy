@@ -7,10 +7,6 @@ tcproxy_log() {
     echo "$(date +"%Y%m%d_%H:%M:%S"): $1" | tee -a "$LOG_FILE"
 }
 
-test() {
-    tcproxy_log "[  ] this is a test log message"
-}
-
 check_updates() {
     echo "[DEBUG]_UPDATE"
     echo "populate"
@@ -140,7 +136,7 @@ define_tcproxy_env_vars() {
     PGID=$(id -g)
     TCP_SERVICE_TEMP_FILE=$TIME_CAPSULE_PROXY_PATH/tcproxy.service
     TCP_SERVICE_PATH=/etc/systemd/system
-    TCP_SERVICE_MOUNT_FILE="$TIME_CAPSULE_PROXY_PATH/tcproxy -u"
+    TCP_SERVICE_MOUNT_FILE="$TIME_CAPSULE_PROXY_PATH/tcproxy"
     LOG_FILE="$TIME_CAPSULE_PROXY_PATH/tcproxy.log"
     touch $LOG_FILE
     sudo chmod 770 $LOG_FILE
@@ -314,18 +310,19 @@ tcproxy_systemd_setup() {
         TIME_CAPSULE_PROXY_SERVICE=/etc/systemd/system/tcproxy.service
         touch "$TCP_SERVICE_TEMP_FILE"
         echo "[Unit]
-        Description='tcproxy load VM and mount on /srv/tcproxy'
-        After=network-online.target
-        Wants=network-online.target
+Description='tcproxy load VM and mount on /srv/tcproxy'
+After=network-online.target
+Wants=network-online.target
 
-        [Service]
-        Type=oneshot
-        EnvironmentFile='$TCP_ENV'
-        ExecStart='$TCP_SERVICE_MOUNT_FILE'
-        RemainAfterExit=true
+[Service]
+Type=oneshot
+WorkingDirectory=$TIME_CAPSULE_PROXY_PATH
+EnvironmentFile=$TCP_ENV
+ExecStart=$TCP_SERVICE_MOUNT_FILE
+RemainAfterExit=true
 
-        [Install]
-        WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
+[Install]
+WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
         # Install service
         tcproxy_log "[  ] Scanning for previously installed daemons..."
         if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
@@ -444,7 +441,6 @@ elif [[ $1 == "-t" ]] || [[ $1 == "--test" ]]; then
     tcproxy_env_check
     STARTUP_MOUNT=Y
     tcproxy_systemd_setup
-    test
 else 
     if [[ $1 == "" ]]; then
         if tcproxy_env_check; then
@@ -453,7 +449,7 @@ else
         else 
             echo "tcproxy installation not detected.
 
-Try  './tcproxy --help' for more options." 
+Try  './tcproxy --help' for more options."; exit 1
         fi
     else
             echo "tcproxy: bad usage
