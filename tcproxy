@@ -102,7 +102,7 @@ prompt_user_inputs() {
 echo "GNU tcproxy $TCPROXY_VERSION - Mount Time Capsule / AirPort Extreme on kernels 5.15 or above.
 
 Close any app or terminal window using /srv/tc-proxy before continuing."
-if tcproxy_env_check; then echo "[ATTENTION]: installation detected will be OVERWRITTEN."; fi
+# if tcproxy_env_check; then echo "[ATTENTION]: installation detected will be OVERWRITTEN."; fi
 read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         tcproxy_log "[  ] Installing..."
@@ -465,7 +465,7 @@ else
             current_directory_check
             tcproxy_up
         else 
-            echo "tcproxy installation not detected.
+            echo "tcproxy: installation not detected.
 
 Try  './tcproxy --help' for more options."; exit 1
         fi
