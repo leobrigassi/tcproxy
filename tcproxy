@@ -465,6 +465,11 @@ elif [[ $1 == "-t" ]]; then
     tcproxy_log "[  ] Installing..."
 else 
     if [[ $1 == "" ]]; then
+        if ! read -t 1 -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL; then
+        echo "Read command failed: input is not available"
+        else
+        echo "Input received: $CONFIRM_INSTALL"
+        fi
         if tcproxy_env_check; then
             current_directory_check
             tcproxy_up
