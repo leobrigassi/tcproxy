@@ -417,7 +417,7 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     tcproxy_env_check
     check_system_requirements
     prompt_user_inputs
-    current_directory_check
+    # current_directory_check
     create_tcproxy_folder
     github_download >/dev/null 2>&1
     define_tcproxy_env_vars
