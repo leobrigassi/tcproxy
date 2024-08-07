@@ -418,7 +418,6 @@ save_ENVs_to_file() {
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     create_tcproxy_folder
     define_tcproxy_env_vars
-    tcproxy_env_check
     check_system_requirements
     prompt_user_inputs
     # current_directory_check
