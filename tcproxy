@@ -36,7 +36,9 @@ current_directory_check() {
 create_tcproxy_folder() {
     current_dir=$(pwd | awk -F'/' '{print $NF}')
     if [[ $current_dir == "tcproxy" ]]; then
+        echo "[  ] Overwriting files in tcproxy/ directory..."
     else
+        echo "[  ] Creating and extracting in tcproxy/ directory..."
         mkdir -p tcproxy &&
         cd tcproxy >/dev/null 2>&1
     fi
