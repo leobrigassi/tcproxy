@@ -49,7 +49,6 @@ github_download() {
     wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz &&
     tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz &&
     chmod +x tcproxy
-    (cd tcproxy >/dev/null 2>&1; ./tcproxy -i)
 }
 
 check_system_requirements() {
@@ -104,6 +103,7 @@ echo "GNU tcproxy $TCPROXY_VERSION - Mount Time Capsule / AirPort Extreme on ker
 Close any app or terminal window using /srv/tc-proxy before continuing."
 # if tcproxy_env_check; then echo "[ATTENTION]: installation detected will be OVERWRITTEN."; fi
 read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
+
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         tcproxy_log "[  ] Installing..."
     else
@@ -437,6 +437,10 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     tcproxy_log "[OK] Process completed"
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     help_menu
+elif [[ $1 == "--web-install" ]] || [[ $1 == "--help" ]]; then
+    create_tcproxy_folder
+    github_download
+    (cd tcproxy >/dev/null 2>&1; ./tcproxy -i)
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     tcproxy_env_check
     testing_ssh_premission_requirements
