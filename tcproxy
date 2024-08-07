@@ -13,12 +13,12 @@ check_updates() {
 }
 
 tcproxy_env_check() {
+source .tcproxy.env >/dev/null 2>&1
   if [[ ! -e .tcproxy.env ]]; then 
     return 1
   elif [[ ! -s .tcproxy.env ]]; then
     return 1
   else
-    source .tcproxy.env
     return 0
   fi
 }
@@ -323,8 +323,15 @@ RemainAfterExit=true
 
 [Install]
 WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
+        remove_system_service
+        install_system_service
+    else
+        tcproxy_log "[INFO] run ./tcproxy --enable-service to enable automatic mount at startup."
+        tcproxy_log "[INFO] run ./tcproxy to mount manually"
+    fi
+}
         
-        remove_system_service() {
+remove_system_service() {
         tcproxy_log "[  ] Scanning for previously installed daemons..."
         if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
             sudo systemctl stop time-capsule-proxy.service >/dev/null 2>&1
@@ -336,7 +343,8 @@ WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
             sudo systemctl disable tcproxy.service >/dev/null 2>&1
             sudo rm /etc/systemd/system/tcproxy.service >/dev/null 2>&1
         fi
-        }
+}
+install_system_service() {
         sudo cp $TCP_SERVICE_TEMP_FILE $TIME_CAPSULE_PROXY_SERVICE >/dev/null 2>&1
         sudo systemctl daemon-reload
         sudo systemctl enable tcproxy.service >/dev/null 2>&1
@@ -344,16 +352,19 @@ WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
             tcproxy_log "[OK] Service enabled at boot."
         else tcproxy_log "[ERROR] Failed to start tcproxy.service - Error code $?"
         fi
-    else
-        tcproxy_log "[INFO] run ./tcproxy --enable-service to enable automatic mount at startup."
-        tcproxy_log "[INFO] run ./tcproxy to mount manually"
-    fi
 }
 
 ssh_vm() {
     tcproxy_log "ssh-in"
     $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022
     tcproxy_log "ssh-out"
+}
+
+remove_tcproxy_env() {
+    if [[ -f $TCP_ENV ]]; then 
+    rm $TCP_ENV >/dev/null 2>&1
+    fi
+    tcproxy_log ".tcproxy.env removed"
 }
 
 help_menu() {
@@ -442,6 +453,7 @@ elif [[ $1 == "--uninstall" ]]; then
     tcproxy_env_check
     stopping_installed_VMs_and_mounts
     remove_system_service
+    remove_tcproxy_env
 else 
     if [[ $1 == "" ]]; then
         if tcproxy_env_check; then
