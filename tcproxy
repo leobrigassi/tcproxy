@@ -23,4 +23,4 @@ tcproxy_install() {
 }
 
 #Arguments selection
-if [[ $1 == "--install" ]]; then tcproxy_install; fi
+if [[ $1 == "--install" || $1 == "install" ]]; then tcproxy_install; fi
