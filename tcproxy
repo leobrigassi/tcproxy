@@ -323,7 +323,8 @@ RemainAfterExit=true
 
 [Install]
 WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
-        # Install service
+        
+        remove_system_service() {
         tcproxy_log "[  ] Scanning for previously installed daemons..."
         if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
             sudo systemctl stop time-capsule-proxy.service >/dev/null 2>&1
@@ -332,10 +333,10 @@ WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
         fi
         if [[ -f /etc/systemd/system/tcproxy.service ]]; then
             sudo systemctl stop tcproxy.service >/dev/null 2>&1
-            # sudo systemctl status tcproxy.service >/dev/null 2>&1
             sudo systemctl disable tcproxy.service >/dev/null 2>&1
             sudo rm /etc/systemd/system/tcproxy.service >/dev/null 2>&1
         fi
+        }
         sudo cp $TCP_SERVICE_TEMP_FILE $TIME_CAPSULE_PROXY_SERVICE >/dev/null 2>&1
         sudo systemctl daemon-reload
         sudo systemctl enable tcproxy.service >/dev/null 2>&1
@@ -437,10 +438,10 @@ elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
     stopping_installed_VMs_and_mounts
     sleep 5
     tcproxy_up
-elif [[ $1 == "-t" ]] || [[ $1 == "--test" ]]; then
+elif [[ $1 == "--uninstall" ]]; then
     tcproxy_env_check
-    STARTUP_MOUNT=Y
-    tcproxy_systemd_setup
+    stopping_installed_VMs_and_mounts
+    remove_system_service
 else 
     if [[ $1 == "" ]]; then
         if tcproxy_env_check; then
