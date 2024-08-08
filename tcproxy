@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.75
+TCPROXY_VERSION=v2.0.0_beta1.76
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -474,7 +474,7 @@ save_ENVs_to_file() {
     echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
     echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
-    echo "UNIQUE_ID$unique_id" >> $TCP_ENV
+    echo "UNIQUE_ID=$unique_id" >> $TCP_ENV
     TC_PASSWORD=""
 }
 
@@ -537,6 +537,8 @@ elif [[ $1 == "--update" ]]; then
     check_updates
 elif [[ $1 == "-t" ]]; then
     echo "test flag"
+    define_tcproxy_env_vars
+    save_ENVs_to_file
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
