@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.106
+TCPROXY_VERSION=v2.0.0_beta1.107
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -435,6 +435,17 @@ remove_tcproxy_env() {
     tcproxy_log ".tcproxy.env removed"
 }
 
+capture_log_entry() {
+    LAST_TIMESTAMP_LINE=$(grep -Eo '^[0-9]{8}_[0-9]{2}:[0-9]{2}:[0-9]{2}:' "$LOG_FILE" | tail -n 1)
+    if [ -n "$LAST_TIMESTAMP_LINE" ]; then
+        LAST_LINE_NUMBER=$(grep -n "$LAST_TIMESTAMP_LINE" "$LOG_FILE" | tail -n 1 | cut -d: -f1)
+        tcproxy_log "last timestampline: $LAST_TIMESTAMP_LINE"
+        tcproxy_log $(tail -n +$LAST_LINE_NUMBER "$LOG_FILE")
+    else
+        echo "No timestamp found in the log file."
+    fi
+}
+
 help_menu() {
     echo "GNU tcproxy $TCPROXY_VERSION - mount Time Capsule and AirPort Extreme on debian systems with kernels 5.15 or above.
 Usage: ./tcproxy [OPTION]...
@@ -549,7 +560,7 @@ elif [[ $1 == "-t" ]]; then
     DEBUG_LEVE1="2>&1 | tee -a $LOG_FILE"
     DEBUG_LEVEL2=">/dev/null 2>&1"
     DEBUG_LEVEL3="2>&1 | tee -a $LOG_FILE"
-    ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "free -m" >> $LOG_FILE
+    ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "free -m" >> $LOG_FILE && capture_log_entry
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
