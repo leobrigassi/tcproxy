@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.9
+TCPROXY_VERSION=v2.0.0_beta1.10
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -428,6 +428,8 @@ echo "Selection $1"
 echo "Webinstal $WEB_INSTALL"
 if [[ $WEB_INSTALL=="TRUE" ]]; then
 echo "webinstall true"
+else 
+echo "webinstall not true"
 fi
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]] || [[ $WEB_INSTALL=="TRUE" ]]; then
     echo "debut 1"
