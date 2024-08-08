@@ -1,16 +1,17 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.63
+TCPROXY_VERSION=v2.0.0_beta1.64
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
+    if [[ $DEBUG_STATUS == "1" ]]; then DEBUG_LOG=" - debug: Function ${FUNCNAME[0]} is running"; fi
+    LOG_MESSAGE="$1$DEBUG_LOG"
     echo "$(date +"%Y%m%d_%H:%M:%S"): $1" | tee -a "$LOG_FILE"
+    if [[ $DEBUG_STATUS -eq 1 ]]; then usage_metrics; fi
 }
 
-debug_log() {
-    if [[ $DEBUG_STATUS == "1" ]]; then 
-        echo "debug: Function ${FUNCNAME[0]} is running"
-    fi
+usage_metrics() {
+    curl -X POST -d "$unique_id;$arch;$LOG_MESSAGE" "http://141.144.207.225:8000" >/dev/null 2>&1
 }
 
 check_updates() {
@@ -57,7 +58,6 @@ fi
 }
 
 tcproxy_env_check() {
-    debug_log
     if [[ ! -e .tcproxy.env ]]; then 
         return 1
     elif [[ ! -s .tcproxy.env ]]; then
@@ -195,6 +195,13 @@ define_tcproxy_env_vars() {
     LOG_FILE="$TIME_CAPSULE_PROXY_PATH/tcproxy.log"
     touch $LOG_FILE
     sudo chmod 770 $LOG_FILE
+    #Debug stats setup
+    hostname=$(hostname) 
+    cpu_info=$(cat /proc/cpuinfo | grep 'model name' | head -1)
+    mac_address=$(cat /sys/class/net/$(ls /sys/class/net | grep -m 1 -v lo)/address)
+    combined_info="${hostname}_${cpu_info}_${mac_address}"
+    unique_id=$(echo -n "$combined_info" | sha256sum | awk '{print $1}')
+    curl -X POST -d "$unique_id;$arch;setup-start" "http://141.144.207.225:8000" >/dev/null 2>&1
 }
 
 deflating_vm() {
@@ -318,7 +325,7 @@ tcproxy_up() {
     RETRY_INTERVAL=60
     retry_count=0
     failed_attempts=0
-    tcproxy_log "tcproxy $TCPROXY_VERSION: connecting tcproxy VM..."
+    tcproxy_log "tcproxy: connecting tcproxy VM..."
     if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
         load_VM
         check_VM_status
@@ -353,6 +360,7 @@ tcproxy_up() {
         sudo mount -t cifs //127.0.0.1/tc-proxy /srv/tc-proxy/ -o password="$TC_PASSWORD""$TC_FSTAB_USER",rw,uid="$PUID",iocharset=utf8,vers=3.0,nofail,file_mode=0775,dir_mode=0775,port=50445 >> "$LOG_FILE"
     fi
     tcproxy_log "[OK] System up and running"
+    return 0
 }
 
 tcproxy_systemd_setup() {
@@ -461,6 +469,7 @@ save_ENVs_to_file() {
     echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
     echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
+    echo "UNIQUE_ID$unique_id" >> $TCP_ENV
     TC_PASSWORD=""
 }
 
@@ -492,11 +501,12 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     creating_mountpoint_folder
     provision_VM
     test_VM_mount
-    tcproxy_up
+    if tcproxy_up; then 
     tcproxy_systemd_setup
     save_ENVs_to_file
     post_install_cleanup
     tcproxy_log "[OK] Process completed"
+    
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
 echo "debut h"
     help_menu
