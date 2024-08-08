@@ -1,17 +1,12 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.74
+TCPROXY_VERSION=v2.0.0_beta1.75
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
-    if [[ $DEBUG_STATUS == "1" ]]; then 
-        DEBUG_LOG=" - debug: Function ${FUNCNAME[0]} is running"
-    fi
-    LOG_MESSAGE="$1$DEBUG_LOG"
-    echo "$(date +"%Y%m%d_%H:%M:%S"): $1" | tee -a "$LOG_FILE"
-    if [[ $DEBUG_STATUS -eq 1 ]]; then 
-        usage_metrics
-    fi
+    LOG_MESSAGE="$1"
+    echo "$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE" | tee -a "$LOG_FILE"
+    if [[ $DEBUG_STATUS -eq 1 ]]; then usage_metrics; fi
 }
 
 usage_metrics() {
@@ -40,7 +35,7 @@ check_updates() {
             curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
             mv "$TEMP_FILE" "$0"
             chmod +x "$0"
-            echo "Update complete to $TCPROXY_LATEST_VERSION"
+            echo "Update complete from to $TCPROXY_LATEST_VERSION"
             exit 0
         else
             echo "Update canceled. You are using version $TCPROXY_VERSION."
