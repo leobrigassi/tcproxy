@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.54
+TCPROXY_VERSION=v2.0.0_beta1.55
 TCPROXY_BRANCH=v2.0.0
 echo "$TCPROXY_VERSION"
 
@@ -18,7 +18,11 @@ check_updates() {
     SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
     TCPROXY_LATEST_VERSION=$(curl -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy?'$(date +%s)'" | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 1 ]]; then
-    return 1
+        if [[ $MAN_UPDATE == 1 ]]; then
+            tcproxy_log "tcproxy: Update server currenlty unavailable."
+        else
+            return 1
+        fi
     fi
     # Compare versions
     if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then        
@@ -37,7 +41,11 @@ check_updates() {
             echo "Update canceled. You are using version $TCPROXY_VERSION."
         fi
     else
-        echo "You are using the latest version ($TCPROXY_VERSION)."
+        if [[ $MAN_UPDATE == 1 ]]; then
+            tcproxy_log "You are using the latest version ($TCPROXY_VERSION)."
+        else
+            return 0
+        fi
     fi
 }
 
@@ -513,6 +521,7 @@ elif [[ $1 == "--debug" ]]; then
     touch .debug_activated
 elif [[ $1 == "-t" ]]; then
     tcproxy_env_check
+    MAN_UPDATE=1
     # tcproxy_log "[  ] log message test..."
     # post_install_cleanup
     check_updates
