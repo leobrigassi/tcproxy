@@ -496,12 +496,12 @@ elif [[ $1 == "-t" ]]; then
     tcproxy_log "[  ] Installing..."
 else 
     if [[ $1 == "" ]]; then
-        if ! read -t 1 WEB_INSTALL; then 
+        if ! read -t 1 WEB_INSTALL; then
+        echo "WEB-install detected"
         create_tcproxy_folder  >/dev/null 2>&1
         WEB_INSTALL=TRUE
         github_download  >/dev/null 2>&1
         elif tcproxy_env_check; then
-            current_directory_check
             tcproxy_up
         else 
             echo "tcproxy: installation not detected.
