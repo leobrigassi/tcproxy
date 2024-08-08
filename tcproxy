@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.87
+TCPROXY_VERSION=v2.0.0_beta1.88
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -533,8 +533,10 @@ elif [[ $1 == "--uninstall" ]]; then
     remove_tcproxy_env
 elif [[ $1 == "--remote-debug" ]]; then
     touch .remote_debug_on
+    tcproxy_log "tcproxy $TCPROXy_VERSION: remote debug activated."
 elif [[ $1 == "--remote-debug" ]]; then
     rm .remote_debug_on
+    tcproxy_log "tcproxy $TCPROXy_VERSION: remote debug disabled."
 elif [[ $1 == "--enable-service" ]]; then
     tcproxy_systemd_setup
     save_ENVs_to_file
