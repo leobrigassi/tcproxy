@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.80
+TCPROXY_VERSION=v2.0.0_beta1.81
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -531,8 +531,10 @@ elif [[ $1 == "--uninstall" ]]; then
     stopping_installed_VMs_and_mounts
     remove_system_service
     remove_tcproxy_env
-elif [[ $1 == "--debug" ]]; then
-    touch .debug_activated
+elif [[ $1 == "--debug-on" ]]; then
+    touch .debug_on
+elif [[ $1 == "--debug-off" ]]; then
+    rm .debug_on
 elif [[ $1 == "--update" ]]; then
     MAN_UPDATE=1
     check_updates
