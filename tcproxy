@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.7
+TCPROXY_VERSION=v2.0.0_beta1.8
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -422,13 +422,12 @@ save_ENVs_to_file() {
     TC_PASSWORD=""
 }
 
-
-
 # tcproxy logic
 web_install_env_check
 echo "Selection $1"
 echo "Webinstall $WEB_INSTALL"
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]] || [[ $WEB_INSTALL=="TRUE" ]]; then
+    echo "debut 1"
     create_tcproxy_folder
     define_tcproxy_env_vars
     check_system_requirements
@@ -450,6 +449,7 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]] || [[ $WEB_INSTALL=="TRUE" ]]; th
     save_ENVs_to_file
     tcproxy_log "[OK] Process completed"
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+echo "debut h"
     help_menu
 elif [[ $1 == "--web-install" ]] || [[ $1 == "--help" ]]; then
     create_tcproxy_folder
@@ -478,6 +478,7 @@ elif [[ $1 == "--uninstall" ]]; then
 elif [[ $1 == "-t" ]]; then
     tcproxy_log "[  ] Installing..."
 else 
+    echo "testing no args"
     if [[ $1 == "" ]]; then
         echo "testing web install"
         if ! read -t 1 -p "tcproxy: installation failed. Please report." WEB_INSTALL; then
@@ -489,13 +490,16 @@ else
             echo "web install NOT detected. bringin up qemu"
             tcproxy_up
         else 
+        echo "debut 3"
             echo "tcproxy: installation not detected.
 
 Try  './tcproxy --help' for more options."; exit 1
         fi
+        echo "debut 4"
     else
             echo "tcproxy: bad usage
 
 Try  './tcproxy --help' for more options."
     fi
+    echo "debut 5"
 fi
