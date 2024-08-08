@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.36
+TCPROXY_VERSION=v2.0.0_beta1.37
 TCPROXY_BRANCH=v2.0.0
 echo "$TCPROXY_VERSION"
 
@@ -67,7 +67,7 @@ tcproxy_env_check() {
         return 1
     else
         source .tcproxy.env >/dev/null 2>&1
-        source .tcproxy >/dev/null 2>&1
+        # source .tcproxy >/dev/null 2>&1
         return 0
     fi
 }
