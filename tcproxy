@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.105
+TCPROXY_VERSION=v2.0.0_beta1.106
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -204,7 +204,7 @@ define_tcproxy_env_vars() {
     CPU_INFO=$(cat /proc/cpuinfo | grep 'model name' | head -1)
     MAC_ADDRESS=$(cat /sys/class/net/$(ls /sys/class/net | grep -m 1 -v lo)/address)
     COMB_HOST_INFO="${HOSTNAME}_${CPU_INFO}_${MAC_ADDRESS}"
-    UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | sha256sum | awk '{print $1}')
+    UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
     tcm "setup-start"
 }
 
@@ -549,7 +549,7 @@ elif [[ $1 == "-t" ]]; then
     DEBUG_LEVE1="2>&1 | tee -a $LOG_FILE"
     DEBUG_LEVEL2=">/dev/null 2>&1"
     DEBUG_LEVEL3="2>&1 | tee -a $LOG_FILE"
-    ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "free -m" $DEBUG_LEVEL
+    ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "free -m" >> $LOG_FILE
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
