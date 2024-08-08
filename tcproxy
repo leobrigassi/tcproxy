@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.35
+TCPROXY_VERSION=v2.0.0_beta1.36
 TCPROXY_BRANCH=v2.0.0
 echo "$TCPROXY_VERSION"
 
@@ -523,8 +523,8 @@ elif [[ $1 == "--debug" ]]; then
     touch .debug_activated
 elif [[ $1 == "-t" ]]; then
     tcproxy_env_check
-    tcproxy_log "[  ] log message test..."
-    post_install_cleanup
+    # tcproxy_log "[  ] log message test..."
+    # post_install_cleanup
     check_updates
 else 
     if [[ $1 == "" ]]; then
