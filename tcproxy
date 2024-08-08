@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.69
+TCPROXY_VERSION=v2.0.0_beta1.70
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -555,8 +555,6 @@ else
             exit 1
         fi
     else
-            echo "tcproxy: bad usage
-
-Try  './tcproxy --help' for more options."
+            echo -e  "tcproxy: bad usage \nTry  './tcproxy --help' for more options."
     fi
 fi
