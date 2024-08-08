@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.21
+TCPROXY_VERSION=v2.0.0_beta1.22
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -422,6 +422,11 @@ save_ENVs_to_file() {
     TC_PASSWORD=""
 }
 
+post_install_cleanup() {
+    rm $TEMP_INSTALLER_PATH
+    rm $TEMP_INSTALLER_IN_PATH
+}
+
 # tcproxy logic
 web_install_check
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
@@ -430,9 +435,7 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     check_system_requirements
     prompt_user_inputs
     github_download >/dev/null 2>&1
-    echo "debug"
     define_tcproxy_env_vars
-    echo "debug"
     deflating_vm
     stopping_installed_VMs_and_mounts
     load_VM
@@ -444,6 +447,7 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     tcproxy_up
     tcproxy_systemd_setup
     save_ENVs_to_file
+    post_install_cleanup
     tcproxy_log "[OK] Process completed"
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
 echo "debut h"
