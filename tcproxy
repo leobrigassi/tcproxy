@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.1
+TCPROXY_VERSION=v2.0.0_beta1.2
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -484,6 +484,7 @@ else
         WEB_INSTALL=TRUE
         github_download  >/dev/null 2>&1
         elif tcproxy_env_check; then
+            echo "web install NOT detected. bringin up qemu"
             tcproxy_up
         else 
             echo "tcproxy: installation not detected.
