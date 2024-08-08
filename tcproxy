@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.26
+TCPROXY_VERSION=v2.0.0_beta1.27
 TCPROXY_BRANCH=v2.0.0
 echo "$TCPROXY_VERSION"
 
@@ -117,8 +117,7 @@ Close any app or terminal window using /srv/tc-proxy before continuing."
 # if tcproxy_env_check; then echo "[ATTENTION]: installation detected will be OVERWRITTEN."; fi
 read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
 
-    if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
-        tcproxy_log "[  ] Installing..."
+    if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then;
     else
         tcproxy_log "[INFO] Installation Aborted. No change has been performed."
         exit 1
@@ -478,7 +477,7 @@ elif [[ $1 == "--uninstall" ]]; then
     remove_system_service
     remove_tcproxy_env
 elif [[ $1 == "-t" ]]; then
-    tcproxy_log "[  ] Installing..."
+    tcproxy_log "[  ] log message test..."
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
