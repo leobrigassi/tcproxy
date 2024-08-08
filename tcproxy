@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.104
+TCPROXY_VERSION=v2.0.0_beta1.105
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -15,7 +15,7 @@ tcm() {
 
 check_updates() {
     SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
-    TCPROXY_LATEST_VERSION=$(curl -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy?'$(date +%s)'" | sed -n '3p' | cut -d '=' -f 2)
+    TCPROXY_LATEST_VERSION=$(curl -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
             tcproxy_log "tcproxy: Update server currenlty unavailable."
