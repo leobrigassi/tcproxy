@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.53
+TCPROXY_VERSION=v2.0.0_beta1.54
 TCPROXY_BRANCH=v2.0.0
 echo "$TCPROXY_VERSION"
 
@@ -17,7 +17,7 @@ debug_log() {
 check_updates() {
     SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
     TCPROXY_LATEST_VERSION=$(curl -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy?'$(date +%s)'" | sed -n '3p' | cut -d '=' -f 2)
-    if [[ $? -ne 0 ]]; then
+    if [[ $? -ne 1 ]]; then
     return 1
     fi
     # Compare versions
