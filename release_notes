@@ -1,8 +1,0 @@
-GNU tcproxy - Mount Time Capsule / AirPort Extreme on debian kernels 5.15 or above.
-Release notes
-
-v2.0.0_beta1.32
-- live update check
-
-v2.0.0_beta1.31
-- debug log

@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.59
+TCPROXY_VERSION=v2.0.0_beta1.60
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -474,7 +474,9 @@ post_install_cleanup() {
 # tcproxy logic
 web_install_check
 tcproxy_env_check
-check_updates
+[[ $WEB_INST -eq 1 ]] || check_updates
+
+# args selection
 if [[ -f .debug_activated ]]; then DEBUG_STATUS=1; fi
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     create_tcproxy_folder
@@ -504,22 +506,17 @@ elif [[ $1 == "--web-install" ]] || [[ $1 == "--help" ]]; then
     github_download
     (cd tcproxy >/dev/null 2>&1; ./tcproxy -i)
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
-    tcproxy_env_check
     testing_ssh_premission_requirements
     ssh_vm
 elif [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
-    tcproxy_env_check
     tcproxy_up
 elif [[ $1 == "-d" ]] || [[ $1 == "--down" ]]; then
-    tcproxy_env_check
     stopping_installed_VMs_and_mounts
 elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
-    tcproxy_env_check
     stopping_installed_VMs_and_mounts
     sleep 5
     tcproxy_up
 elif [[ $1 == "--uninstall" ]]; then
-    tcproxy_env_check
     stopping_installed_VMs_and_mounts
     remove_system_service
     remove_tcproxy_env
@@ -528,7 +525,6 @@ elif [[ $1 == "--debug" ]]; then
 elif [[ $1 == "--update" ]]; then
     check_updates
 elif [[ $1 == "-t" ]]; then
-    tcproxy_env_check
     MAN_UPDATE=1
     # tcproxy_log "[  ] log message test..."
     # post_install_cleanup
