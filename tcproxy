@@ -52,6 +52,7 @@ TIME_CAPSULE_PROXY_PATH='$TIME_CAPSULE_PROXY_PATH'
 TEMP_INSTALLER_PATH='$TIME_CAPSULE_PROXY_PATH'/.tcproxy
 cd tcproxy
 ./tcproxy -i' > .tcproxy
+        chmod +x .tcproxy
     fi
 }
 
