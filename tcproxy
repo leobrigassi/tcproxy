@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.0
+TCPROXY_VERSION=v2.0.0_beta1.1
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -34,45 +34,21 @@ tcproxy_env_check() {
   fi
 }
 
-current_directory_check() {
-    CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
-    if [[ $CURRENT_PATH == "tcproxy" ]]; then
-        return 0
-        echo -e '#!/bin/bash
-WEB_INSTALL='$WEB_INSTALL'
-CURRENT_PATH='$CURRENT_PATH'
-TEMP_INSTALLER_PATH='$CURRENT_PATH'.tcproxy
-cd tcproxy
-./tcproxy -i' > .tcproxy
-    else
-        echo -e '#!/bin/bash
-WEB_INSTALL='$WEB_INSTALL'
-CURRENT_PATH='$CURRENT_PATH'
-TEMP_INSTALLER_PATH='$CURRENT_PATH'.tcproxy
-cd tcproxy
-./tcproxy -i' > tcproxy/.tcproxy
-    fi
-}
-
 create_tcproxy_folder() {
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
-        echo -e '#!/bin/bash
+        echo "[  ] Overwriting files in tcproxy/ directory..."
+    else
+        echo "[  ] Creating and extracting in tcproxy/ directory..."
+        mkdir -p tcproxy
+        cd tcproxy >/dev/null 2>&1
+    fi
+            echo -e '#!/bin/bash
+WEB_INSTALL='$WEB_INSTALL'
 CURRENT_PATH='$CURRENT_PATH'
 TEMP_INSTALLER_PATH='$CURRENT_PATH'.tcproxy
 cd tcproxy
 ./tcproxy -i' > .tcproxy
-        echo "[  ] Overwriting files in tcproxy/ directory..."
-    else
-        echo "[  ] Creating and extracting in tcproxy/ directory..."
-        echo -e '#!/bin/bash
-CURRENT_PATH='$CURRENT_PATH'
-TEMP_INSTALLER_PATH='$CURRENT_PATH'.tcproxy
-cd tcproxy
-./tcproxy -i' > tcproxy/.tcproxy
-        mkdir -p tcproxy &&
-        cd tcproxy >/dev/null 2>&1
-    fi
 }
 
 github_download() {
