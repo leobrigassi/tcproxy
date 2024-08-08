@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.8
+TCPROXY_VERSION=v2.0.0_beta1.9
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -425,7 +425,10 @@ save_ENVs_to_file() {
 # tcproxy logic
 web_install_env_check
 echo "Selection $1"
-echo "Webinstall $WEB_INSTALL"
+echo "Webinstal $WEB_INSTALL"
+if [[ $WEB_INSTALL=="TRUE" ]]; then
+echo "webinstall true"
+fi
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]] || [[ $WEB_INSTALL=="TRUE" ]]; then
     echo "debut 1"
     create_tcproxy_folder
