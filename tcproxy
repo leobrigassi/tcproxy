@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.71
+TCPROXY_VERSION=v2.0.0_beta1.72
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -250,7 +250,7 @@ stopping_installed_VMs_and_mounts() {
             ELAPSED=$((ELAPSED + INTERVAL))
             if [ $ELAPSED -ge $TIMEOUT ]; then
                 tcproxy_log "[ERROR] VM did not power down after $TIMEOUT seconds. Forcing termination..."
-                pkill -f "mac=02:D2:46:5B:4E:84"
+                sudo pkill -f "mac=02:D2:46:5B:4E:84"
                 if [ $? -eq 0 ]; then
                     tcproxy_log "[  ] VM process killed."
                 else
@@ -493,7 +493,7 @@ post_install_cleanup() {
 # tcproxy logic
 web_install_check
 tcproxy_env_check
-tcproxy_web_install_env_check
+# tcproxy_web_install_env_check
 USER_ARG=$1 && [[ $1 == "--update" ]] || [[ $WEB_INST -eq 1 ]] || check_updates
 if [[ -f .debug_activated ]]; then DEBUG_STATUS=1; fi
 # args selection
@@ -544,7 +544,7 @@ elif [[ $1 == "-t" ]]; then
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
-        echo "tcproxy $TCPROXY_VERSION: web install"
+        echo "tcproxy $TCPROXY_VERSION: web install..."
         create_tcproxy_folder  >/dev/null 2>&1
         github_download  >/dev/null 2>&1
         elif tcproxy_env_check; then
