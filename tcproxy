@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.99
+TCPROXY_VERSION=v2.0.0_beta1.100
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -545,8 +545,9 @@ elif [[ $1 == "--update" ]]; then
     check_updates
     save_ENVs_to_file
 elif [[ $1 == "-t" ]]; then
-    DEBUG_LEVEL=" 2>&1 | tee -a $LOG_FILE"
+    DEBUG_LEVEL=">> $LOG_FILE"
     DEBUG_LEVEL2='>/dev/null 2>&1'
+    DEBUG_LEVEL3="2>&1 | tee -a $LOG_FILE"
     ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "free -m" $DEBUG_LEVEL
     ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls -lah" 2>&1 | tee -a $LOG_FILE
 else 
