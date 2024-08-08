@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.32
+TCPROXY_VERSION=v2.0.0_beta1.33
 TCPROXY_BRANCH=v2.0.0
 echo "$TCPROXY_VERSION"
 
@@ -19,9 +19,7 @@ check_updates() {
     LATEST_VERSION=$(curl -s "$RELEASE_NOTES_URL" | sed -n '4p' | awk '{print $1}')
 
     # Compare versions
-    if [[ "$TCPROXY_VERSION" != "$LATEST_VERSION" ]]; then
-        echo "Update tcproxy to $LATEST_VERSION? Current version ($TCPROXY_VERSION): "
-        
+    if [[ "$TCPROXY_VERSION" != "$LATEST_VERSION" ]]; then        
         # Prompt the user to download and replace the script
         read -p "Update tcproxy to $LATEST_VERSION? Installed version $TCPROXY_VERSION: " UPDATE_CHOICE
         
