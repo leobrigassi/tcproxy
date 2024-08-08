@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.81
+TCPROXY_VERSION=v2.0.0_beta1.82
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -66,7 +66,6 @@ tcproxy_env_check() {
         return 1
     else
         source .tcproxy.env >/dev/null 2>&1
-        echo ".tcproxy.env loaded"
         return 0
     fi
 }
@@ -201,7 +200,6 @@ define_tcproxy_env_vars() {
     LOG_FILE="$TIME_CAPSULE_PROXY_PATH/tcproxy.log"
     touch $LOG_FILE
     sudo chmod 770 $LOG_FILE
-    #Debug stats setup
     HOSTNAME=$(hostname) 
     CPU_INFO=$(cat /proc/cpuinfo | grep 'model name' | head -1)
     MAC_ADDRESS=$(cat /sys/class/net/$(ls /sys/class/net | grep -m 1 -v lo)/address)
@@ -492,7 +490,6 @@ tcproxy_env_check
 # tcproxy_web_install_env_check
 USER_ARG=$1 && [[ $1 == "--update" ]] || [[ $WEB_INST -eq 1 ]] || check_updates
 if [[ -f .debug_activated ]]; then DEBUG_STATUS=1; fi
-echo "Debug status: $DEBUG_STATUS"
 # args selection
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     create_tcproxy_folder
