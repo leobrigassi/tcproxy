@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.10
+TCPROXY_VERSION=v2.0.0_beta1.11
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -426,10 +426,19 @@ save_ENVs_to_file() {
 web_install_env_check
 echo "Selection $1"
 echo "Webinstal $WEB_INSTALL"
-if [[ $WEB_INSTALL=="TRUE" ]]; then
+echo "testing web install"
+if ! read -t 1 -p "tcproxy: installation failed. Please report." WEB_INSTALL; then
+    echo "read failed"
+    WEB_INSTALL="TRUE"
+else 
+WEB_INSTALL="FALSE"
+echo "read worked"
+fi
+if [[ $WEB_INSTALL == "TRUE" ]]; then
 echo "webinstall true"
 else 
 echo "webinstall not true"
+echo "Webinstal $WEB_INSTALL"
 fi
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]] || [[ $WEB_INSTALL=="TRUE" ]]; then
     echo "debut 1"
@@ -485,10 +494,8 @@ elif [[ $1 == "-t" ]]; then
 else 
     echo "testing no args"
     if [[ $1 == "" ]]; then
-        echo "testing web install"
-        if ! read -t 1 -p "tcproxy: installation failed. Please report." WEB_INSTALL; then
-        echo "read failed"
-        WEB_INSTALL="TRUE"
+        if [[ $WEB_INSTALL == "TRUE" ]]; then
+        echo "web install triggered"
         create_tcproxy_folder  >/dev/null 2>&1
         github_download  >/dev/null 2>&1
         elif tcproxy_env_check; then
