@@ -1,13 +1,17 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.64
+TCPROXY_VERSION=v2.0.0_beta1.65
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
-    if [[ $DEBUG_STATUS == "1" ]]; then DEBUG_LOG=" - debug: Function ${FUNCNAME[0]} is running"; fi
+    if [[ $DEBUG_STATUS == "1" ]]; then 
+        DEBUG_LOG=" - debug: Function ${FUNCNAME[0]} is running"
+    fi
     LOG_MESSAGE="$1$DEBUG_LOG"
     echo "$(date +"%Y%m%d_%H:%M:%S"): $1" | tee -a "$LOG_FILE"
-    if [[ $DEBUG_STATUS -eq 1 ]]; then usage_metrics; fi
+    if [[ $DEBUG_STATUS -eq 1 ]]; then 
+        usage_metrics
+    fi
 }
 
 usage_metrics() {
@@ -37,12 +41,15 @@ check_updates() {
             mv "$TEMP_FILE" "$0"
             chmod +x "$0"
             echo "Update complete to $TCPROXY_LATEST_VERSION"
+            exit 0
         else
             echo "Update canceled. You are using version $TCPROXY_VERSION."
+            exit 0
         fi
     else
         if [[ $MAN_UPDATE == 1 ]]; then
             tcproxy_log "You are using the latest version ($TCPROXY_VERSION)."
+            exit 0
         else
             return 0
         fi
@@ -483,7 +490,7 @@ post_install_cleanup() {
 # tcproxy logic
 web_install_check
 tcproxy_env_check
-[[ $1 == "--update" ]] || [[ $WEB_INST -eq 1 ]] || check_updates
+USER_ARG=$1 && [[ $1 == "--update" ]] || [[ $WEB_INST -eq 1 ]] || check_updates
 # args selection
 if [[ -f .debug_activated ]]; then DEBUG_STATUS=1; fi
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
