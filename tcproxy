@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.31
+TCPROXY_VERSION=v2.0.0_beta1.32
 TCPROXY_BRANCH=v2.0.0
 echo "$TCPROXY_VERSION"
 
@@ -15,8 +15,41 @@ debug_log() {
 }
 
 check_updates() {
-    echo "[DEBUG]_UPDATE"
-    echo "populate"
+    RELEASE_NOTES_URL="https://github.com/leobrigassi/time_capsule_proxy/raw/'$TCPROXY_BRANCH'/release_notes"
+    LATEST_VERSION=$(curl -s "$RELEASE_NOTES_URL" | sed -n '4p' | awk '{print $1}')
+
+    # Compare versions
+    if [[ "$TCPROXY_VERSION" != "$LATEST_VERSION" ]]; then
+        echo "Update tcproxy to $LATEST_VERSION? Current version ($TCPROXY_VERSION): "
+        
+        # Prompt the user to download and replace the script
+        read -p "Update tcproxy to $LATEST_VERSION? Installed version $TCPROXY_VERSION: " UPDATE_CHOICE
+        
+        if [[ "$UPDATE_CHOICE" =~ ^[Yy]$ ]]; then
+            echo "Downloading the latest version..."
+            
+            # Backup the current script
+            BACKUP_FILE="${0}.bak"
+            cp -f "$0" "$BACKUP_FILE"
+            echo "Backup created at $BACKUP_FILE"
+            
+            # Download the latest version
+            TEMP_FILE=$(mktemp)
+            curl -s -o "$TEMP_FILE" "$SCRIPT_URL"
+            
+            # Replace the old script with the new one
+            mv "$TEMP_FILE" "$0"
+            chmod +x "$0"
+            echo "Update complete. Restarting script..."
+            
+            # Optionally restart the script
+            exec "$0" "$@"
+        else
+            echo "Update canceled. You are using version $TCPROXY_VERSION."
+        fi
+    else
+        echo "You are using the latest version ($TCPROXY_VERSION)."
+    fi
 }
 
 web_install_check() {
@@ -494,6 +527,7 @@ elif [[ $1 == "-t" ]]; then
     tcproxy_env_check
     tcproxy_log "[  ] log message test..."
     post_install_cleanup
+    check_updates
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
