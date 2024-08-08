@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.91
+TCPROXY_VERSION=v2.0.0_beta1.92
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -33,7 +33,7 @@ check_updates() {
             cp -f "$0" "$BACKUP_FILE"
             TEMP_FILE=$(mktemp)
             curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
-            mv "$TEMP_FILE" "$0"
+            sudo mv "$TEMP_FILE" "$0"
             chmod +x "$0"
             echo "Update complete from to $TCPROXY_LATEST_VERSION"
             return 0
