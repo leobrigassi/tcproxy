@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.90
+TCPROXY_VERSION=v2.0.0_beta1.91
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -94,9 +94,9 @@ cd tcproxy >/dev/null 2>&1
     fi
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
-        echo "[  ] Overwriting files in tcproxy/ directory..."
+        echo "Overwriting files in tcproxy/ directory..."
     else
-        echo "[  ] Creating and extracting in tcproxy/ directory..."
+        echo "Creating and extracting in tcproxy/ directory..."
         mkdir -p tcproxy
         cp .tcproxy tcproxy/.tcproxy >/dev/null 2>&1
         cd tcproxy >/dev/null 2>&1
@@ -104,7 +104,7 @@ cd tcproxy >/dev/null 2>&1
 }
 
 github_download() {
-    tcproxy_log "[  ] Downloading tcproxy version "
+    tcproxy_log "Downloading tcproxy version "
     wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz &&
     tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz &&
     chmod +x tcproxy
@@ -209,7 +209,7 @@ define_tcproxy_env_vars() {
 }
 
 deflating_vm() {
-    tcproxy_log "[  ] Deflating VM disk..."
+    tcproxy_log "Deflating VM disk..."
     if [[ $ARCH == x86_64* ]]; then
         sudo tar -xf timecapsule_proxy_x86.tar.gz
     elif [[ $ARCH == aarch64* ]]; then
@@ -222,7 +222,7 @@ deflating_vm() {
 stopping_installed_VMs_and_mounts() {
     if mountpoint -q "/srv/tc-proxy"; then
         if sudo umount /srv/tc-proxy 2>/dev/null; then
-            tcproxy_log "[  ] Mountpoint /srv/tc-proxy detected. Unmounting..."
+            tcproxy_log "Mountpoint /srv/tc-proxy detected. Unmounting..."
         else
             tcproxy_log "[INFO] Cannot gracefully unmount /srv/tc-proxy. Forcing unmount..."
             sudo umount -f /srv/tc-proxy 2>/dev/null
@@ -234,7 +234,7 @@ stopping_installed_VMs_and_mounts() {
         fi
     fi
     if pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
-        tcproxy_log "[  ] VM detected. Sending poweroff command..."
+        tcproxy_log "VM detected. Sending poweroff command..."
         $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "poweroff"
         TIMEOUT=60
         INTERVAL=5
@@ -246,7 +246,7 @@ stopping_installed_VMs_and_mounts() {
                 tcproxy_log "[ERROR] VM did not power down after $TIMEOUT seconds. Forcing termination..."
                 sudo pkill -f "mac=02:D2:46:5B:4E:84"
                 if [ $? -eq 0 ]; then
-                    tcproxy_log "[  ] VM process killed."
+                    tcproxy_log "VM process killed."
                 else
                     tcproxy_log "[ERROR] Failed to kill VM process. Installation stopped."
                     exit 1
@@ -254,7 +254,7 @@ stopping_installed_VMs_and_mounts() {
             fi
         done
         if [ $ELAPSED -lt $TIMEOUT ]; then
-            tcproxy_log "[  ] VM powered down."
+            tcproxy_log "VM powered down."
         fi
     fi
 }
@@ -288,12 +288,12 @@ load_VM() {
 }
 
 check_VM_status() {
-    tcproxy_log "[  ] Waiting for VM to boot..."
+    tcproxy_log "Waiting for VM to boot..."
     while ! sudo tail -f ./vm.log | grep -q "Welcome to Alpine Linux"; do
     sleep 5 
     done
     sleep 10
-    tcproxy_log "[  ] VM up..."
+    tcproxy_log "VM up..."
 }
 
 creating_mountpoint_folder() {
@@ -301,7 +301,7 @@ creating_mountpoint_folder() {
 }
 
 provision_VM() {
-    tcproxy_log "[  ] Provisioning VM..."
+    tcproxy_log "Provisioning VM..."
     # Configure VMroot passwd, /etc/fstab, samba
     $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | passwd' >/dev/null 2>&1
     $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab" >/dev/null 2>&1
@@ -312,7 +312,7 @@ provision_VM() {
 test_VM_mount() {
     if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''
     then
-        tcproxy_log "[  ] VM connected to Time Capsule..."
+        tcproxy_log "VM connected to Time Capsule..."
     else
         tcproxy_log "[ERROR] VM unable to connect to Time Capsule. Please check credentials and IPv4 and run install again."
         exit 1
@@ -336,7 +336,7 @@ tcproxy_up() {
     fi
     while [ $retry_count -lt $MAX_RETRIES ]; do
         if check_smb_share; then
-            tcproxy_log "[  ] VM samba share is accessible."
+            tcproxy_log "VM samba share is accessible."
             break
         else
             retry_count=$((retry_count + 1))
@@ -359,11 +359,11 @@ tcproxy_up() {
     done
     # Verify host mount
     if ! mountpoint -q /srv/tc-proxy; then
-        tcproxy_log "[  ] Remounting /srv/tc-proxy..."
+        tcproxy_log "Remounting /srv/tc-proxy..."
         sudo umount -l /srv/tc-proxy  > /dev/null 2>&1
         sudo mount -t cifs //127.0.0.1/tc-proxy /srv/tc-proxy/ -o password="$TC_PASSWORD""$TC_FSTAB_USER",rw,uid="$PUID",iocharset=utf8,vers=3.0,nofail,file_mode=0775,dir_mode=0775,port=50445 >> "$LOG_FILE"
     fi
-    tcproxy_log "[OK] System up and running"
+    tcproxy_log "/srv/tc-proxy mounted and accessible"
     return 0
 }
 
@@ -399,7 +399,7 @@ WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
 }
         
 remove_system_service() {
-        tcproxy_log "[  ] Scanning for previously installed daemons..."
+        tcproxy_log "Scanning for previously installed daemons..."
         if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
             sudo systemctl stop time-capsule-proxy.service >/dev/null 2>&1
             sudo systemctl disable time-capsule-proxy.service >/dev/null 2>&1
