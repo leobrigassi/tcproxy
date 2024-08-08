@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.19
+TCPROXY_VERSION=v2.0.0_beta1.20
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -53,7 +53,7 @@ cd tcproxy
     else
         echo "[  ] Creating and extracting in tcproxy/ directory..."
         mkdir -p tcproxy
-        cp .tcproxy tcproxy/.tcproxy
+        cp .tcproxy tcproxy/.tcproxy >/dev/null 2>&1
         cd tcproxy >/dev/null 2>&1
     fi
 }
