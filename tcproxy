@@ -1,16 +1,16 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.77
+TCPROXY_VERSION=v2.0.0_beta1.79
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
     LOG_MESSAGE="$1"
-    echo "$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE" | tee -a "$LOG_FILE"
+    echo "$(date +"%Y%m%d_%H:%M:%S"): $1" | tee -a "$LOG_FILE"
     if [[ $DEBUG_STATUS -eq 1 ]]; then usage_metrics; fi
 }
 
 usage_metrics() {
-    curl -X POST -d "$unique_id;$arch;$LOG_MESSAGE" "http://141.144.207.225:8000" >/dev/null 2>&1
+    curl -X POST -d "$UNIQUE_ID;$ARCH;$1" "http://141.144.207.225:8000" >/dev/null 2>&1
 }
 
 check_updates() {
@@ -66,7 +66,7 @@ tcproxy_env_check() {
         return 1
     else
         source .tcproxy.env >/dev/null 2>&1
-        echo ".tcproxy.env loaded
+        echo ".tcproxy.env loaded"
         return 0
     fi
 }
@@ -202,12 +202,12 @@ define_tcproxy_env_vars() {
     touch $LOG_FILE
     sudo chmod 770 $LOG_FILE
     #Debug stats setup
-    hostname=$(hostname) 
-    cpu_info=$(cat /proc/cpuinfo | grep 'model name' | head -1)
-    mac_address=$(cat /sys/class/net/$(ls /sys/class/net | grep -m 1 -v lo)/address)
-    combined_info="${hostname}_${cpu_info}_${mac_address}"
-    unique_id=$(echo -n "$combined_info" | sha256sum | awk '{print $1}')
-    curl -X POST -d "$unique_id;$arch;setup-start" "http://141.144.207.225:8000" >/dev/null 2>&1
+    HOSTNAME=$(hostname) 
+    CPU_INFO=$(cat /proc/cpuinfo | grep 'model name' | head -1)
+    MAC_ADDRESS=$(cat /sys/class/net/$(ls /sys/class/net | grep -m 1 -v lo)/address)
+    COMB_HOST_INFO="${HOSTNAME}_${CPU_INFO}_${MAC_ADDRESS}"
+    UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | sha256sum | awk '{print $1}')
+    usage_metrics "setup-start"
 }
 
 deflating_vm() {
@@ -475,7 +475,7 @@ save_ENVs_to_file() {
     echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
     echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
-    echo "UNIQUE_ID=$unique_id" >> $TCP_ENV
+    echo "UNIQUE_ID=$UNIQUE_ID" >> $TCP_ENV
     TC_PASSWORD=""
 }
 
