@@ -1,11 +1,11 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.83
+TCPROXY_VERSION=v2.0.0_beta1.84
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $1"
-    echo "$LOG_MESSAGE" | tee -a "$LOG_FILE" >/dev/null
+    echo "$LOG_MESSAGE" | tee -a "$LOG_FILE"
     if [[ $DEBUG_STATUS -eq 1 ]]; then usage_metrics '$LOG_MESSAGE'; fi
 }
 
