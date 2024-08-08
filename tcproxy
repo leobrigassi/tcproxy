@@ -44,11 +44,12 @@ create_tcproxy_folder() {
         cd tcproxy >/dev/null 2>&1
     fi
     if [[ $WEB_INSTALL="TRUE" ]]; then 
+    echo "web install detected"
         TIME_CAPSULE_PROXY_PATH=$(readlink -f .)
         echo -e '#!/bin/bash
 WEB_INSTALL='$WEB_INSTALL'
 TIME_CAPSULE_PROXY_PATH='$TIME_CAPSULE_PROXY_PATH'
-TEMP_INSTALLER_PATH='$TIME_CAPSULE_PROXY_PATH'.tcproxy
+TEMP_INSTALLER_PATH='$TIME_CAPSULE_PROXY_PATH'/.tcproxy
 cd tcproxy
 ./tcproxy -i' > .tcproxy
     fi
