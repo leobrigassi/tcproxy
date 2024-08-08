@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.68
+TCPROXY_VERSION=v2.0.0_beta1.69
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -517,14 +517,8 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     save_ENVs_to_file
     post_install_cleanup
     tcproxy_log "[OK] Process completed"
-    
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-echo "debut h"
     help_menu
-elif [[ $1 == "--web-install" ]] || [[ $1 == "--help" ]]; then
-    create_tcproxy_folder
-    github_download
-    (cd tcproxy >/dev/null 2>&1; ./tcproxy -i)
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     testing_ssh_premission_requirements
     ssh_vm
@@ -543,12 +537,10 @@ elif [[ $1 == "--uninstall" ]]; then
 elif [[ $1 == "--debug" ]]; then
     touch .debug_activated
 elif [[ $1 == "--update" ]]; then
+    MAN_UPDATE=1
     check_updates
 elif [[ $1 == "-t" ]]; then
-    MAN_UPDATE=1
-    # tcproxy_log "[  ] log message test..."
-    # post_install_cleanup
-    check_updates
+    echo "test flag"
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
@@ -559,9 +551,7 @@ else
             echo "tcproxy: no arguments. Defaulting to 'tcproxy --up'"
             tcproxy_up
         else 
-            echo "tcproxy: installation not detected.
-
-Try  './tcproxy --help' for more options."
+            echo -e "tcproxy: installation not detected.\nTry  './tcproxy --help' for more options."
             exit 1
         fi
     else
