@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.61
+TCPROXY_VERSION=v2.0.0_beta1.62
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -318,7 +318,7 @@ tcproxy_up() {
     RETRY_INTERVAL=60
     retry_count=0
     failed_attempts=0
-    tcproxy_log "[  ] Connecting tcproxy VM..."
+    tcproxy_log "tcproxy $TCPROXY_VERSION: connecting tcproxy VM..."
     if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
         load_VM
         check_VM_status
