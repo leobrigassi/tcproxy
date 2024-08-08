@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.101
+TCPROXY_VERSION=v2.0.0_beta1.102
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -551,6 +551,7 @@ elif [[ $1 == "-t" ]]; then
     DEBUG_LEVEL3="2>&1 | tee -a $LOG_FILE"
     ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "free -m" $DEBUG_LEVEL
     ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls -lah" 2>&1 | tee -a $LOG_FILE
+    COMMAND_OUTPUT=$(ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "free -m" 2>&1); tcproxy_log $COMMAND_OUTPUT
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
