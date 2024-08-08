@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.85
+TCPROXY_VERSION=v2.0.0_beta1.86
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -439,15 +439,17 @@ help_menu() {
     echo "GNU tcproxy $TCPROXY_VERSION - mount Time Capsule and AirPort Extreme on debian systems with kernels 5.15 or above.
 Usage: ./tcproxy [OPTION]...
 
-  -h,  --help          prints this help
-  -i,  --install       initiates setup wizard
-  -u,  --up            [default arg.], loads VM and initiates mount /srv/tcproxy on host
-  -d,  --down          unmounts /srv/tcproxy and poweroff to VM
-  -r,  --restart       restarts VM and remounts /srv/tcproxy
-  -s,  --ssh           connects to the VM via ssh (DEBUG)
-  --enable-service     install systemd startup service
-  --disable-service    stops and removes systemd startup service
-  --uninstall          unmounts /srv/tcproxy and poweroff to VM and stops and removes system service
+  -h,  --help           prints this help
+  -i,  --install        initiates setup wizard
+  -u,  --up             [default arg.], loads VM and initiates mount /srv/tcproxy on host
+  -d,  --down           unmounts /srv/tcproxy and poweroff to VM
+  -r,  --restart        restarts VM and remounts /srv/tcproxy
+  -s,  --ssh            connects to the VM via ssh
+  --remote-debug        sends debugging logs to project server
+  --remote-debug-off    disables remote debug
+  --enable-service      install systemd startup service
+  --disable-service     stops and removes systemd startup service
+  --uninstall           unmounts /srv/tcproxy and poweroff to VM and stops and removes system service
 
 For bug reports, questions, discussions and/or open issues visit:
 https://github.com/leobrigassi/time_capsule_proxy"
@@ -528,10 +530,13 @@ elif [[ $1 == "--uninstall" ]]; then
     stopping_installed_VMs_and_mounts
     remove_system_service
     remove_tcproxy_env
-elif [[ $1 == "--debug-on" ]]; then
-    touch .debug_on
-elif [[ $1 == "--debug-off" ]]; then
-    rm .debug_on
+elif [[ $1 == "--remote-debug" ]]; then
+    touch .remote_debug_on
+elif [[ $1 == "--remote-debug" ]]; then
+    rm .remote_debug_on
+elif [[ $1 == "--enable-service" ]]; then
+    tcproxy_systemd_setup
+    save_ENVs_to_file
 elif [[ $1 == "--update" ]]; then
     MAN_UPDATE=1
     check_updates
