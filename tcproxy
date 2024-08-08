@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.82
+TCPROXY_VERSION=v2.0.0_beta1.83
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -36,15 +36,15 @@ check_updates() {
             mv "$TEMP_FILE" "$0"
             chmod +x "$0"
             echo "Update complete from to $TCPROXY_LATEST_VERSION"
-            exit 0
+            return 0
         else
             echo "Update canceled. You are using version $TCPROXY_VERSION."
-            exit 0
+            return 0
         fi
     else
         if [[ $MAN_UPDATE == 1 ]]; then
             tcproxy_log "You are using the latest version ($TCPROXY_VERSION)."
-            exit 0
+            return 0
         else
             return 0
         fi
@@ -535,6 +535,7 @@ elif [[ $1 == "--debug-off" ]]; then
 elif [[ $1 == "--update" ]]; then
     MAN_UPDATE=1
     check_updates
+    save_ENVs_to_file
 elif [[ $1 == "-t" ]]; then
     echo "test flag"
     define_tcproxy_env_vars
