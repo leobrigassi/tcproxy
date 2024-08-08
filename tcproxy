@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.15
+TCPROXY_VERSION=v2.0.0_beta1.16
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -428,22 +428,15 @@ echo "Selection $1"
 echo "Webinstal $WEB_INST"
 echo "testing web install"
 if [ -t 0 ]; then
-    # Standard input is a terminal, proceed with the read command
-    if ! read -t 1 -p "tcproxy: installation failed. Please report." WEB_INST; then
-        echo "read failed"
-        WEB_INST=1
-    else
-        WEB_INST=0
-        echo "read worked"
-    fi
+    WEB_INST=0
+    echo "local run detected"
 else
-    # Standard input is not a terminal, likely piped via wget
-    echo "Script is being piped; read cannot receive input."
+    echo "web install detected."
     WEB_INST=1
 fi
 echo "Webinstal $WEB_INST"
 echo "$TCPROXY_VERSION"
-if [[ $1 == "-i" ]] || [[ $1 == "--install" ]] || [[ $WEB_INST -eq 1 ]]; then
+if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     echo "debut 1"
     create_tcproxy_folder
     define_tcproxy_env_vars
@@ -502,7 +495,7 @@ else
         create_tcproxy_folder  >/dev/null 2>&1
         github_download  >/dev/null 2>&1
         elif tcproxy_env_check; then
-            echo "web install NOT detected. bringin up qemu"
+            echo "local run. bringin up qemu"
             tcproxy_up
         else 
         echo "debut 3"
