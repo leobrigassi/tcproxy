@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.84
+TCPROXY_VERSION=v2.0.0_beta1.85
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -538,8 +538,7 @@ elif [[ $1 == "--update" ]]; then
     save_ENVs_to_file
 elif [[ $1 == "-t" ]]; then
     echo "test flag"
-    define_tcproxy_env_vars
-    save_ENVs_to_file
+    usage_metrics "test"
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
