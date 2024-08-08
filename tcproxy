@@ -43,12 +43,14 @@ create_tcproxy_folder() {
         mkdir -p tcproxy
         cd tcproxy >/dev/null 2>&1
     fi
-            echo -e '#!/bin/bash
+    if [[ $WEB_INSTALL="TRUE" ]]; then 
+        echo -e '#!/bin/bash
 WEB_INSTALL='$WEB_INSTALL'
 CURRENT_PATH='$CURRENT_PATH'
 TEMP_INSTALLER_PATH='$CURRENT_PATH'.tcproxy
 cd tcproxy
 ./tcproxy -i' > .tcproxy
+    fi
 }
 
 github_download() {
