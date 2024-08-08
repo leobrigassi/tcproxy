@@ -1,12 +1,12 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.92
+TCPROXY_VERSION=v2.0.0_beta1.93
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $1"
     echo "$LOG_MESSAGE" | tee -a "$LOG_FILE"
-    if [[ $DEBUG_STATUS -eq 1 ]]; then usage_metrics '$LOG_MESSAGE'; fi
+    if [[ $DEBUG_STATUS -eq 1 ]] || [[ $M -eq 1 ]]; then usage_metrics '$LOG_MESSAGE'; fi
 }
 
 usage_metrics() {
@@ -35,10 +35,10 @@ check_updates() {
             curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
             sudo mv "$TEMP_FILE" "$0"
             chmod +x "$0"
-            echo "Update complete from to $TCPROXY_LATEST_VERSION"
+            M=1; tcproxy_log "Update complete from to $TCPROXY_LATEST_VERSION"
             return 0
         else
-            echo "Update canceled. You are using version $TCPROXY_VERSION."
+            tcproxy_log "Update canceled. You are using version $TCPROXY_VERSION."
             return 0
         fi
     else
@@ -104,7 +104,7 @@ cd tcproxy >/dev/null 2>&1
 }
 
 github_download() {
-    tcproxy_log "Downloading tcproxy version "
+    M=1; tcproxy_log "Downloading tcproxy version "
     wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz &&
     tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz &&
     chmod +x tcproxy
@@ -329,7 +329,7 @@ tcproxy_up() {
     RETRY_INTERVAL=60
     retry_count=0
     failed_attempts=0
-    tcproxy_log "tcproxy: connecting tcproxy VM..."
+    tcproxy_log "connecting tcproxy VM..."
     if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
         load_VM
         check_VM_status
@@ -417,7 +417,7 @@ install_system_service() {
         sudo systemctl daemon-reload
         sudo systemctl enable tcproxy.service >/dev/null 2>&1
         if sudo systemctl start tcproxy.service; then
-            tcproxy_log "[OK] Service enabled at boot."
+            tcproxy_log "Service enabled at boot."
         else tcproxy_log "[ERROR] Failed to start tcproxy.service - Error code $?"
         fi
 }
@@ -513,7 +513,7 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     tcproxy_systemd_setup
     save_ENVs_to_file
     post_install_cleanup
-    tcproxy_log "[OK] Process completed"
+    M=1; tcproxy_log "[OK] Process completed"
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     help_menu
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
