@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.107
+TCPROXY_VERSION=v2.0.0_beta1.108
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -439,10 +439,9 @@ capture_log_entry() {
     LAST_TIMESTAMP_LINE=$(grep -Eo '^[0-9]{8}_[0-9]{2}:[0-9]{2}:[0-9]{2}:' "$LOG_FILE" | tail -n 1)
     if [ -n "$LAST_TIMESTAMP_LINE" ]; then
         LAST_LINE_NUMBER=$(grep -n "$LAST_TIMESTAMP_LINE" "$LOG_FILE" | tail -n 1 | cut -d: -f1)
-        tcproxy_log "last timestampline: $LAST_TIMESTAMP_LINE"
-        tcproxy_log $(tail -n +$LAST_LINE_NUMBER "$LOG_FILE")
-    else
-        echo "No timestamp found in the log file."
+        echo "Log entries starting from the last occurrence of timestamp $LAST_TIMESTAMP_LINE:"
+        awk "NR >= $LAST_LINE_NUMBER" "$LOG_FILE"
+        tcproxy_log "$(awk "NR >= $LAST_LINE_NUMBER" "$LOG_FILE")"
     fi
 }
 
@@ -556,11 +555,7 @@ elif [[ $1 == "--update" ]]; then
     check_updates
     save_ENVs_to_file
 elif [[ $1 == "-t" ]]; then
-    DEBUG_LEVEL=">> $LOG_FILE"
-    DEBUG_LEVE1="2>&1 | tee -a $LOG_FILE"
-    DEBUG_LEVEL2=">/dev/null 2>&1"
-    DEBUG_LEVEL3="2>&1 | tee -a $LOG_FILE"
-    ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "free -m" >> $LOG_FILE && capture_log_entry
+    ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls -la" >> $LOG_FILE;capture_log_entry
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
