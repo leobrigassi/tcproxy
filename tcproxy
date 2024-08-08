@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.17
+TCPROXY_VERSION=v2.0.0_beta1.18
 TCPROXY_BRANCH=v2.0.0
 
 tcproxy_log() {
@@ -12,15 +12,14 @@ check_updates() {
     echo "populate"
 }
 
-web_install_env_check() {
-  if [[ ! -e .tcproxy ]]; then 
-    return 1
-  elif [[ ! -s .tcproxy ]]; then
-    return 1
-  else
-    source .tcproxy >/dev/null 2>&1
-    return 0
-  fi
+web_install_check() {
+  if [ -t 0 ]; then
+    WEB_INST=0
+    echo "local run detected"
+else
+    echo "web install detected."
+    WEB_INST=1
+fi
 }
 
 tcproxy_env_check() {
@@ -30,30 +29,32 @@ tcproxy_env_check() {
     return 1
   else
     source .tcproxy.env >/dev/null 2>&1
+    source .tcproxy >/dev/null 2>&1
     return 0
   fi
 }
 
 create_tcproxy_folder() {
+    if [[ $WEB_INST -eq 1 ]]; then 
+        echo "web install detected"
+        TIME_CAPSULE_PROXY_PATH=$(readlink -f .)
+        echo -e '#!/bin/bash
+WEB_INST='$WEB_INST'
+TIME_CAPSULE_PROXY_PATH='$TIME_CAPSULE_PROXY_PATH'/tcproxy
+TEMP_INSTALLER_PATH='$TIME_CAPSULE_PROXY_PATH'/.tcproxy
+TEMP_INSTALLER_IN_PATH='$TIME_CAPSULE_PROXY_PATH'/tcproxy/.tcproxy
+cd tcproxy
+./tcproxy -i' > .tcproxy
+        chmod +x .tcproxy
+    fi
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
         echo "[  ] Overwriting files in tcproxy/ directory..."
     else
         echo "[  ] Creating and extracting in tcproxy/ directory..."
         mkdir -p tcproxy
+        cp .tcproxy tcproxy/.tcproxy
         cd tcproxy >/dev/null 2>&1
-    fi
-    if [[ $WEB_INST -eq 1 ]]; then 
-    echo "web install detected"
-        TIME_CAPSULE_PROXY_PATH=$(readlink -f .)
-        echo -e '#!/bin/bash
-WEB_INST='$WEB_INST'
-TIME_CAPSULE_PROXY_PATH='$TIME_CAPSULE_PROXY_PATH'
-TEMP_INSTALLER_PATH='$TIME_CAPSULE_PROXY_PATH'/.tcproxy
-cd tcproxy
-./tcproxy -i' > .tcproxy
-        chmod +x .tcproxy
-    fi
 }
 
 github_download() {
@@ -424,14 +425,7 @@ save_ENVs_to_file() {
 
 # tcproxy logic
 echo "tcproxy $TCPROXY_VERSION"
-web_install_env_check
-if [ -t 0 ]; then
-    WEB_INST=0
-    echo "local run detected"
-else
-    echo "web install detected."
-    WEB_INST=1
-fi
+web_install_check
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     echo "debut 1"
     create_tcproxy_folder
