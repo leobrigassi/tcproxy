@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.29
+TCPROXY_VERSION=v2.0.0_beta1.30
 TCPROXY_BRANCH=v2.0.0
 echo "$TCPROXY_VERSION"
 
@@ -426,6 +426,8 @@ save_ENVs_to_file() {
 post_install_cleanup() {
     rm $TEMP_INSTALLER_PATH
     rm $TEMP_INSTALLER_IN_PATH
+    echo $TEMP_INSTALLER_PATH
+    echo $TEMP_INSTALLER_IN_PATH
 }
 
 # tcproxy logic
@@ -479,6 +481,7 @@ elif [[ $1 == "--uninstall" ]]; then
     remove_tcproxy_env
 elif [[ $1 == "-t" ]]; then
     tcproxy_log "[  ] log message test..."
+    post_install_cleanup
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
