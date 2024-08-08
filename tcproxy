@@ -55,6 +55,7 @@ cd tcproxy
         mkdir -p tcproxy
         cp .tcproxy tcproxy/.tcproxy
         cd tcproxy >/dev/null 2>&1
+    fi
 }
 
 github_download() {
