@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.117
+TCPROXY_VERSION=v2.0.0_beta1.118
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -126,9 +126,9 @@ cd tcproxy >/dev/null 2>&1
 }
 
 github_download() {
-    logm "downloading tcproxy from server"
-    wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz && >/dev/null 2>&1
-    tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz &&
+    logm "Downloading tcproxy from server"
+    logsc wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz && echo "Download successful" || echo "Download failed"; exit 0
+    tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 &&
     chmod +x tcproxy
 }
 
