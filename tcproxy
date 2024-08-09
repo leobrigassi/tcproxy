@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.123
+TCPROXY_VERSION=v2.0.0_beta1.124
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -521,16 +521,16 @@ post_install_cleanup() {
 # tcproxy logic
 web_install_check
 tcproxy_env_check
-logsm WEB_INST=$WEB_INST
+# logsm WEB_INST=$WEB_INST
 # tcproxy_web_install_env_check
 # USER_ARG=$1 && [[ $1 == "--update" ]] || [[ $WEB_INST -eq 1 ]] || check_updates
 if [[ $1 != "--update" && $WEB_INST -eq 1 ]]; then check_updates; fi
 if [[ -f .remote_debug_on ]]; then DEBUG_STATUS=1; fi
 # args selection
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
-    logm "tcproxy: installing..."
     create_tcproxy_folder
     define_tcproxy_env_vars
+    logm "tcproxy: installing..."
     check_system_requirements
     prompt_user_inputs
     github_download
