@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.136
+TCPROXY_VERSION=v2.0.0_beta1.137
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -87,9 +87,10 @@ web_installer_download() {
         SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
         TEMP_FILE=$(mktemp)
         curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
-        touch "tcproxy/tcproxy"
-        mv "$TEMP_FILE" "tcproxy/tcproxy"
-        chmod +x "tcproxy/tcproxy"
+        cd tcproxy
+        touch tcproxy
+        mv "$TEMP_FILE" tcproxy
+        chmod +x tcproxy"
 }
 
 tcproxy_env_check() {
