@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.116
+TCPROXY_VERSION=v2.0.0_beta1.117
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -103,7 +103,7 @@ tcproxy_web_install_env_check() {
 
 create_tcproxy_folder() {
     if [[ $WEB_INST -eq 1 ]]; then 
-        logsm "tcproxy: web install detected"
+        logm "tcproxy: web install detected"
         TIME_CAPSULE_PROXY_PATH=$(readlink -f .)
         echo -e '#!/bin/bash
 WEB_INST='$WEB_INST'
@@ -170,9 +170,9 @@ testing_ssh_premission_requirements() {
         SUDOREQUIREDEXIT=$?
         if [ $SUDOREQUIREDEXIT -eq 0 ]; then
             SUDOREQUIRED="sudo "
-            logsm "[INFO] SSH privileges have been elevated."
+            logm "[INFO] SSH privileges have been elevated."
         else
-            logsm "[ERROR] Cannot SSH in the VM. Installation aborted. Error code $SUDOREQUIREDEXIT"
+            logm "[ERROR] Cannot SSH in the VM. Installation aborted. Error code $SUDOREQUIREDEXIT"
             exit 1
         fi
     fi
@@ -188,24 +188,24 @@ read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         :
     else
-        logsm "[INFO] Installation Aborted. No change has been performed."
+        logm "[INFO] Installation Aborted. No change has been performed."
         exit 1
     fi
     read -p "[INPUT] Time Capsule IPv4 (e.g. 192.168.1.10): " TC_IP
     if [ -z "$TC_IP" ]; then
-        logsm "[ERROR] IPv4 required. Installation aborted"
+        logm "[ERROR] IPv4 required. Installation aborted"
         exit 1
     fi
     read -p "[INPUT] Time Capsule DISK name (e.g. Data): " TC_FOLDER
     if [ -z "$TC_FOLDER" ]; then
-        logsm "[ERROR] DISK name is required. Installation aborted"
+        logm "[ERROR] DISK name is required. Installation aborted"
         exit 1
     fi
     read -p "[INPUT] Time Capsule USER: " TC_USER
     TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     read -p "[INPUT] Time Capsule PASSWORD: " TC_PASSWORD
     if [ -z "$TC_PASSWORD" ]; then
-        logsm "[ERROR] PASSWORD is required. Installation aborted"
+        logm "[ERROR] PASSWORD is required. Installation aborted"
         exit 1
     fi
     read -p "[INPUT] Do you want to enable mount at startup? (y/N): " STARTUP_MOUNT
