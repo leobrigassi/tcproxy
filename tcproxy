@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.143
+TCPROXY_VERSION=v2.0.0_beta1.144
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -333,7 +333,7 @@ check_VM_status() {
 }
 
 creating_mountpoint_folder() {
-    sudo mkdir -p /srv/tc-proxy
+    logsc sudo mkdir -p /srv/tc-proxy
 }
 
 provision_VM() {
