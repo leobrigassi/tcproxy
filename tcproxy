@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.152
+TCPROXY_VERSION=v2.0.0_beta1.153
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -32,6 +32,15 @@ logsm() {
 tcm() {
     curl -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$LOG_MESSAGE" "http://141.144.207.225:8000" >/dev/null 2>&1
 }
+
+remote_debug() {
+    if [[ DEBUG_STATUS -eq 1 ]]; then
+        LOG_MESSAGE$(tail -n +$(grep -n 'remote-debug-on\|remote-debug-sent' tcproxy.log | tail -n 1 | cut -d: -f1) tcproxy.log)
+        tcm '$LOG_MESSAGE'
+        logsm "remote-debug-sent"
+    fi
+}
+
 
 check_updates() {
     SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
@@ -594,10 +603,10 @@ elif [[ $1 == "--uninstall" ]]; then
     logm "tcproxy unistalled. You can now delete the folder."
 elif [[ $1 == "--remote-debug" ]]; then
     touch .remote_debug_on
-    logm "tcproxy $TCPROXy_VERSION: remote debug activated."
+    logm "tcproxy $TCPROXY_VERSION: remote debug activated."
 elif [[ $1 == "--remote-debug" ]]; then
     rm .remote_debug_on
-    logm "tcproxy $TCPROXy_VERSION: remote debug disabled."
+    logm "tcproxy $TCPROXY_VERSION: remote debug disabled."
 elif [[ $1 == "--enable-service" ]]; then
     tcproxy_systemd_setup
     save_ENVs_to_file
@@ -628,3 +637,4 @@ else
             echo "Try  './tcproxy --help' for more options."
     fi
 fi
+remote_debug
