@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.142
+TCPROXY_VERSION=v2.0.0_beta1.143
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -253,17 +253,20 @@ deflating_vm() {
 }
 
 stopping_installed_VMs_and_mounts() {
-    if mountpoint -q "/srv/tc-proxy"; then
-        if sudo umount /srv/tc-proxy >/dev/null 2>&1; then
-            logm "Mountpoint /srv/tc-proxy detected. Unmounting..."
-        else
-            logm "[INFO] Cannot gracefully unmount /srv/tc-proxy. Forcing unmount..."
-            sudo umount -f /srv/tc-proxy
-            sleep 2
-            if mountpoint -q "/srv/tc-proxy"; then
-                logm "[ERROR] Cannot unmount /srv/tc-proxy. Please umount and run setup again."
+    if sudo umount /srv/tc-proxy >/dev/null 2>&1; then
+        logsm "Unmount of /srv/tc-proxy successful..."
+    else
+        sleep5 
+        if  mountpoint -q "/srv/tc-proxy"; then
+            if sudo umount -f /srv/tc-proxy >/dev/null 2>&1; then
+                logm "[INFO] forced unmount of /srv/tc-proxy successful..."
+            else
+                EXIT_CODE=$?
+                logm "[ERROR $EXIT_CODE] Cannot unmount /srv/tc-proxy. Please check your system and run tcproxy -i again."
                 exit 1
             fi
+        else
+            logsm "Late unmount of /srv/tc-proxy successful..."
         fi
     fi
     if pgrep -f "mac=02:D2:46:5B:4E:84" >/dev/null 2>&1; then
