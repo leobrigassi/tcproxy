@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.119
+TCPROXY_VERSION=v2.0.0_beta1.120
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -126,8 +126,8 @@ cd tcproxy >/dev/null 2>&1
 }
 
 github_download() {
-    logm "Downloading tcproxy from server"
-    logsc wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz && echo "Download successful" || echo "Download failed"; exit 0
+    logm "Downloading tcproxy from server..."
+    wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 && logsm "Download successful" || { logm "Download failed; Installation aborted"; exit 1; }
     tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 &&
     chmod +x tcproxy
 }
@@ -325,10 +325,10 @@ creating_mountpoint_folder() {
 provision_VM() {
     logm "Provisioning VM..."
     # Configure VMroot passwd, /etc/fstab, samba
-    $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | passwd'
-    $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab"
-    $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
-    $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | smbpasswd -a root'
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | passwd'
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab"
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | smbpasswd -a root'
 }
 
 test_VM_mount() {
@@ -351,7 +351,7 @@ tcproxy_up() {
     RETRY_INTERVAL=60
     retry_count=0
     failed_attempts=0
-    logm "connecting tcproxy VM..."
+    logm "Checking VM status..."
     if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
         load_VM
         check_VM_status
@@ -382,8 +382,8 @@ tcproxy_up() {
     # Verify host mount
     if ! mountpoint -q /srv/tc-proxy; then
         logm "Remounting /srv/tc-proxy..."
-        sudo umount -l /srv/tc-proxy
-        sudo mount -t cifs //127.0.0.1/tc-proxy /srv/tc-proxy/ -o password="$TC_PASSWORD""$TC_FSTAB_USER",rw,uid="$PUID",iocharset=utf8,vers=3.0,nofail,file_mode=0775,dir_mode=0775,port=50445 >> "$LOG_FILE"
+        logsc sudo umount -l /srv/tc-proxy
+        logsc sudo mount -t cifs //127.0.0.1/tc-proxy /srv/tc-proxy/ -o password="$TC_PASSWORD""$TC_FSTAB_USER",rw,uid="$PUID",iocharset=utf8,vers=3.0,nofail,file_mode=0775,dir_mode=0775,port=50445
     fi
     logm "/srv/tc-proxy mounted and accessible"
     return 0
@@ -423,21 +423,21 @@ WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
 remove_system_service() {
         logm "Scanning for previously installed daemons..."
         if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
-            sudo systemctl stop time-capsule-proxy.service
-            sudo systemctl disable time-capsule-proxy.service
-            sudo rm /etc/systemd/system/time-capsule-proxy.service
+            logsc sudo systemctl stop time-capsule-proxy.service
+            logsc sudo systemctl disable time-capsule-proxy.service
+            logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
         fi
         if [[ -f /etc/systemd/system/tcproxy.service ]]; then
-            sudo systemctl stop tcproxy.service
-            sudo systemctl disable tcproxy.service
-            sudo rm /etc/systemd/system/tcproxy.service
+            logsc sudo systemctl stop tcproxy.service
+            logsc sudo systemctl disable tcproxy.service
+            logsc sudo rm /etc/systemd/system/tcproxy.service
         fi
 }
 
 install_system_service() {
-        sudo cp $TCP_SERVICE_TEMP_FILE $TIME_CAPSULE_PROXY_SERVICE
-        sudo systemctl daemon-reload
-        sudo systemctl enable tcproxy.service
+        logsc sudo cp $TCP_SERVICE_TEMP_FILE $TIME_CAPSULE_PROXY_SERVICE
+        logsc sudo systemctl daemon-reload
+        logsc sudo systemctl enable tcproxy.service
         if sudo systemctl start tcproxy.service; then
             logm "Service enabled at boot."
         else logm "[ERROR] Failed to start tcproxy.service - Error code $?"
@@ -509,14 +509,14 @@ save_ENVs_to_file() {
     echo "ARCH=$ARCH" >> $TCP_ENV
     echo "UNIQUE_ID=$UNIQUE_ID" >> $TCP_ENV
     TC_PASSWORD=""
-    logsm "tcproxy envronment variables updated"
+    logsm "tcproxy: envronment variables updated"
 }
 
 post_install_cleanup() {
-    rm $TEMP_INSTALLER_PATH
-    rm $TEMP_INSTALLER_IN_PATH
-    echo $TEMP_INSTALLER_PATH
-    echo $TEMP_INSTALLER_IN_PATH
+    rm "$TEMP_INSTALLER_PATH"
+    rm "$TEMP_INSTALLER_IN_PATH"
+    echo "$TEMP_INSTALLER_PATH"
+    echo "$TEMP_INSTALLER_IN_PATH"
 }
 
 # tcproxy logic
