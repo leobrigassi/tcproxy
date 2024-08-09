@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.120
+TCPROXY_VERSION=v2.0.0_beta1.121
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -77,7 +77,7 @@ web_install_check() {
     if [ -t 0 ]; then
         WEB_INST=0
     else
-        WEB_INST=1
+        WEB_INST=1 # web install detected
     fi
 }
 
@@ -103,7 +103,7 @@ tcproxy_web_install_env_check() {
 
 create_tcproxy_folder() {
     if [[ $WEB_INST -eq 1 ]]; then 
-        logm "tcproxy: web install detected"
+        echo "tcproxy: web install detected"
         TIME_CAPSULE_PROXY_PATH=$(readlink -f .)
         echo -e '#!/bin/bash
 WEB_INST='$WEB_INST'
@@ -116,18 +116,18 @@ cd tcproxy >/dev/null 2>&1
     fi
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
-        logsm "overwriting files in tcproxy/ directory..."
+        echo "Overwriting files in tcproxy/ directory..."
     else
-        logsm "creating and extracting in tcproxy/ directory..."
+        echo "Creating and extracting in tcproxy/ directory..."
         mkdir -p tcproxy
         cp .tcproxy tcproxy/.tcproxy
-        logsc cd tcproxy
+        cd tcproxy
     fi
 }
 
 github_download() {
-    logm "Downloading tcproxy from server..."
-    wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 && logsm "Download successful" || { logm "Download failed; Installation aborted"; exit 1; }
+    echo "Downloading tcproxy from server..."
+    wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 && echo "Download successful" || { echo "Download failed; Installation aborted"; exit 1; }
     tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 &&
     chmod +x tcproxy
 }
@@ -588,13 +588,15 @@ else
         create_tcproxy_folder
         github_download
         elif tcproxy_env_check; then
-            echo "tcproxy: no arguments. Defaulting to 'tcproxy --up'"
+            logm "tcproxy: no arguments. Defaulting to 'tcproxy --up'"
             tcproxy_up
         else 
-            echo -e "tcproxy: installation not detected.\nTry  './tcproxy --help' for more options."
+            logm "tcproxy: installation not detected."
+            logm "Try  './tcproxy --help' for more options."
             exit 1
         fi
     else
-            echo -e  "tcproxy: bad usage \nTry  './tcproxy --help' for more options."
+            logm "tcproxy: bad usage."
+            logm "Try  './tcproxy --help' for more options."
     fi
 fi
