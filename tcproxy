@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.135
+TCPROXY_VERSION=v2.0.0_beta1.136
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -76,8 +76,10 @@ update_script() {
 web_install_check() {
     if [ -t 0 ]; then
         WEB_INST=0
+        echo "local install"
     else
         WEB_INST=1 # web install detected
+        echo "web install detected"
     fi
 }
 
@@ -593,9 +595,9 @@ elif [[ $1 == "-t" ]]; then
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
-        echo "tcproxy $TCPROXY_VERSION: web install..."
-        create_tcproxy_folder
-        web_installer_download
+            echo "tcproxy $TCPROXY_VERSION: web install..."
+            create_tcproxy_folder
+            web_installer_download
         elif tcproxy_env_check; then
             logm "tcproxy $TCPROXY_VERSION: no arguments. Defaulting to 'tcproxy --up'"
             tcproxy_up
