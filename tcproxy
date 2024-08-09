@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.149
+TCPROXY_VERSION=v2.0.0_beta1.150
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -448,11 +448,16 @@ remove_system_service() {
 }
 
 install_system_service() {
+    logm "Installing startup daemons..."
     logsc sudo cp $TCP_SERVICE_TEMP_FILE $TIME_CAPSULE_PROXY_SERVICE
     logsc sudo systemctl daemon-reload
+    sleep 3
     logsc sudo systemctl enable tcproxy.service
+    sleep 3
     logsc sudo systemctl start tcproxy.service
+    sleep 3
     logsc sudo systemctl is-active --quiet tcproxy.service
+    sleep 3
     if [ $? -eq 0 ]; then
         logm "Service enabled at boot."
     else
@@ -529,16 +534,17 @@ save_ENVs_to_file() {
 }
 
 post_install_cleanup() {
-    rm "$TEMP_INSTALLER_PATH"
-    rm "$TEMP_INSTALLER_IN_PATH"
-    echo "$TEMP_INSTALLER_PATH"
-    echo "$TEMP_INSTALLER_IN_PATH"
+    logm "Running post install tasks..."
+    logsc rm "$TEMP_INSTALLER_PATH"
+    logsc rm "$TEMP_INSTALLER_IN_PATH"
+    logm "$TEMP_INSTALLER_PATH"
+    logm "$TEMP_INSTALLER_IN_PATH"
 }
 
 # tcproxy logic
 web_install_check
 tcproxy_env_check
-# tcproxy_web_install_env_check
+tcproxy_web_install_env_check
 if [[ $1 != "--update" && $WEB_INST -eq 1 ]]; then check_updates; fi
 if [[ -f .remote_debug_on ]]; then DEBUG_STATUS=1; fi
 # args selection
