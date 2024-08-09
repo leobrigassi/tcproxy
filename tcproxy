@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.121
+TCPROXY_VERSION=v2.0.0_beta1.123
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -103,7 +103,6 @@ tcproxy_web_install_env_check() {
 
 create_tcproxy_folder() {
     if [[ $WEB_INST -eq 1 ]]; then 
-        echo "tcproxy: web install detected"
         TIME_CAPSULE_PROXY_PATH=$(readlink -f .)
         echo -e '#!/bin/bash
 WEB_INST='$WEB_INST'
