@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.154
+TCPROXY_VERSION=v2.0.0_beta1.155
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -575,11 +575,17 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     testing_ssh_premission_requirements
     creating_mountpoint_folder
     provision_VM
+    read -p "Continue?" CONTINUE
     test_VM_mount
-    tcproxy_up;
+    read -p "Continue?" CONTINUE
+    tcproxy_up
+    read -p "Continue?" CONTINUE
     tcproxy_systemd_setup
+    read -p "Continue?" CONTINUE
     save_ENVs_to_file
+    read -p "Continue?" CONTINUE
     post_install_cleanup
+    read -p "Continue?" CONTINUE
     logm "[OK] Process completed"
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     help_menu
