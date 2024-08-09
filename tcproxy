@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.160
+TCPROXY_VERSION=v2.0.0_beta1.161
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -466,13 +466,13 @@ install_system_service() {
     logm "Installing startup daemons..."
     logsc sudo cp $TCP_SERVICE_TEMP_FILE $TIME_CAPSULE_PROXY_SERVICE
     logsc sudo systemctl daemon-reload
-    sleep 3
+    sleep 5
     logsc sudo systemctl enable tcproxy.service
-    sleep 3
+    sleep 5
     logsc sudo systemctl start tcproxy.service
-    sleep 3
+    sleep 5
     logsc sudo systemctl is-active --quiet tcproxy.service
-    sleep 3
+    sleep 5
     if [ $? -eq 0 ]; then
         logm "Service enabled at boot."
     else
@@ -482,7 +482,7 @@ install_system_service() {
 
 ssh_vm() {
     logsm "ssh-in"
-    $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls -lah"
+    $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022
     logsm "ssh-out"
 }
 
