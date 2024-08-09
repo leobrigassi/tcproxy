@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.153
+TCPROXY_VERSION=v2.0.0_beta1.154
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -569,6 +569,7 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     deflating_vm
     unmount_srv_tcproxy
     stopping_VM
+    sudo chown $(whoami) $TIME_CAPSULE_PROXY_PATH/*
     load_VM
     check_VM_status
     testing_ssh_premission_requirements
