@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.150
+TCPROXY_VERSION=v2.0.0_beta1.152
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -103,10 +103,10 @@ tcproxy_env_check() {
 }
 
 tcproxy_web_install_env_check() {
-    if [[ ! -e .tcproxy ]]; then 
+    if [[ ! -e .tcproxy.env ]]; then 
         return 1
     else
-        source .tcproxy
+        source .tcproxy.env
         return 0
     fi
 }
@@ -119,7 +119,8 @@ create_tcproxy_folder() {
 WEB_INST='$WEB_INST'
 TIME_CAPSULE_PROXY_PATH='$TIME_CAPSULE_PROXY_PATH'/tcproxy
 TEMP_INSTALLER_PATH='$TIME_CAPSULE_PROXY_PATH'/.tcproxy
-TEMP_INSTALLER_IN_PATH='$TIME_CAPSULE_PROXY_PATH'/tcproxy/.tcproxy
+TEMP_INSTALLER_IN_PATH='$TIME_CAPSULE_PROXY_PATH'/tcproxy/.tcproxy' > .tcproxy.env
+        echo -e '#!/bin/bash
 cd tcproxy >/dev/null 2>&1
 ./tcproxy -i' > .tcproxy
         chmod +x .tcproxy
@@ -132,6 +133,7 @@ cd tcproxy >/dev/null 2>&1
         # echo  "Creating and extracting in tcproxy/ directory..."
         mkdir -p tcproxy
         cp .tcproxy tcproxy/.tcproxy
+        cp .tcproxy.env tcproxy/.tcproxy.env
         cd tcproxy
     fi
 }
@@ -537,8 +539,8 @@ post_install_cleanup() {
     logm "Running post install tasks..."
     logsc rm "$TEMP_INSTALLER_PATH"
     logsc rm "$TEMP_INSTALLER_IN_PATH"
-    logm "$TEMP_INSTALLER_PATH"
-    logm "$TEMP_INSTALLER_IN_PATH"
+    logsc rm "$TEMP_INSTALLER_PATH.env"
+    logsc rm "$TEMP_INSTALLER_IN_PATH.env"
 }
 
 # tcproxy logic
