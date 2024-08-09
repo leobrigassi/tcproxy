@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.169
+TCPROXY_VERSION=v2.0.0_beta1.170
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -437,7 +437,7 @@ Wants=network-online.target
 Type=oneshot
 WorkingDirectory=$TIME_CAPSULE_PROXY_PATH
 EnvironmentFile=$TCP_ENV
-ExecStart=$TCP_SERVICE_MOUNT_FILE-system-service
+ExecStart='$TCP_SERVICE_MOUNT_FILE-system-service'
 RemainAfterExit=true
 
 [Install]
