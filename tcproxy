@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.155
+TCPROXY_VERSION=v2.0.0_beta1.156
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -112,10 +112,10 @@ tcproxy_env_check() {
 }
 
 tcproxy_web_install_env_check() {
-    if [[ ! -e .tcproxy.env ]]; then 
+    if [[ ! -e .tcproxy-install.env ]]; then 
         return 1
     else
-        source .tcproxy.env
+        source .tcproxy-install.env
         return 0
     fi
 }
@@ -123,15 +123,13 @@ tcproxy_web_install_env_check() {
 create_tcproxy_folder() {
     if [[ $WEB_INST -eq 1 ]]; then 
         TIME_CAPSULE_PROXY_PATH=$(readlink -f .)
+        touch .tcproxy-install.env
         touch .tcproxy
-        echo -e '#!/bin/bash
-WEB_INST='$WEB_INST'
-TIME_CAPSULE_PROXY_PATH='$TIME_CAPSULE_PROXY_PATH'/tcproxy
-TEMP_INSTALLER_PATH='$TIME_CAPSULE_PROXY_PATH'/.tcproxy
-TEMP_INSTALLER_IN_PATH='$TIME_CAPSULE_PROXY_PATH'/tcproxy/.tcproxy' > .tcproxy.env
-        echo -e '#!/bin/bash
+        echo -e "#!/bin/bash
+TEMP_INSTALLER_PATH='$TIME_CAPSULE_PROXY_PATH'" > .tcproxy-install.env
+        echo -e "#!/bin/bash
 cd tcproxy >/dev/null 2>&1
-./tcproxy -i' > .tcproxy
+./tcproxy -i" > .tcproxy
         chmod +x .tcproxy
     fi
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
@@ -142,7 +140,7 @@ cd tcproxy >/dev/null 2>&1
         # echo  "Creating and extracting in tcproxy/ directory..."
         mkdir -p tcproxy
         cp .tcproxy tcproxy/.tcproxy
-        cp .tcproxy.env tcproxy/.tcproxy.env
+        cp .tcproxy-install.env tcproxy/.tcproxy-install.env
         cd tcproxy
     fi
 }
@@ -546,10 +544,10 @@ save_ENVs_to_file() {
 
 post_install_cleanup() {
     logm "Running post install tasks..."
-    logsc rm "$TEMP_INSTALLER_PATH"
-    logsc rm "$TEMP_INSTALLER_IN_PATH"
-    logsc rm "$TEMP_INSTALLER_PATH.env"
-    logsc rm "$TEMP_INSTALLER_IN_PATH.env"
+    logsc rm "$TEMP_INSTALLER_PATH/.tcproxy"
+    logsc rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy"
+    logsc rm "$TEMP_INSTALLER_PATH/.tcproxy-install.env"
+    logsc rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy-install.env"
 }
 
 # tcproxy logic
@@ -585,7 +583,8 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     save_ENVs_to_file
     read -p "Continue?" CONTINUE
     post_install_cleanup
-    read -p "Continue?" CONTINUE
+    read -p "CHOWN whoami?" CONTINUE
+    sudo chown $(whoami) $TIME_CAPSULE_PROXY_PATH/*
     logm "[OK] Process completed"
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     help_menu
