@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.114_logm-local
+TCPROXY_VERSION=v2.0.0_beta1.115
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -126,8 +126,8 @@ cd tcproxy >/dev/null 2>&1
 }
 
 github_download() {
-    logm "downloading tcproxy version "
-    wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz &&
+    logm "downloading tcproxy from server"
+    wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz && >/dev/null 2>&1
     tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz &&
     chmod +x tcproxy
 }
@@ -231,7 +231,7 @@ define_tcproxy_env_vars() {
 }
 
 deflating_vm() {
-    logsm "Deflating VM disk..."
+    logm "Deflating VM disk..."
     if [[ $ARCH == x86_64* ]]; then
         sudo tar -xf timecapsule_proxy_x86.tar.gz
     elif [[ $ARCH == aarch64* ]]; then
@@ -250,13 +250,13 @@ stopping_installed_VMs_and_mounts() {
             sudo umount -f /srv/tc-proxy
             sleep 2
             if mountpoint -q "/srv/tc-proxy"; then
-                logsm "[ERROR] Cannot unmount /srv/tc-proxy. Please umount and run setup again."
+                logm "[ERROR] Cannot unmount /srv/tc-proxy. Please umount and run setup again."
                 exit 1
             fi
         fi
     fi
     if pgrep -f "mac=02:D2:46:5B:4E:84" >/dev/null 2>&1; then
-        logsm "VM detected. Sending poweroff command..."
+        logm "VM detected. Sending poweroff command..."
         $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "poweroff"
         TIMEOUT=60
         INTERVAL=5
@@ -265,18 +265,18 @@ stopping_installed_VMs_and_mounts() {
             sleep $INTERVAL
             ELAPSED=$((ELAPSED + INTERVAL))
             if [ $ELAPSED -ge $TIMEOUT ]; then
-                logsm "[ERROR] VM did not power down after $TIMEOUT seconds. Forcing termination..."
+                logm "[ERROR] VM did not power down after $TIMEOUT seconds. Forcing termination..."
                 sudo pkill -f "mac=02:D2:46:5B:4E:84"
                 if [ $? -eq 0 ]; then
-                    logsm "VM process killed."
+                    logm "VM process killed."
                 else
-                    logsm "[ERROR] Failed to kill VM process. Installation stopped."
+                    logm "[ERROR] Failed to kill VM process. Installation stopped."
                     exit 1
                 fi
             fi
         done
         if [ $ELAPSED -lt $TIMEOUT ]; then
-            logsm "VM powered down."
+            logm "VM powered down."
         fi
     fi
 }
@@ -310,12 +310,12 @@ load_VM() {
 }
 
 check_VM_status() {
-    logsm "Waiting for VM to boot..."
+    logm "Waiting for VM to boot..."
     while ! sudo tail -f ./vm.log | grep -q "Welcome to Alpine Linux"; do
     sleep 5 
     done
     sleep 10
-    logsm "VM up..."
+    logm "VM up..."
 }
 
 creating_mountpoint_folder() {
@@ -323,7 +323,7 @@ creating_mountpoint_folder() {
 }
 
 provision_VM() {
-    logsm "Provisioning VM..."
+    logm "Provisioning VM..."
     # Configure VMroot passwd, /etc/fstab, samba
     $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | passwd'
     $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab"
@@ -334,9 +334,9 @@ provision_VM() {
 test_VM_mount() {
     if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''
     then
-        logsm "VM connected to Time Capsule..."
+        logm "VM connected to Time Capsule..."
     else
-        logsm "[ERROR] VM unable to connect to Time Capsule. Please check credentials and IPv4 and run install again."
+        logm "[ERROR] VM unable to connect to Time Capsule. Please check credentials and IPv4 and run install again."
         exit 1
     fi
 }
@@ -351,27 +351,27 @@ tcproxy_up() {
     RETRY_INTERVAL=60
     retry_count=0
     failed_attempts=0
-    logsm "connecting tcproxy VM..."
+    logm "connecting tcproxy VM..."
     if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
         load_VM
         check_VM_status
     fi
     while [ $retry_count -lt $MAX_RETRIES ]; do
         if check_smb_share; then
-            logsm "VM samba share is accessible."
+            logm "VM samba share is accessible."
             break
         else
             retry_count=$((retry_count + 1))
             failed_attempts=$((failed_attempts + 1))
-            logsm "[INFO] Failed to access VM samba share. Attempt $retry_count/$MAX_RETRIES."
+            logm "[INFO] Failed to access VM samba share. Attempt $retry_count/$MAX_RETRIES."
             if [ $failed_attempts -eq 5 ]; then
-                logsm "[INFO] Restarting time-capsule-proxy VM..."
+                logm "[INFO] Restarting time-capsule-proxy VM..."
                 stopping_installed_VMs_and_mounts
                 sleep 10
                 load_VM
             fi
             if [ $failed_attempts -eq 10 ]; then
-                logsm "[ERROR] Container taking very long to load. Killing and restarting time-capsule-proxy container..."
+                logm "[ERROR] Container taking very long to load. Killing and restarting time-capsule-proxy container..."
                 sudo kill $(pgrep -f "mac=02:D2:46:5B:4E:84")
                 sleep 5
                 load_VM
@@ -381,7 +381,7 @@ tcproxy_up() {
     done
     # Verify host mount
     if ! mountpoint -q /srv/tc-proxy; then
-        logsm "Remounting /srv/tc-proxy..."
+        logm "Remounting /srv/tc-proxy..."
         sudo umount -l /srv/tc-proxy
         sudo mount -t cifs //127.0.0.1/tc-proxy /srv/tc-proxy/ -o password="$TC_PASSWORD""$TC_FSTAB_USER",rw,uid="$PUID",iocharset=utf8,vers=3.0,nofail,file_mode=0775,dir_mode=0775,port=50445 >> "$LOG_FILE"
     fi
@@ -392,7 +392,7 @@ tcproxy_up() {
 tcproxy_systemd_setup() {
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
         if ! [ -d /run/systemd/system ]; then
-            logsm "[ERROR] systemctl not detected, script requires systemd."
+            logm "[ERROR] systemctl not detected, script requires systemd."
             exit 1
         fi
         # Configure startup service
@@ -415,13 +415,13 @@ WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
         remove_system_service
         install_system_service
     else
-        logsm "[INFO] run ./tcproxy --enable-service to enable automatic mount at startup."
-        logsm "[INFO] run ./tcproxy to mount manually"
+        logm "[INFO] run ./tcproxy --enable-service to enable automatic mount at startup."
+        logm "[INFO] run ./tcproxy to mount manually"
     fi
 }
         
 remove_system_service() {
-        logsm "Scanning for previously installed daemons..."
+        logm "Scanning for previously installed daemons..."
         if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
             sudo systemctl stop time-capsule-proxy.service
             sudo systemctl disable time-capsule-proxy.service
@@ -439,8 +439,8 @@ install_system_service() {
         sudo systemctl daemon-reload
         sudo systemctl enable tcproxy.service
         if sudo systemctl start tcproxy.service; then
-            logsm "Service enabled at boot."
-        else logsm "[ERROR] Failed to start tcproxy.service - Error code $?"
+            logm "Service enabled at boot."
+        else logm "[ERROR] Failed to start tcproxy.service - Error code $?"
         fi
 }
 
@@ -567,10 +567,10 @@ elif [[ $1 == "--uninstall" ]]; then
     remove_tcproxy_env
 elif [[ $1 == "--remote-debug" ]]; then
     touch .remote_debug_on
-    logsm "tcproxy $TCPROXy_VERSION: remote debug activated."
+    logm "tcproxy $TCPROXy_VERSION: remote debug activated."
 elif [[ $1 == "--remote-debug" ]]; then
     rm .remote_debug_on
-    logsm "tcproxy $TCPROXy_VERSION: remote debug disabled."
+    logm "tcproxy $TCPROXy_VERSION: remote debug disabled."
 elif [[ $1 == "--enable-service" ]]; then
     tcproxy_systemd_setup
     save_ENVs_to_file
