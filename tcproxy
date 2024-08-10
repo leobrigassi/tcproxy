@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.206
+TCPROXY_VERSION=v2.0.0_beta1.207
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -475,7 +475,7 @@ remove_system_service() {
         logsc sudo systemctl disable time-capsule-proxy.service
         logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
     fi
-    if [[ -f /etc/systemd/system/tcproxy.service ]]; then
+    if [[ -f /etc/systemd/system/$TCPROXY_SERVICE_FILE_NAME ]]; then
         logsc sudo systemctl stop $TCPROXY_SERVICE_FILE_NAME
         logsc sudo systemctl disable $TCPROXY_SERVICE_FILE_NAME
         logsc sudo rm $TCPROXY_SERVICE_FILE_NAME
