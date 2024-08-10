@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.188
+TCPROXY_VERSION=v2.0.0_beta1.189
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -443,7 +443,8 @@ tcproxy_systemd_setup() {
             exit 1
         fi
         # Configure startup service
-        TCPROXY_SERVICE_FILE=/etc/systemd/system/tcproxy-startup.service
+        TCPROXY_SERVICE_FILE_NAME=tcproxy-startup.service
+        TCPROXY_SERVICE_FILE=/etc/systemd/system/$TCPROXY_SERVICE_FILE_NAME
         touch "$TCPROXY_SERVICE_TEMP_FILE"
         cp "$TCPROXY_PATH/tcproxy" $TCP_STARTUP_SERVICE_EXEC
         echo "[Unit]
@@ -476,9 +477,9 @@ remove_system_service() {
         logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
     fi
     if [[ -f /etc/systemd/system/tcproxy.service ]]; then
-        logsc sudo systemctl stop $TCPROXY_SERVICE_FILE
-        logsc sudo systemctl disable $TCPROXY_SERVICE_FILE
-        logsc sudo rm $TCPROXY_SERVICE_FILE
+        logsc sudo systemctl stop $TCPROXY_SERVICE_FILE_NAME
+        logsc sudo systemctl disable $TCPROXY_SERVICE_FILE_NAME
+        logsc sudo rm $TCPROXY_SERVICE_FILE_NAME
     fi
 }
 
@@ -486,13 +487,13 @@ install_system_service() {
     logm "Installing startup daemons..."
     logsc sudo cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
     logsc sudo systemctl daemon-reload && sleep 3
-    logsc sudo systemctl enable $TCPROXY_SERVICE_FILE && sleep 3
-    logsc sudo systemctl start $TCPROXY_SERVICE_FILE && sleep 3
-    logsc sudo systemctl is-active --quiet $TCPROXY_SERVICE_FILE && sleep 3
+    logsc sudo systemctl enable $TCPROXY_SERVICE_FILE_NAME && sleep 3
+    logsc sudo systemctl start $TCPROXY_SERVICE_FILE_NAME && sleep 3
+    logsc sudo systemctl is-active --quiet $TCPROXY_SERVICE_FILE_NAME && sleep 3
     if [ $? -eq 0 ]; then
         logm "Service enabled at boot."
     else
-        logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE - Error code $?"
+        logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE_NAME - Error code $?"
     fi
 }
 
