@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.204
+TCPROXY_VERSION=v2.0.0_beta1.205
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -446,7 +446,6 @@ tcproxy_systemd_setup() {
         TCPROXY_SERVICE_FILE=/etc/systemd/system/$TCPROXY_SERVICE_FILE_NAME
         touch "$TCPROXY_SERVICE_TEMP_FILE"
         TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/tcproxy-startup-service-exec"
-        cp "$TCPROXY_PATH/tcproxy" $TCP_STARTUP_SERVICE_EXEC
         echo "[Unit]
 Description=tcproxy load VM and mount on /srv/tcproxy
 After=network-online.target
@@ -456,7 +455,7 @@ Wants=network-online.target
 Type=oneshot
 EnvironmentFile=$TCP_ENV
 WorkingDirectory=$TCPROXY_PATH
-ExecStart=$TCP_STARTUP_SERVICE_EXEC
+ExecStart=$TCPROXY_PATH/tcproxy
 RemainAfterExit=true
 
 [Install]
@@ -571,6 +570,7 @@ post_install_cleanup() {
     logsc rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy"
     logsc rm "$TEMP_INSTALLER_PATH/.tcproxy-install.env"
     logsc rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy-install.env"
+    logsc rm "$TEMP_INSTALLER_PATH/tcproxy/tcproxy-startup.service"
 }
 
 # tcproxy logic
