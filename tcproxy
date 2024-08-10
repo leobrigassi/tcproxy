@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.212
+TCPROXY_VERSION=v2.0.0_beta1.213
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -442,7 +442,7 @@ tcproxy_systemd_setup() {
         fi
         # Configure startup service
         TCPROXY_SERVICE_FILE_NAME=tcproxy-startup.service
-        TCPROXY_SERVICE_FILE=/etc/systemd/system/$TCPROXY_SERVICE_FILE_NAME
+        TCPROXY_SERVICE_FILE="/etc/systemd/system/$TCPROXY_SERVICE_FILE_NAME"
         touch "$TCPROXY_SERVICE_TEMP_FILE"
         TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/tcproxy-startup-service-exec"
         echo "[Unit]
