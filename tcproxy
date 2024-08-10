@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.179
+TCPROXY_VERSION=v2.0.0_beta1.180
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -642,11 +642,13 @@ else
             tcproxy_up
         else 
             logm "tcproxy $TCPROXY_VERSION: installation not detected."
-            logm "Try  './tcproxy --help' for more options."
+            echo ""
+            logc ./tcproxy --help
         fi
     else
             echo "tcproxy: bad usage."
-            echo "Try  './tcproxy --help' for more options."
+            echo ""
+            logc ./tcproxy --help
     fi
 fi
 remote_debug
