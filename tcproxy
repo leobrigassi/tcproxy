@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.171
+TCPROXY_VERSION=v2.0.0_beta1.172
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -131,11 +131,11 @@ tcproxy_web_install_env_check() {
 
 create_tcproxy_folder() {
     if [[ $WEB_INST -eq 1 ]]; then 
-        TIME_CAPSULE_PROXY_PATH=$(readlink -f .)
+        TCPROXY_PATH=$(readlink -f .)
         touch .tcproxy-install.env
         touch .tcproxy
         echo -e "#!/bin/bash
-TEMP_INSTALLER_PATH='$TIME_CAPSULE_PROXY_PATH'" > .tcproxy-install.env
+TEMP_INSTALLER_PATH='$TCPROXY_PATH'" > .tcproxy-install.env
         echo -e "#!/bin/bash
 cd tcproxy >/dev/null 2>&1
 ./tcproxy -i" > .tcproxy
@@ -241,14 +241,12 @@ read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
 }
 
 define_tcproxy_env_vars() {
-    TIME_CAPSULE_PROXY_PATH=$(readlink -f .)
-    TCP_ENV=$TIME_CAPSULE_PROXY_PATH/.tcproxy.env
+    TCPROXY_PATH=$(readlink -f .)
+    TCP_ENV=$TCPROXY_PATH/.tcproxy.env
     PUID=$(id -u)
     PGID=$(id -g)
-    TCP_SERVICE_TEMP_FILE=$TIME_CAPSULE_PROXY_PATH/tcproxy.service
-    TCP_SERVICE_PATH=/etc/systemd/system
-    TCP_SERVICE_MOUNT_FILE="$TIME_CAPSULE_PROXY_PATH/tcproxy"
-    LOG_FILE="$TIME_CAPSULE_PROXY_PATH/tcproxy.log"
+    TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/tcproxy-startup.service
+    LOG_FILE="$TCPROXY_PATH/tcproxy.log"
     touch $LOG_FILE
     sudo chmod 770 $LOG_FILE
     HOSTNAME=$(hostname) 
@@ -427,9 +425,9 @@ tcproxy_systemd_setup() {
             exit 1
         fi
         # Configure startup service
-        TIME_CAPSULE_PROXY_SERVICE=/etc/systemd/system/tcproxy.service
-        touch "$TCP_SERVICE_TEMP_FILE"
-        cp $TCP_SERVICE_MOUNT_FILE $TCP_SERVICE_MOUNT_FILE-system-service
+        TCPROXY_SERVICE_FILE=/etc/systemd/system/tcproxy-startup.service
+        touch "$TCPROXY_SERVICE_TEMP_FILE"
+        cp "$TCPROXY_PATH/tcproxy" $TCP_STARTUP_SERVICE_EXEC
         echo "[Unit]
 Description=tcproxy load VM and mount on /srv/tcproxy
 After=network-online.target
@@ -437,13 +435,13 @@ Wants=network-online.target
 
 [Service]
 Type=oneshot
-WorkingDirectory=$TIME_CAPSULE_PROXY_PATH
+WorkingDirectory=$TCPROXY_PATH
 EnvironmentFile=$TCP_ENV
-ExecStart='$TCP_SERVICE_MOUNT_FILE-system-service'
+ExecStart='$TCP_STARTUP_SERVICE_EXEC'
 RemainAfterExit=true
 
 [Install]
-WantedBy=multi-user.target" > "$TCP_SERVICE_TEMP_FILE"
+WantedBy=multi-user.target" > "$TCP_STARTUP_SERVICE_EXEC"
         remove_system_service
         install_system_service
     else
@@ -468,7 +466,7 @@ remove_system_service() {
 
 install_system_service() {
     logm "Installing startup daemons..."
-    logsc sudo cp $TCP_SERVICE_TEMP_FILE $TIME_CAPSULE_PROXY_SERVICE
+    logsc sudo cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
     logsc sudo systemctl daemon-reload
     sleep 5
     logsc sudo systemctl enable tcproxy.service
@@ -533,7 +531,7 @@ save_ENVs_to_file() {
     else
         echo "# Environment variables for tcproxy, Time_Capsule_Proxy setup. Run "./tcproxy --install" to modify." > $TCP_ENV
     fi
-    echo "TIME_CAPSULE_PROXY_PATH=$TIME_CAPSULE_PROXY_PATH" >> $TCP_ENV
+    echo "TCPROXY_PATH=$TCPROXY_PATH" >> $TCP_ENV
     echo "TCP_ENV=$TCP_ENV" >> $TCP_ENV
     echo "PUID=$PUID" >> $TCP_ENV
     echo "PGID=$PGID" >> $TCP_ENV
@@ -541,9 +539,9 @@ save_ENVs_to_file() {
     echo "TC_FOLDER=$TC_FOLDER" >> $TCP_ENV
     echo "TC_FSTAB_USER=$TC_FSTAB_USER" >> $TCP_ENV
     echo "TC_PASSWORD=$TC_PASSWORD" >> $TCP_ENV
-    echo "TIME_CAPSULE_PROXY_SERVICE=$TIME_CAPSULE_PROXY_SERVICE" >> $TCP_ENV
-    echo "TCP_SERVICE_TEMP_FILE=$TCP_SERVICE_TEMP_FILE" >> $TCP_ENV
-    echo "TCP_SERVICE_MOUNT_FILE=$TCP_SERVICE_MOUNT_FILE" >> $TCP_ENV
+    echo "TCPROXY_SERVICE_FILE=$TCPROXY_SERVICE_FILE" >> $TCP_ENV
+    echo "TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_SERVICE_TEMP_FILE" >> $TCP_ENV
+    echo "TCP_STARTUP_SERVICE_EXEC=$TCPROXY_PATH/tcproxy-startup-service-exec" >> $TCP_ENV
     echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
     echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
