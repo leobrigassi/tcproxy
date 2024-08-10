@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.189
+TCPROXY_VERSION=v2.0.0_beta1.190
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -169,7 +169,7 @@ cd tcproxy >/dev/null 2>&1
 github_download() {
     logm "Downloading tcproxy from server..."
     wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz >/dev/null 2>&1
-    if [[ $? -ne 0 ]]; then
+    if [[ $? -eq 0 ]]; then
         logsm "Download successful"
     else
         logm "tcproxy: Update server currenlty unavailable."
