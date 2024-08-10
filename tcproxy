@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.177
+TCPROXY_VERSION=v2.0.0_beta1.178
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -100,7 +100,8 @@ update_script() {
         logm "tcproxy: Script updated from $TCPROXY_VERSION to $TCPROXY_LATEST_VERSION"
     else
         logm "tcproxy: Script $TCPROXY_LATEST_VERSION is already on latest version."
-    return 0
+        return 0
+    fi
 }
 
 web_install_check() {
