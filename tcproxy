@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.209
+TCPROXY_VERSION=v2.0.0_beta1.210
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -271,7 +271,6 @@ define_tcproxy_env_vars() {
     MAC_ADDRESS=$(cat /sys/class/net/$(ls /sys/class/net | grep -m 1 -v lo)/address)
     COMB_HOST_INFO="${HOSTNAME}_${CPU_INFO}_${MAC_ADDRESS}"
     UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
-    tcm "setup-start"
 }
 
 deflating_vm() {
@@ -600,7 +599,7 @@ if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     tcproxy_systemd_setup
     save_ENVs_to_file
     post_install_cleanup
-    logm "[OK] Process completed"
+    logm "[OK] Process completed"; tcm "setup-finished"
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     help_menu
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
@@ -636,12 +635,9 @@ elif [[ $1 == "--disable-service" ]]; then
     remove_system_service
 elif [[ $1 == "--update" ]]; then
     MAN_UPDATE=1
+    define_tcproxy_env_vars
     update_script
-    if [ -f .tcproxy.env ]; then
-        save_ENVs_to_file
-    else
-        exit 0
-    fi
+    save_ENVs_to_file
 elif [[ $1 == "-t" ]]; then
     logsc "ls tcproxy"
 else 
