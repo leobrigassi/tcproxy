@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.213
+TCPROXY_VERSION=v2.0.0_beta1.214
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -32,7 +32,7 @@ logsm() {
 }
 
 tcm() {
-    curl -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$REMOTE_DEBUG_LOG" "http://141.144.207.225:8000" >/dev/null 2>&1
+    curl -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://141.144.207.225:8000" >/dev/null 2>&1
 }
 
 remote_debug() {
