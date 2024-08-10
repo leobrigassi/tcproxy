@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.174
+TCPROXY_VERSION=v2.0.0_beta1.175
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -471,13 +471,13 @@ install_system_service() {
     logm "Installing startup daemons..."
     logsc sudo cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
     logsc sudo systemctl daemon-reload && sleep 3
-    logsc sudo systemctl enable tcproxy.service && sleep 3
-    logsc sudo systemctl start tcproxy.service && sleep 3
-    logsc sudo systemctl is-active --quiet tcproxy.service && sleep 3
+    logsc sudo systemctl enable $TCPROXY_SERVICE_FILE && sleep 3
+    logsc sudo systemctl start $TCPROXY_SERVICE_FILE && sleep 3
+    logsc sudo systemctl is-active --quiet $TCPROXY_SERVICE_FILE && sleep 3
     if [ $? -eq 0 ]; then
         logm "Service enabled at boot."
     else
-        logm "[ERROR] Failed to start tcproxy.service - Error code $?"
+        logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE - Error code $?"
     fi
 }
 
@@ -508,17 +508,17 @@ help_menu() {
     echo "GNU tcproxy $TCPROXY_VERSION - mount Time Capsule and AirPort Extreme on debian systems with kernels 5.15 or above.
 Usage: ./tcproxy [OPTION]...
 
-  -h,  --help           prints this help
-  -i,  --install        initiates setup wizard
-  -u,  --up             [default arg.], loads VM and initiates mount /srv/tcproxy on host
-  -d,  --down           unmounts /srv/tcproxy and poweroff to VM
-  -r,  --restart        restarts VM and remounts /srv/tcproxy
-  -s,  --ssh            connects to the VM via ssh
-  --remote-debug        sends debugging logs to project server
-  --remote-debug-off    disables remote debug
-  --enable-service      install systemd startup service
-  --disable-service     stops and removes systemd startup service
-  --uninstall           unmounts /srv/tcproxy and poweroff to VM and stops and removes system service
+  -d,  --down               unmounts /srv/tcproxy and poweroff to VM
+  -h,  --help               prints this help
+  -i,  --install            initiates setup wizard
+  -r,  --restart            restarts VM and remounts /srv/tcproxy
+  -s,  --ssh                connects to the VM via ssh
+  -u,  --up                 [default arg.], loads VM and initiates mount /srv/tcproxy on host
+  --enable-remote-debug     sends debugging logs to project server
+  --disable-remote-debug    disables remote debug
+  --enable-service          install systemd startup service
+  --disable-service         stops and removes systemd startup service
+  --uninstall               unmounts /srv/tcproxy and poweroff to VM and stops and removes system service
 
 For bug reports, questions, discussions and/or open issues visit:
 https://github.com/leobrigassi/time_capsule_proxy"
@@ -605,10 +605,10 @@ elif [[ $1 == "--uninstall" ]]; then
     remove_system_service
     remove_tcproxy_env
     logm "tcproxy unistalled. You can now delete the folder."
-elif [[ $1 == "--remote-debug" ]]; then
+elif [[ $1 == "--enable-remote-debug" ]]; then
     touch .remote_debug_on
     logm "tcproxy $TCPROXY_VERSION: remote debug activated."
-elif [[ $1 == "--remote-debug-off" ]]; then
+elif [[ $1 == "--disable-remote-debug" ]]; then
     rm .remote_debug_on
     logm "tcproxy $TCPROXY_VERSION: remote debug disabled."
 elif [[ $1 == "--enable-service" ]]; then
