@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.208
+TCPROXY_VERSION=v2.0.0_beta1.209
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -637,7 +637,11 @@ elif [[ $1 == "--disable-service" ]]; then
 elif [[ $1 == "--update" ]]; then
     MAN_UPDATE=1
     update_script
-    save_ENVs_to_file
+    if [ -f .tcproxy.env ]; then
+        save_ENVs_to_file
+    else
+        exit 0
+    fi
 elif [[ $1 == "-t" ]]; then
     logsc "ls tcproxy"
 else 
