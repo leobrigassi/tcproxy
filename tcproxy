@@ -1,17 +1,20 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.170
+TCPROXY_VERSION=v2.0.0_beta1.171
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
-    echo "$: $0 $@" 2>&1 >> "$LOG_FILE"
+    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
+    echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
     "$@" 2>&1 | tee -a "$LOG_FILE"
+    # if [[ $DEBUG_STATUS -eq 1 ]] || [[ $M -eq 1 ]]; then tcm '$LOG_MESSAGE'; fi
 }
 
 logsc() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
-    echo "$: $0 $@" >> "$LOG_FILE"
+    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
+    echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
     "$@" 2>&1 >> "$LOG_FILE"
 }
 
@@ -19,22 +22,21 @@ logm() {
     LOG_MESSAGE="$*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $*"
     echo "$LOG_MESSAGE" 
-    echo "$LOG_MESSAGE_TIMESTAMP" 2>&1 >> "$LOG_FILE"
+    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
 }
 
 logsm() {
     LOG_MESSAGE="$*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $*"
-    echo "$LOG_MESSAGE_TIMESTAMP" 2>&1 >> "$LOG_FILE"
+    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
 }
 
-# if [[ $DEBUG_STATUS -eq 1 ]] || [[ $M -eq 1 ]]; then tcm '$LOG_MESSAGE'; fi
 tcm() {
     curl -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$LOG_MESSAGE" "http://141.144.207.225:8000" >/dev/null 2>&1
 }
 
 remote_debug() {
-    if [[ DEBUG_STATUS -eq 1 ]]; then
+    if [[ -f .remote_debug_on ]]; then
         REMOTE_DEBUG_LOG=$(tail -n +$(grep -n 'remote-debug-on\|remote-debug-sent' tcproxy.log | tail -n 1 | cut -d: -f1) tcproxy.log)
         tcm "$REMOTE_DEBUG_LOG"
         logsm "remote-debug-sent"
@@ -563,7 +565,6 @@ web_install_check
 tcproxy_env_check
 tcproxy_web_install_env_check
 if [[ $1 != "--update" && $WEB_INST -eq 1 ]]; then check_updates; fi
-if [[ -f .remote_debug_on ]]; then DEBUG_STATUS=1; fi
 # args selection
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     create_tcproxy_folder
@@ -637,7 +638,6 @@ else
         else 
             logm "tcproxy $TCPROXY_VERSION: installation not detected."
             logm "Try  './tcproxy --help' for more options."
-            exit 1
         fi
     else
             echo "tcproxy: bad usage."
