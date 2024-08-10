@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.192
+TCPROXY_VERSION=v2.0.0_beta1.193
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -557,7 +557,7 @@ save_ENVs_to_file() {
     echo "TC_PASSWORD=$TC_PASSWORD" >> $TCP_ENV
     echo "TCPROXY_SERVICE_FILE=$TCPROXY_SERVICE_FILE" >> $TCP_ENV
     echo "TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_SERVICE_TEMP_FILE" >> $TCP_ENV
-    echo "TCP_STARTUP_SERVICE_EXEC=$TCP_STARTUP_SERVICE_EXEC >> $TCP_ENV
+    echo "TCP_STARTUP_SERVICE_EXEC=$TCP_STARTUP_SERVICE_EXEC" >> $TCP_ENV
     echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
     echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
