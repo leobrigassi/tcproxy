@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.173
+TCPROXY_VERSION=v2.0.0_beta1.174
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -74,20 +74,23 @@ To update run:  ./tcproxy --update"
 }
 
 update_script() {
-    logm "Downloading tcproxy $LATEST_VERSION ..."
     SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
     TCPROXY_LATEST_VERSION=$(curl -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         logm "tcproxy: Update server currenlty unavailable."
         return 1
     fi
+    logm "Downloading tcproxy $TCPROXY_LATEST_VERSION ..."
     BACKUP_FILE="${0}.bak"
     cp -f "$0" "$BACKUP_FILE"
     TEMP_FILE=$(mktemp)
     curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
     mv "$TEMP_FILE" "$0"
     chmod +x "$0"
-    logm "Update complete from $TCPROXY_VERSION to $TCPROXY_LATEST_VERSION"
+    if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then 
+        logm "tcproxy: Script updated from $TCPROXY_VERSION to $TCPROXY_LATEST_VERSION"
+    else
+        logm "tcproxy: Script $TCPROXY_LATEST_VERSION" is already on latest version.
     return 0
 }
 
