@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.221
+TCPROXY_VERSION=v2.0.0_beta1.222
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -45,11 +45,13 @@ remote_debug() {
         REMOTE_DEBUG_LINES=$(grep -n 'remote-debug-activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1)
         if [[ $UNSENT_DEBUG_LOG_LINES -ge 1 ]]; then
             REMOTE_DEBUG_LOG=$(tail -n +$(grep -n 'remote-debug-activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1) $LOG_FILE)
-            SERVER_RESPONSE=$(tcm "$REMOTE_DEBUG_LOG")
+        else 
+            REMOTE_DEBUG_LOG=$(tail -n 200 $LOG_FILE)
+        fi
+        SERVER_RESPONSE=$(tcm "$REMOTE_DEBUG_LOG")
             if [[ "$SERVER_RESPONSE" == "200" ]]; then 
                 logsm "remote-debug-sent"
             fi
-        fi
     fi
 }
 
