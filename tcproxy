@@ -1,13 +1,14 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.220
+TCPROXY_VERSION=v2.0.0_beta1.221
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
-    LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
+    LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
-    "$@" 2>&1 | tee -a "$LOG_FILE"
+    # "$@" 2>&1 | tee -a "$LOG_FILE"
+    eval "$@ 2>&1 | tee -a \"$LOG_FILE\""
     # if [[ $DEBUG_STATUS -eq 1 ]] || [[ $M -eq 1 ]]; then tcm '$LOG_MESSAGE'; fi
 }
 
@@ -15,7 +16,7 @@ logsc() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
-    "$@" 2>&1 >> "$LOG_FILE"
+    "$@" >> "$LOG_FILE" 2>&1
 }
 
 logm() {
@@ -31,25 +32,26 @@ logsm() {
     echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
 }
 
+# tcm() {    
+#     curl -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://141.144.207.225:8000" >/dev/null 2>&1    
+# }
+
 tcm() {
-    curl -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://141.144.207.225:8000" >/dev/null 2>&1
+    curl -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://141.144.207.225:8000"
 }
 
 remote_debug() {
     if [[ -f .remote_debug_on ]]; then
-        REMOTE_DEBUG_LINES=$(grep -n 'remote debug activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1)
-        if [[ $REMOTE_DEBUG_LINES -gt 1 ]]; then 
-            REMOTE_DEBUG_LOG=$(tail -n +$(grep -n 'remote debug activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1) $LOG_FILE)
+        REMOTE_DEBUG_LINES=$(grep -n 'remote-debug-activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1)
+        if [[ $UNSENT_DEBUG_LOG_LINES -ge 1 ]]; then
+            REMOTE_DEBUG_LOG=$(tail -n +$(grep -n 'remote-debug-activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1) $LOG_FILE)
             SERVER_RESPONSE=$(tcm "$REMOTE_DEBUG_LOG")
-            echo "Server response: $SERVER_RESPONSE"
-            if [[ "$SERVER_RESPONSE" == "Log received" ]]; then 
+            if [[ "$SERVER_RESPONSE" == "200" ]]; then 
                 logsm "remote-debug-sent"
-                SERVER_RESPONSE=""
             fi
         fi
     fi
 }
-
 
 check_updates() {
     SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
@@ -624,10 +626,10 @@ elif [[ $1 == "--uninstall" ]]; then
     logm "tcproxy unistalled. You can now delete the folder."
 elif [[ $1 == "--enable-remote-debug" ]]; then
     touch .remote_debug_on
-    logm "tcproxy $TCPROXY_VERSION: remote debug activated."
+    logm "tcproxy $TCPROXY_VERSION: remote-debug-activated."
 elif [[ $1 == "--disable-remote-debug" ]]; then
     rm .remote_debug_on
-    logm "tcproxy $TCPROXY_VERSION: remote debug disabled."
+    logm "tcproxy $TCPROXY_VERSION: remote-debug-disabled."
 elif [[ $1 == "--enable-service" ]]; then
     STARTUP_MOUNT=Y
     tcproxy_systemd_setup
@@ -640,7 +642,17 @@ elif [[ $1 == "--update" ]]; then
     update_script
     save_ENVs_to_file
 elif [[ $1 == "-t" ]]; then
-    tcm "ls tcproxy"
+    read -p "Type or paste command: " CUSTOM_COMMAND
+    logc "$CUSTOM_COMMAND"
+elif [[ $1 == "-sm" ]]; then
+    logsm "LOGsm"
+elif [[ $1 == "-m" ]]; then
+    logm "LOGm"
+elif [[ $1 == "-c" ]]; then
+    logsc ls tsproxy
+elif [[ $1 == "-sc" ]]; then
+    logc ls
+
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
