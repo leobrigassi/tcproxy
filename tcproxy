@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.224
+TCPROXY_VERSION=v2.0.0_beta1.225
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -582,8 +582,6 @@ post_install_cleanup() {
     logsc rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy"
     logsc rm "$TEMP_INSTALLER_PATH/.tcproxy-install.env"
     logsc rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy-install.env"
-    logsc sudo rm "$TEMP_INSTALLER_PATH/tcproxy/tcproxy-startup.service"
-    logsc sudo rm "$TEMP_INSTALLER_PATH/tcproxy/data.img"
 }
 
 # tcproxy logic
@@ -633,6 +631,8 @@ elif [[ $1 == "--uninstall" ]]; then
     stopping_VM
     remove_system_service
     remove_tcproxy_env
+    logsc sudo rm "$TEMP_INSTALLER_PATH/tcproxy/tcproxy-startup.service"
+    logsc sudo rm "$TEMP_INSTALLER_PATH/tcproxy/data.img"
     logm "tcproxy unistalled. You can now delete the folder."
 elif [[ $1 == "--remote-log" ]]; then
     if [ -f .remote_log_enabled ]; then
