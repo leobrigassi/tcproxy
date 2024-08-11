@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.222
+TCPROXY_VERSION=v2.0.0_beta1.223
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -9,7 +9,6 @@ logc() {
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
     # "$@" 2>&1 | tee -a "$LOG_FILE"
     eval "$@ 2>&1 | tee -a \"$LOG_FILE\""
-    # if [[ $DEBUG_STATUS -eq 1 ]] || [[ $M -eq 1 ]]; then tcm '$LOG_MESSAGE'; fi
 }
 
 logsc() {
@@ -43,6 +42,8 @@ tcm() {
 remote_debug() {
     if [[ -f .remote_debug_on ]]; then
         REMOTE_DEBUG_LINES=$(grep -n 'remote-debug-activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1)
+        TOTAL_LOG_LINES=$(wc -l < "$LOG_FILE")
+        UNSENT_DEBUG_LOG_LINES=$((TOTAL_LOG_LINES - REMOTE_DEBUG_LINES))
         if [[ $UNSENT_DEBUG_LOG_LINES -ge 1 ]]; then
             REMOTE_DEBUG_LOG=$(tail -n +$(grep -n 'remote-debug-activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1) $LOG_FILE)
         else 
