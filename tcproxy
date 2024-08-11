@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.223
+TCPROXY_VERSION=v2.0.0_beta1.224
 TCPROXY_BRANCH=v2.0.0
 
 logc() {
@@ -9,6 +9,7 @@ logc() {
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
     # "$@" 2>&1 | tee -a "$LOG_FILE"
     eval "$@ 2>&1 | tee -a \"$LOG_FILE\""
+    # if [[ $DEBUG_STATUS -eq 1 ]] || [[ $M -eq 1 ]]; then tcm '$LOG_MESSAGE'; fi
 }
 
 logsc() {
@@ -39,21 +40,27 @@ tcm() {
     curl -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://141.144.207.225:8000"
 }
 
-remote_debug() {
-    if [[ -f .remote_debug_on ]]; then
-        REMOTE_DEBUG_LINES=$(grep -n 'remote-debug-activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1)
+remote_log() {
+    if [ -f .remote_log_enabled ]; then
+        REMOTE_LOG_LAST=$(grep -n 'remote-log-enabled\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1)
         TOTAL_LOG_LINES=$(wc -l < "$LOG_FILE")
-        UNSENT_DEBUG_LOG_LINES=$((TOTAL_LOG_LINES - REMOTE_DEBUG_LINES))
-        if [[ $UNSENT_DEBUG_LOG_LINES -ge 1 ]]; then
-            REMOTE_DEBUG_LOG=$(tail -n +$(grep -n 'remote-debug-activated\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1) $LOG_FILE)
-        else 
-            REMOTE_DEBUG_LOG=$(tail -n 200 $LOG_FILE)
+        UNSENT_LOG_LINES_NUMBER=$((TOTAL_LOG_LINES - REMOTE_LOG_LAST))
+        if [[ $UNSENT_LOG_LINES_NUMBER -ge 1 ]]; then
+            UNSENT_LOG_LINES=$(tail -n +$(grep -n 'remote-log-enabled\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1) $LOG_FILE)
         fi
-        SERVER_RESPONSE=$(tcm "$REMOTE_DEBUG_LOG")
+        SERVER_RESPONSE=$(tcm "$UNSENT_LOG_LINES")
             if [[ "$SERVER_RESPONSE" == "200" ]]; then 
                 logsm "remote-debug-sent"
             fi
     fi
+}
+
+remote_log_enabled() {
+    FIRST200_LOG_LINES=$(tail -n 200 $LOG_FILE)
+    SERVER_RESPONSE=$(tcm "$FIRST200_LOG_LINES")
+        if [[ "$SERVER_RESPONSE" == "200" ]]; then 
+            logsm "remote-debug-sent;remote-log-enabled"
+        fi
 }
 
 check_updates() {
@@ -460,7 +467,7 @@ Wants=network-online.target
 Type=oneshot
 EnvironmentFile=$TCP_ENV
 WorkingDirectory=$TCPROXY_PATH
-ExecStart=$TCPROXY_PATH/tcproxy -i
+ExecStart=$TCPROXY_PATH/tcproxy -u
 RemainAfterExit=true
 
 [Install]
@@ -534,8 +541,8 @@ Usage: ./tcproxy [OPTION]...
   -r,  --restart            restarts VM and remounts /srv/tcproxy
   -s,  --ssh                connects to the VM via ssh
   -u,  --up                 [default arg.], loads VM and initiates mount /srv/tcproxy on host
-  --enable-remote-debug     sends debugging logs to project server
-  --disable-remote-debug    disables remote debug
+  --debug-command           run and log local command
+  --remote-log              toggles remote-loggin on/off. When enabled sends last 100 log lines and each new log thereof to project server
   --enable-service          install systemd startup service
   --disable-service         stops and removes systemd startup service
   --uninstall               unmounts /srv/tcproxy and poweroff to VM and stops and removes system service
@@ -627,12 +634,16 @@ elif [[ $1 == "--uninstall" ]]; then
     remove_system_service
     remove_tcproxy_env
     logm "tcproxy unistalled. You can now delete the folder."
-elif [[ $1 == "--enable-remote-debug" ]]; then
-    touch .remote_debug_on
-    logm "tcproxy $TCPROXY_VERSION: remote-debug-activated."
-elif [[ $1 == "--disable-remote-debug" ]]; then
-    rm .remote_debug_on
-    logm "tcproxy $TCPROXY_VERSION: remote-debug-disabled."
+elif [[ $1 == "--remote-log" ]]; then
+    if [ -f .remote_log_enabled ]; then
+        rm .remote_log_enabled
+        logm "tcproxy $TCPROXY_VERSION: remote-log-disabled."
+    else
+        touch .remote_log_enabled
+        logm "tcproxy $TCPROXY_VERSION: remote-log-enabled."
+        remote_log_enabled
+        exit 0
+    fi
 elif [[ $1 == "--enable-service" ]]; then
     STARTUP_MOUNT=Y
     tcproxy_systemd_setup
@@ -644,18 +655,11 @@ elif [[ $1 == "--update" ]]; then
     define_tcproxy_env_vars
     update_script
     save_ENVs_to_file
-elif [[ $1 == "-t" ]]; then
+elif [[ $1 == "--custom-debug-command" ]]; then
     read -p "Type or paste command: " CUSTOM_COMMAND
     logc "$CUSTOM_COMMAND"
-elif [[ $1 == "-sm" ]]; then
-    logsm "LOGsm"
-elif [[ $1 == "-m" ]]; then
-    logm "LOGm"
-elif [[ $1 == "-c" ]]; then
-    logsc ls tsproxy
-elif [[ $1 == "-sc" ]]; then
-    logc ls
-
+elif [[ $1 == "-t" ]]; then
+    remote_log_enabled
 else 
     if [[ $1 == "" ]]; then
         if [[ $WEB_INST -eq 1 ]]; then
@@ -676,4 +680,4 @@ else
             logc ./tcproxy --help
     fi
 fi
-remote_debug
+remote_log
