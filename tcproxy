@@ -1,15 +1,29 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.230
+TCPROXY_VERSION=v2.0.0_beta1.231
 TCPROXY_BRANCH=v2.0.0
+
+define_tcproxy_env_vars() {
+    TCPROXY_PATH=$(readlink -f .)
+    TCP_ENV=$TCPROXY_PATH/.tcproxy.env
+    PUID=$(id -u)
+    PGID=$(id -g)
+    TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/tcproxy-startup.service
+    LOG_FILE="$TCPROXY_PATH/log-tcproxy.log"
+    touch $LOG_FILE
+    sudo chmod 770 $LOG_FILE
+    HOSTNAME=$(hostname) 
+    CPU_INFO=$(cat /proc/cpuinfo | grep 'model name' | head -1)
+    MAC_ADDRESS=$(cat /sys/class/net/$(ls /sys/class/net | grep -m 1 -v lo)/address)
+    COMB_HOST_INFO="${HOSTNAME}_${CPU_INFO}_${MAC_ADDRESS}"
+    UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
+}
 
 logc() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
-    # "$@" 2>&1 | tee -a "$LOG_FILE"
     eval "$@ 2>&1 | tee -a \"$LOG_FILE\""
-    # if [[ $DEBUG_STATUS -eq 1 ]] || [[ $M -eq 1 ]]; then tcm '$LOG_MESSAGE'; fi
 }
 
 logsc() {
@@ -31,10 +45,6 @@ logsm() {
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
 }
-
-# tcm() {    
-#     curl -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://141.144.207.225:8000" >/dev/null 2>&1    
-# }
 
 tcm() {
     curl -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://141.144.207.225:8000"
@@ -82,9 +92,7 @@ check_updates() {
             return 1
         fi
     fi
-    # Compare versions
     if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then        
-        # Prompt the user to download and replace the script
         logm "tcproxy: Update available $TCPROXY_LATEST_VERSION. (Current $TCPROXY_VERSION)
 To update run:  ./tcproxy --update"
         echo ""
@@ -176,9 +184,7 @@ cd tcproxy >/dev/null 2>&1
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
         :
-        # echo "Overwriting files in tcproxy/ directory..."
     else
-        # echo  "Creating and extracting in tcproxy/ directory..."
         mkdir -p tcproxy
         cp .tcproxy tcproxy/.tcproxy
         cp .tcproxy-install.env tcproxy/.tcproxy-install.env
@@ -249,7 +255,6 @@ prompt_user_inputs() {
 echo "GNU tcproxy $TCPROXY_VERSION - Mount Time Capsule / AirPort Extreme on kernels 5.15 or above.
 
 Close any app or terminal window using /srv/tc-proxy before continuing."
-# if tcproxy_env_check; then echo "[ATTENTION]: installation detected will be OVERWRITTEN."; fi
 read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
 
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
@@ -276,22 +281,6 @@ read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
         exit 1
     fi
     read -p "[INPUT] Do you want to enable mount at startup? (y/N): " STARTUP_MOUNT
-}
-
-define_tcproxy_env_vars() {
-    TCPROXY_PATH=$(readlink -f .)
-    TCP_ENV=$TCPROXY_PATH/.tcproxy.env
-    PUID=$(id -u)
-    PGID=$(id -g)
-    TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/tcproxy-startup.service
-    LOG_FILE="$TCPROXY_PATH/log-tcproxy.log"
-    touch $LOG_FILE
-    sudo chmod 770 $LOG_FILE
-    HOSTNAME=$(hostname) 
-    CPU_INFO=$(cat /proc/cpuinfo | grep 'model name' | head -1)
-    MAC_ADDRESS=$(cat /sys/class/net/$(ls /sys/class/net | grep -m 1 -v lo)/address)
-    COMB_HOST_INFO="${HOSTNAME}_${CPU_INFO}_${MAC_ADDRESS}"
-    UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
 }
 
 deflating_vm() {
