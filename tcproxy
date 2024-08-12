@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.237
+TCPROXY_VERSION=v2.0.0_beta1.238
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -396,7 +396,7 @@ provision_VM() {
         SEC_TOT=$(shuf -i 0-86400 -n 1)
     fi
     SEC_TOT=$SERVER_RESPONSE_MESSAGE; SEC_TOT=$((SEC_TOT % 86400)); CRON_H=$(($((SEC_TOT % 86400)) / 3600)); CRON_M=$((($((SEC_TOT % 86400)) % 3600) / 60)); CRONM_HM="$CRON_M $CRON_H * * * /usr/local/bin/metrics.sh"
-    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 'apk add curl; touch /usr/local/bin/.metrics.env; touch /usr/local/bin/metrics.sh'
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 'touch /usr/local/bin/.metrics.env; touch /usr/local/bin/metrics.sh'
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "UNIQUE_ID=$UNIQUE_ID; ARCH=$ARCH; TCPROXY_VERSION=$TCPROXY_VERSION" | base64)' | base64 -d > /usr/local/bin/.metrics.env"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo '#!/bin/sh
     source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$(uptime);$mem_usage;$(df -h | grep "mnt/tc");$(df -h | grep "dev/vda3")" "http://141.144.207.225:8000"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
