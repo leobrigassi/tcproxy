@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.234
+TCPROXY_VERSION=v2.0.0_beta1.235
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -9,7 +9,7 @@ define_tcproxy_env_vars() {
     PUID=$(id -u)
     PGID=$(id -g)
     TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/tcproxy-startup.service
-    LOG_FILE="$TCPROXY_PATH/log-tcproxy.log"
+    LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"
     touch $LOG_FILE
     sudo chmod 770 $LOG_FILE
     HOSTNAME=$(hostname) 
@@ -351,7 +351,7 @@ load_VM() {
         -drive file=data.img,format=qcow2,if=virtio \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
         -device virtio-net,netdev=net0,mac=$(cat qemu.mac) \
-        -serial file:./vm.log \
+        -serial file:./.vm.serial_file \
         -daemonize \
         -display none
     elif [[ $ARCH == aarch64* ]]; then
@@ -363,7 +363,7 @@ load_VM() {
         -bios uefi.rom \
         -device virtio-net-device,netdev=net0,mac=$(cat qemu.mac) \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
-        -serial file:./vm.log \
+        -serial file:./.vm.serial_file \
         -daemonize \
         -display none
     fi
@@ -371,7 +371,7 @@ load_VM() {
 
 check_VM_status() {
     logm "Waiting for VM to boot..."
-    while ! sudo tail -f ./vm.log | grep -q "Welcome to Alpine Linux"; do
+    while ! sudo tail -f ./.vm.serial_file | grep -q "Welcome to Alpine Linux"; do
     sleep 5 
     done
     sleep 10
@@ -548,11 +548,13 @@ Usage: ./tcproxy [OPTION]...
   -d,  --down               unmounts /srv/tcproxy and poweroff to VM
   -h,  --help               prints this help
   -i,  --install            initiates setup wizard
+  -l,  --log                prints last 100 log lines to screen
   -r,  --restart            restarts VM and remounts /srv/tcproxy
   -s,  --ssh                connects to the VM via ssh
   -u,  --up                 [default arg.], loads VM and initiates mount /srv/tcproxy on host
-  --debug-command           run and log local command
-  --remote-log              toggles remote-loggin on/off. When enabled sends last 100 log lines and each new log thereof to project server
+  --update                  requests update from project server and attempts local upgrade
+  --remote-log              toggles remote-loggin on/off for remote debug
+                            When enabled sends last 200 log lines and each new log thereof to project server
   --enable-service          install systemd startup service
   --disable-service         stops and removes systemd startup service
   --uninstall               unmounts /srv/tcproxy and poweroff to VM and stops and removes system service
@@ -636,6 +638,8 @@ elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
     stopping_VM
     sleep 5
     tcproxy_up
+elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
+    tail -n 100 "$LOG_FILE"
 elif [[ $1 == "--uninstall" ]]; then
     unmount_srv_tcproxy
     stopping_VM
