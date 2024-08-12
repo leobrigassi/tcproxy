@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.265
+TCPROXY_VERSION=v2.0.0_beta1.266
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -155,32 +155,27 @@ create_tcproxy_folder() {
         WEB_INST=0
     else
         WEB_INST=1 # web install detected
-    fi
-    TEMP_INSTALLER_PATH=$(readlink -f .)
-    touch .tcproxy-install.env
-    touch .tcproxy
-    echo -e "#!/bin/bash
+        TEMP_INSTALLER_PATH=$(readlink -f .)
+        touch .tcproxy-install.env
+        touch .tcproxy
+        echo -e "#!/bin/bash
 TEMP_INSTALLER_PATH=$TEMP_INSTALLER_PATH" > .tcproxy-install.env
-    echo -e "#!/bin/bash
+        echo -e "#!/bin/bash
 cd tcproxy >/dev/null 2>&1
 ./tcproxy -i" > .tcproxy
-    chmod +x .tcproxy
-    echo "Downloading latest installation script..."
-    SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
-    TEMP_FILE=$(mktemp)
-    curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
-    cp .tcproxy tcproxy/.tcproxy >/dev/null 2>&1
-    cp .tcproxy-install.env tcproxy/.tcproxy-install.env >/dev/null 2>&1
-    cd tcproxy >/dev/null 2>&1
-    if [[ ! -e tcproxy ]]; then 
-        touch tcproxy
-    fi
-    mv "$TEMP_FILE" tcproxy
-    chmod +x tcproxy
-    if [ -t 0 ]; then
-        WEB_INST=0
-    else
-        WEB_INST=1 # web install detected
+        chmod +x .tcproxy
+        echo "Downloading latest installation script..."
+        SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
+        TEMP_FILE=$(mktemp)
+        curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
+        cp .tcproxy tcproxy/.tcproxy >/dev/null 2>&1
+        cp .tcproxy-install.env tcproxy/.tcproxy-install.env >/dev/null 2>&1
+        cd tcproxy >/dev/null 2>&1
+        if [[ ! -e tcproxy ]]; then 
+            touch tcproxy
+        fi
+        mv "$TEMP_FILE" tcproxy
+        chmod +x tcproxy
         exit 0
     fi
 }
