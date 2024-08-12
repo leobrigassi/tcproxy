@@ -19,7 +19,7 @@ define_tcproxy_env_vars() {
     UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
     L1="141"; L2="144"; L3="207"; L4="225"; L5="8000"
 }
-
+ 
 logc() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
