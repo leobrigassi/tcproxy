@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.259
+TCPROXY_VERSION=v2.0.0_beta1.260
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -661,7 +661,7 @@ elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
     echo "GNU tcproxy $TCPROXY_VERSION - mount Time Capsule and AirPort Extreme on debian systems with kernels 5.15 or above.
 tcproxy: no argument. Defaulting to './tcproxy --up'
 
-Try: './tcproxy --help' for more options.
+Try: './tcproxy --help' for more options."
     tcproxy_up
 elif [[ $1 == "" ]]; then
     echo "tcproxy $TCPROXY_VERSION: installation not detected."
