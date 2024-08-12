@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.244
+TCPROXY_VERSION=v2.0.0_beta1.245_logic
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -602,6 +602,14 @@ web_install_check
 tcproxy_env_check
 tcproxy_web_install_env_check
 if [[ $1 != "--update" && $WEB_INST -eq 1 ]]; then check_updates; fi
+if [[ $WEB_INST -eq 1 ]]; then
+            echo "tcproxy $TCPROXY_VERSION: web install..."
+            create_tcproxy_folder
+            web_installer_download
+elif [ -f .tcproxy-uninstalled ]; then
+    echo "tcproxy: Detected uninstalled state. Forcing installation."
+    set -- "--install"
+fi
 # args selection
 if [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     create_tcproxy_folder
@@ -648,6 +656,7 @@ elif [[ $1 == "--uninstall" ]]; then
     remove_tcproxy_env
     logsc sudo rm "$TCPROXY_PATH/tcproxy-startup.service"
     logsc sudo rm "$TCPROXY_PATH/data.img"
+    touch .tcproxy-uninstalled
     logm "tcproxy unistalled. You can now delete the folder."
 elif [[ $1 == "--remote-log" ]]; then
     if [ -f .remote_log_enabled ]; then
@@ -675,11 +684,11 @@ elif [[ $1 == "--custom-debug-command" ]]; then
     logc "$CUSTOM_COMMAND"
 else 
     if [[ $1 == "" ]]; then
-        if [[ $WEB_INST -eq 1 ]]; then
-            echo "tcproxy $TCPROXY_VERSION: web install..."
-            create_tcproxy_folder
-            web_installer_download
-        elif tcproxy_env_check; then
+        # if [[ $WEB_INST -eq 1 ]]; then
+        #     echo "tcproxy $TCPROXY_VERSION: web install..."
+        #     create_tcproxy_folder
+        #     web_installer_download
+        if tcproxy_env_check; then
             logm "tcproxy $TCPROXY_VERSION: no arguments. Defaulting to 'tcproxy --up'"
             tcproxy_up
         else 
