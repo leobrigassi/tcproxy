@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.257
+TCPROXY_VERSION=v2.0.0_beta1.258
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -131,43 +131,12 @@ update_script() {
     fi
 }
 
-web_install_check() {
-    if [ -t 0 ]; then
-        WEB_INST=0
-    else
-        WEB_INST=1 # web install detected
-    fi
-}
-
-# web_installer_download() {
-#         SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
-#         TEMP_FILE=$(mktemp)
-#         curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
-#         cd tcproxy >/dev/null 2>&1
-#         if [[ ! -e tcproxy ]]; then 
-#             touch tcproxy
-#         fi
-#         mv "$TEMP_FILE" tcproxy
-#         chmod +x tcproxy
-# }
-
 tcproxy_env_check() {
     if [[ ! -e .tcproxy.env ]]; then 
         return 1
-    elif [[ ! -s .tcproxy.env ]]; then
-        return 1
     else
         source .tcproxy.env
-        set -- "--install"
     fi
-    if [[ ! -e .tcproxy-install.env ]]; then 
-        return 1
-    else
-        source .tcproxy-install.env
-    fi
-}
-
-tcproxy_web_install_env_check() {
     if [[ ! -e .tcproxy-install.env ]]; then 
         return 1
     else
@@ -459,7 +428,7 @@ tcproxy_up() {
             failed_attempts=$((failed_attempts + 1))
             logm "[INFO] Failed to access VM samba share. Attempt $retry_count/$MAX_RETRIES."
             if [ $failed_attempts -eq 5 ]; then
-                logm "[INFO] Restarting time-capsule-proxy VM..."
+                logm "[INFO] Restarting tcproxy VM..."
                 unmount_srv_tcproxy
                 stopping_VM
                 sleep 10
@@ -541,21 +510,7 @@ install_system_service() {
 }
 
 ssh_vm() {
-    ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls"
-    SUDOREQUIREDEXIT=$?
-    if [ $SUDOREQUIREDEXIT -eq 0 ]; then
-        SUDOREQUIRED=""
-    else
-        sudo ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls"
-        SUDOREQUIREDEXIT=$?
-        if [ $SUDOREQUIREDEXIT -eq 0 ]; then
-            SUDOREQUIRED="sudo "
-            logm "[INFO] SSH privileges have been elevated."
-        else
-            logm "[ERROR] Cannot SSH in the VM. Installation aborted. Error code $SUDOREQUIREDEXIT"
-            exit 1
-        fi
-    fi
+    testing_ssh_premission_requirements
     logsm "ssh-in"
     $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022
     logsm "ssh-out"
@@ -566,16 +521,6 @@ remove_tcproxy_env() {
     rm $TCP_ENV
     fi
     logsm ".tcproxy.env removed"
-}
-
-capture_log_entry() {
-    LAST_TIMESTAMP_LINE=$(grep -Eo '^[0-9]{8}_[0-9]{2}:[0-9]{2}:[0-9]{2}:' "$LOG_FILE" | tail -n 1)
-    if [ -n "$LAST_TIMESTAMP_LINE" ]; then
-        LAST_LINE_NUMBER=$(grep -n "$LAST_TIMESTAMP_LINE" "$LOG_FILE" | tail -n 1 | cut -d: -f1)
-        echo "Log entries starting from the last occurrence of timestamp $LAST_TIMESTAMP_LINE:"
-        awk "NR >= $LAST_LINE_NUMBER" "$LOG_FILE"
-        logsm "$(awk "NR >= $LAST_LINE_NUMBER" "$LOG_FILE")"
-    fi
 }
 
 help_menu() {
@@ -634,20 +579,13 @@ post_install_cleanup() {
 }
 
 # tcproxy logic
-# web_install_check
 tcproxy_env_check
 create_tcproxy_folder
-# tcproxy_web_install_env_check
 if [[ $1 != "--update" && $WEB_INST -eq 0 ]]; then check_updates; fi
 if [[ $WEB_INST -eq 1 ]]; then
     echo "tcproxy $TCPROXY_VERSION: web install..."
     exit 0
-    # set -- "--install"
-            # create_tcproxy_folder
-            # web_installer_download
-# elif [[ -f .tcproxy-uninstalled || ($1 != "--install" && $1 != "-i") ]]; then
 elif [[ -f .tcproxy-uninstalled && $1 != "--install" && $1 != "-i" ]]; then
-# elif [ -f .tcproxy-uninstalled ]; then
     echo "tcproxy: Reinstalling..."
     ./tcproxy --install
 # args selection
@@ -676,7 +614,6 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     help_menu
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
-    # testing_ssh_premission_requirements
     ssh_vm
 elif [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
     tcproxy_up
@@ -720,25 +657,15 @@ elif [[ $1 == "--update" ]]; then
     define_tcproxy_env_vars
     update_script
     save_ENVs_to_file
-else 
-    if [[ $1 == "" ]]; then
-        # if [[ $WEB_INST -eq 1 ]]; then
-        #     echo "tcproxy $TCPROXY_VERSION: web install..."
-        #     create_tcproxy_folder
-        #     rm .tcproxy-uninstalled
-        #     web_installer_download
-        # if tcproxy_env_check; then
-        #     logm "tcproxy $TCPROXY_VERSION: no arguments. Defaulting to 'tcproxy --up'"
-        #     tcproxy_up
-        # else 
-            echo "tcproxy $TCPROXY_VERSION: installation not detected."
-            echo ""
-            ./tcproxy --help
-        # fi
-    else
-            echo "tcproxy: bad usage."
-            echo ""
-            ./tcproxy --help
-    fi
+elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
+    tcproxy_up
+elif [[ $1 == "" ]]; then
+    echo "tcproxy $TCPROXY_VERSION: installation not detected."
+    echo ""
+    ./tcproxy --help
+else
+    echo "tcproxy: bad usage."
+    echo ""
+    ./tcproxy --help
 fi
 remote_log
