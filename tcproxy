@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.243
+TCPROXY_VERSION=v2.0.0_beta1.244
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -68,15 +68,16 @@ remote_log() {
 
 remote_log_enabled() {
     LAST_LINES=$(tail -n 500 "$LOG_FILE")
-    REMOTE_LOG_LAST=$(echo "$LAST_LINES" | grep -n 'remote-log-enabled\|remote-debug-sent' | tail -n 1 | cut -d: -f1)
-    if [ -n "$REMOTE_LOG_LAST" ]; then
-        REMOTE_LOG_LAST=$(( $(wc -l < "$LOG_FILE") - (500 - REMOTE_LOG_LAST) ))
-    else
-        REMOTE_LOG_LAST=$(wc -l < "$LOG_FILE")
-    fi
+    REMOTE_LOG_LAST=$(echo "$LAST_LINES" | grep -n 'remote-debug-sent' | tail -n 1 | cut -d: -f1)
     TOTAL_LOG_LINES=$(wc -l < "$LOG_FILE")
+    if [ -n "$REMOTE_LOG_LAST" ]; then
+        REMOTE_LOG_LAST=$((TOTAL_LOG_LINES - 500 + REMOTE_LOG_LAST))
+    else
+        REMOTE_LOG_LAST=$TOTAL_LOG_LINES
+    fi
     UNSENT_LOG_LINES_NUMBER=$((TOTAL_LOG_LINES - REMOTE_LOG_LAST))
-    SERVER_RESPONSE=$(tcm "$UNSENT_LOG_LINES_NUMBER")
+    UNSENT_LOG_LINES=$(tail -n "$UNSENT_LOG_LINES_NUMBER" "$LOG_FILE")
+    SERVER_RESPONSE=$(tcm "$UNSENT_LOG_LINES")
         if [[ "$SERVER_RESPONSE" == "200" ]]; then 
             logsm "remote-debug-sent;remote-log-enabled"
         fi
