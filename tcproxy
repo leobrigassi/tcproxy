@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.286
+TCPROXY_VERSION=v2.0.0_beta1.287
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -431,12 +431,13 @@ tcproxy_systemd_setup() {
             exit 1
         fi
         # Configure startup service
-        TCPROXY_SERVICE_FILE_NAME=.tcproxy-startup.service
         TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-startup.service
-        TCPROXY_SERVICE_FILE="/etc/systemd/system/$TCPROXY_SERVICE_FILE_NAME"
-        touch "$TCPROXY_SERVICE_TEMP_FILE"
+        TCPROXY_SERVICE_FILE="/etc/systemd/system/tcproxy-startup.service"
+        TCPROXY_SERVICE_NAME=tcproxy-startup.service
         TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
         cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"
+        chmod +x $TCP_STARTUP_SERVICE_EXEC
+        touch "$TCPROXY_SERVICE_TEMP_FILE"
         echo "[Unit]
 Description=tcproxy load VM and mount on /srv/tcproxy
 After=network-online.target
@@ -466,9 +467,9 @@ remove_system_service() {
         logsc sudo systemctl disable time-capsule-proxy.service
         logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
     fi
-    if [[ -f /etc/systemd/system/$TCPROXY_SERVICE_FILE_NAME ]]; then
-        logsc sudo systemctl stop $TCPROXY_SERVICE_FILE_NAME
-        logsc sudo systemctl disable $TCPROXY_SERVICE_FILE_NAME
+    if [[ -f $TCPROXY_SERVICE_FILE ]]; then
+        logsc sudo systemctl stop $TCPROXY_SERVICE_NAME
+        logsc sudo systemctl disable $TCPROXY_SERVICE_NAME
         logsc sudo rm $TCPROXY_SERVICE_FILE
     fi
     logm "Startup daemon disabled and removed..."
@@ -476,14 +477,14 @@ remove_system_service() {
 
 install_system_service() {
     logm "Installing startup daemons..."
-    logsc mv $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE && logsc
+    logsc cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
     logsc sudo systemctl daemon-reload; sleep 3
-    logsc sudo systemctl enable --now $TCPROXY_SERVICE_FILE_NAME; sleep 5
-    logsc sudo systemctl is-active --quiet $TCPROXY_SERVICE_FILE_NAME; sleep 3
+    logsc sudo systemctl enable --now $TCPROXY_SERVICE_NAME; sleep 5
+    logsc sudo systemctl is-active --quiet $TCPROXY_SERVICE_NAME; sleep 3
     if [ $? -eq 0 ]; then
         logm "Service enabled at boot."
     else
-        logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE_NAME - Error code $?"
+        logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE - Error code $?"
     fi
 }
 
