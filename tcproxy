@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.268
+TCPROXY_VERSION=v2.0.0_beta1.269
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -8,7 +8,7 @@ define_tcproxy_env_vars() {
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env
     PUID=$(id -u)
     PGID=$(id -g)
-    TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/tcproxy-startup.service
+    TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-startup.service
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"
     touch $LOG_FILE
     sudo chmod 770 $LOG_FILE
@@ -48,7 +48,8 @@ logsm() {
 }
 
 tcm() {
-    curl -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://141.144.207.225:8000"
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://$L1.$L2.$L3.$L4:$L5"
+
 }
 
 remote_log() {
@@ -85,7 +86,7 @@ remote_log_enabled() {
 
 check_updates() {
     SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
-    TCPROXY_LATEST_VERSION=$(curl -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
+    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
             logm "tcproxy: Update server currenlty unavailable."
@@ -111,7 +112,7 @@ To update run:  ./tcproxy --update"
 
 update_script() {
     SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
-    TCPROXY_LATEST_VERSION=$(curl -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
+    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 --max-time 10 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         logm "tcproxy: Update server currenlty unavailable."
         return 1
@@ -120,9 +121,11 @@ update_script() {
     BACKUP_FILE="${0}.bak"
     cp -f "$0" "$BACKUP_FILE"
     TEMP_FILE=$(mktemp)
-    curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
+    curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"
     mv "$TEMP_FILE" "$0"
     chmod +x "$0"
+    TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
+    cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"
     if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then 
         logm "tcproxy: Script updated from $TCPROXY_VERSION to $TCPROXY_LATEST_VERSION"
     else
@@ -167,7 +170,7 @@ cd tcproxy >/dev/null 2>&1
         echo "Downloading latest installation script..."
         SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
         TEMP_FILE=$(mktemp)
-        curl -sL -o "$TEMP_FILE" "$SCRIPT_URL"
+        curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"
         cp .tcproxy tcproxy/.tcproxy >/dev/null 2>&1
         cp .tcproxy-install.env tcproxy/.tcproxy-install.env >/dev/null 2>&1
         cd tcproxy >/dev/null 2>&1
@@ -181,7 +184,7 @@ cd tcproxy >/dev/null 2>&1
 }
 
 github_download() {
-    logm "Downloading tcproxy from server..."
+    logm "Downloading tcproxy suite from server..."
     wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz >/dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         logsm "Download successful"
@@ -240,9 +243,7 @@ testing_ssh_premission_requirements() {
 }
 
 prompt_user_inputs() {
-echo "GNU tcproxy $TCPROXY_VERSION - Mount Time Capsule / AirPort Extreme on kernels 5.15 or above.
-
-Close any app or terminal window using /srv/tcproxy before continuing."
+echo "Close any app or terminal window using /srv/tcproxy before continuing."
 read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
 
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
@@ -284,7 +285,7 @@ deflating_vm() {
 
 unmount_srv_tcproxy() {
     if sudo umount /srv/tcproxy >/dev/null 2>&1; then
-        logsm "Unmount of /srv/tcproxy successful..."
+        logm "Unmount of /srv/tcproxy successful..."
     else
         sleep 5 
         if  mountpoint -q "/srv/tcproxy"; then
@@ -296,7 +297,7 @@ unmount_srv_tcproxy() {
                 exit 1
             fi
         else
-            logsm "Late unmount of /srv/tcproxy successful..."
+            logm "Unmount (slow) of /srv/tcproxy successful..."
         fi
     fi
 }
@@ -323,8 +324,10 @@ stopping_VM() {
             fi
         done
         if [ $ELAPSED -lt $TIMEOUT ]; then
-            logm "VM powered down."
+            logm "VM powered down..."
         fi
+    else 
+        logm "VM powered down..."
     fi
 }
 
@@ -338,7 +341,7 @@ load_VM() {
         -drive file=data.img,format=qcow2,if=virtio \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
         -device virtio-net,netdev=net0,mac=$(cat qemu.mac) \
-        -serial file:./.vm.serial_file \
+        -serial file:./.vm-serial-file \
         -daemonize \
         -display none
     elif [[ $ARCH == aarch64* ]]; then
@@ -350,7 +353,7 @@ load_VM() {
         -bios uefi.rom \
         -device virtio-net-device,netdev=net0,mac=$(cat qemu.mac) \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
-        -serial file:./.vm.serial_file \
+        -serial file:./.vm-serial-file \
         -daemonize \
         -display none
     fi
@@ -358,7 +361,7 @@ load_VM() {
 
 check_VM_status() {
     logm "Waiting for VM to boot..."
-    while ! sudo tail -f ./.vm.serial_file | grep -q "Welcome to Alpine Linux"; do
+    while ! sudo tail -f ./.vm-serial-file | grep -q "Welcome to Alpine Linux"; do
     sleep 5 
     done
     sleep 10
@@ -377,7 +380,7 @@ provision_VM() {
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | smbpasswd -a root'
-    SERVER_RESPONSE=$(curl -s -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;Provisioning_VM" "http://$L1.$L2.$L3.$L4:$L5"); SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4); SERVER_RESPONSE_MESSAGE=$(echo "$SERVER_RESPONSE" | head -c -4)
+    SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;Provisioning_VM" "http://$L1.$L2.$L3.$L4:$L5"); SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4); SERVER_RESPONSE_MESSAGE=$(echo "$SERVER_RESPONSE" | head -c -4)
     if [ "$SERVER_RESPONSE_CODE" -eq 200 ]; then
         SEC_TOT=$SERVER_RESPONSE_MESSAGE; else logsm "Failed to get a valid response from log server. Status Code: $SERVER_RESPONSE_CODE"
         SEC_TOT=$(shuf -i 0-86400 -n 1)
@@ -386,7 +389,7 @@ provision_VM() {
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 'touch /usr/local/bin/.metrics.env; touch /usr/local/bin/metrics.sh'
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "UNIQUE_ID=$UNIQUE_ID; ARCH=$ARCH; TCPROXY_VERSION=$TCPROXY_VERSION" | base64)' | base64 -d > /usr/local/bin/.metrics.env"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo '#!/bin/sh
-    source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$(uptime);$mem_usage;$(df -h | grep "mnt/tc");$(df -h | grep "dev/vda3")" "http://141.144.207.225:8000"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
+    source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl --connect-timeout 5 --max-time 10 -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$(uptime);$mem_usage;$(df -h | grep "mnt/tc");$(df -h | grep "dev/vda3")" "http://141.144.207.225:8000"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "chmod +x /usr/local/bin/metrics.sh; (crontab -l | grep -v '/usr/local/bin/metrics.sh'; echo '$CRONM_HM') | crontab -"
 }
 
@@ -450,10 +453,11 @@ tcproxy_systemd_setup() {
             exit 1
         fi
         # Configure startup service
-        TCPROXY_SERVICE_FILE_NAME=tcproxy-startup.service
+        TCPROXY_SERVICE_FILE_NAME=.tcproxy-startup.service
         TCPROXY_SERVICE_FILE="/etc/systemd/system/$TCPROXY_SERVICE_FILE_NAME"
         touch "$TCPROXY_SERVICE_TEMP_FILE"
-        TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/tcproxy-startup-service-exec"
+        TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
+        cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"
         echo "[Unit]
 Description=tcproxy load VM and mount on /srv/tcproxy
 After=network-online.target
@@ -463,7 +467,7 @@ Wants=network-online.target
 Type=oneshot
 EnvironmentFile=$TCP_ENV
 WorkingDirectory=$TCPROXY_PATH
-ExecStart=$TCPROXY_PATH/tcproxy -u
+ExecStart=$TCP_STARTUP_SERVICE_EXEC -u
 RemainAfterExit=true
 
 [Install]
@@ -519,9 +523,20 @@ remove_tcproxy_env() {
     logsm ".tcproxy.env removed"
 }
 
+header() {
+    echo "GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
+tcproxy $TCPROXY_VERSION: [ $0 $@] $DESCR_COM
+"
+    sleep 1
+}
+
+footer() {
+    echo "
+tcproxy $TCPROXY_VERSION: command completed. Try [ ./tcproxy --help ] for more options."
+}
+
 help_menu() {
-    echo "GNU tcproxy $TCPROXY_VERSION - mount Time Capsule and AirPort Extreme on debian systems with kernels 5.15 or above.
-Usage: ./tcproxy [OPTION]...
+    echo "Usage: ./tcproxy [OPTION]...
 
   -d,  --down               unmounts /srv/tcproxy and poweroff to VM
   -h,  --help               prints this help
@@ -573,6 +588,9 @@ post_install_cleanup() {
     logsc rm "$TEMP_INSTALLER_PATH/.tcproxy-install.env"
     logsc rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy-install.env"
     logsc rm "leobrigassi.code-workspace"
+    cd ..
+    logsc rm "$TEMP_INSTALLER_PATH/.tcproxy"
+    logsc rm "$TEMP_INSTALLER_PATH/.tcproxy-install.env"
 }
 
 # tcproxy logic
@@ -580,16 +598,15 @@ tcproxy_env_check
 create_tcproxy_folder
 if [[ $1 != "--update" && $WEB_INST -eq 0 ]]; then check_updates; fi
 if [[ $WEB_INST -eq 1 ]]; then
-    echo "tcproxy $TCPROXY_VERSION: web install..."
+    DESCR_COM="Web install..."; header
     exit 0
-elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    help_menu
 elif [[ -f .tcproxy-uninstalled && $1 != "--install" && $1 != "-i" ]]; then
-    echo "tcproxy: Reinstalling..."
+    DESCR_COM="Reinstalling..."; header
     ./tcproxy --install
+    exit 0
 # args selection
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
-    # create_tcproxy_folder
+    DESCR_COM="Installing..."; header
     define_tcproxy_env_vars
     check_system_requirements
     prompt_user_inputs
@@ -609,68 +626,94 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     save_ENVs_to_file
     post_install_cleanup
     logsc rm .tcproxy-uninstalled
-    logm "[OK] installation completed in folder tcproxy/
-
-Try: './tcproxy --help' for available options."; tcm "setup-finished"
+    logm "Installation completed in folder tcproxy/"
+    tcm "setup-finished"  >/dev/null 2>&1
+    footer
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+    DESCR_COM="Showing help menu..."; header
     help_menu
+    footer
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
+    DESCR_COM="Accessing VM via SSH..."; header
     ssh_vm
+    footer
 elif [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
+    DESCR_COM="Loading and mounting VM..."; header
     tcproxy_up
+    footer
 elif [[ $1 == "-d" ]] || [[ $1 == "--down" ]]; then
+    DESCR_COM="Unmounting share and stopping VM..."; header
     unmount_srv_tcproxy
     stopping_VM
+    footer
 elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
+    DESCR_COM="Restarting VM and remounting share..."; header
     unmount_srv_tcproxy
     stopping_VM
     sleep 5
     tcproxy_up
+    footer
 elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
+    DESCR_COM="Printing last 100 lines from log..."; header
     tail -n 100 "$LOG_FILE"
+    footer
 elif [[ $1 == "--uninstall" ]]; then
+    DESCR_COM="Uninstalling tcproxy..."; header
     unmount_srv_tcproxy
     stopping_VM
     remove_system_service
     remove_tcproxy_env
-    logsc sudo rm "$TCPROXY_PATH/tcproxy-startup.service"
+    logsc sudo rm "$TCPROXY_PATH/.tcproxy-startup.service"
     logsc sudo rm "$TCPROXY_PATH/data.img"
     touch .tcproxy-uninstalled
     logm "tcproxy unistalled. You can now delete the folder."
+    footer
 elif [[ $1 == "--remote-log" ]]; then
     if [ -f .remote_log_enabled ]; then
+        DESCR_COM="Remote-log disabled..."; header
         rm .remote_log_enabled
-        logm "tcproxy $TCPROXY_VERSION: remote-log-disabled."
+        logsm "tcproxy $TCPROXY_VERSION: remote-log-disabled."
+        footer
     else
+        DESCR_COM="Remote-log enabled..."; header
         touch .remote_log_enabled
-        logm "tcproxy $TCPROXY_VERSION: remote-log-enabled."
+        logsm "tcproxy $TCPROXY_VERSION: Remote-log enabled."
         remote_log_enabled
+        footer
         exit 0
     fi
 elif [[ $1 == "--enable-service" ]]; then
+    DESCR_COM="Enabling startup service..."; header
     STARTUP_MOUNT=Y
     tcproxy_systemd_setup
     save_ENVs_to_file
+    footer
 elif [[ $1 == "--disable-service" ]]; then
+    DESCR_COM="Disabling startup service..."; header
     remove_system_service
+    footer
 elif [[ $1 == "--update" ]]; then
+    DESCR_COM="Updating script..."; header
     MAN_UPDATE=1
     define_tcproxy_env_vars
     update_script
     save_ENVs_to_file
+    footer
+elif [[ $1 == "-t" ]]; then
+    DESCR_COM="Printing test message..."; header
+    logm "Test Message."
+    footer
 elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
-    echo "GNU tcproxy $TCPROXY_VERSION - mount Time Capsule and AirPort Extreme on debian systems with kernels 5.15 or above.
-tcproxy: no argument. Defaulting to './tcproxy --up'
-
-Try: './tcproxy --help' for more options."
+    DESCR_COM="no argument. Defaulting to [ ./tcproxy --up ]"; header
+    echo "Loading and mounting VM..."
     tcproxy_up
+    footer
 elif [[ $1 == "" ]]; then
-    echo "tcproxy $TCPROXY_VERSION: installation not detected."
-    echo ""
-    ./tcproxy --help
+    DESCR_COM="Reinstalling..."; header
+    ./tcproxy --install
+    exit 0
 else
-    echo "tcproxy: bad usage."
-    echo ""
-    ./tcproxy --help
+    DESCR_COM="Argument not recognized..."; header
+    footer
 fi
 remote_log
