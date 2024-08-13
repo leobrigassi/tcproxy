@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.270
+TCPROXY_VERSION=v2.0.0_beta1.271
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -144,6 +144,7 @@ tcproxy_env_check() {
         return 1
     else
         source .tcproxy-install.env
+        read -p "check if .tcproxy-install.env has been sourced Continue? (y/N): " CONFIRM_INSTALL
     fi
 }
 
@@ -583,10 +584,10 @@ save_ENVs_to_file() {
 
 post_install_cleanup() {
     logm "Running post install tasks..."
-    logsc sudo rm "$TEMP_INSTALLER_PATH/.tcproxy"
-    logsc sudo rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy"
-    logsc sudo rm "$TEMP_INSTALLER_PATH/.tcproxy-install.env"
-    logsc sudo rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy-install.env"
+    logsc sudo rm $TEMP_INSTALLER_PATH/.tcproxy
+    logsc sudo rm $TEMP_INSTALLER_PATH/tcproxy/.tcproxy
+    logsc sudo rm $TEMP_INSTALLER_PATH/.tcproxy-install.env
+    logsc sudo rm $TEMP_INSTALLER_PATH/tcproxy/.tcproxy-install.env
     logsc sudo rm "leobrigassi.code-workspace"
 }
 
