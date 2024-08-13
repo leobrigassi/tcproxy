@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.279
+TCPROXY_VERSION=v2.0.0_beta1.280
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -499,7 +499,7 @@ remove_tcproxy_env() {
 
 header() {
     echo "GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
-tcproxy $TCPROXY_VERSION: [ $0 $@ ] $DESCR_COM
+tcproxy $TCPROXY_VERSION: [ $SCRIPT_COMMAND ] $DESCR_COM
 "
     sleep 1
 }
@@ -565,6 +565,7 @@ post_install_cleanup() {
 }
 
 # tcproxy logic
+SCRIPT_COMMAND="$0 $@"
 tcproxy_env_check
 create_tcproxy_folder
 if [[ $1 != "--update" && $WEB_INST -eq 0 ]]; then check_updates; fi
@@ -660,7 +661,7 @@ elif [[ $1 == "--update" ]]; then
     update_script
     save_ENVs_to_file
     footer
-elif [[ $1 == "-t" ]]; then
+elif [[ $1 == "--test-message" ]]; then
     DESCR_COM="Printing test message..."; header
     logm "Test logm Message."
     tcm "Test tcm Message."
