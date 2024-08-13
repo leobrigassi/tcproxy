@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.293
+TCPROXY_VERSION=v2.0.0_beta1.294
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -306,7 +306,7 @@ stopping_VM() {
             logm "VM powered down..."
         fi
     else 
-        logm "VM powered down..."
+        logsm "VM powered down..."
     fi
 }
 
