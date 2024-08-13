@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.273
+TCPROXY_VERSION=v2.0.0_beta1.274
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -8,7 +8,6 @@ define_tcproxy_env_vars() {
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env
     PUID=$(id -u)
     PGID=$(id -g)
-    TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-startup.service
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"
     touch $LOG_FILE
     sudo chmod 770 $LOG_FILE
@@ -452,6 +451,7 @@ tcproxy_systemd_setup() {
         fi
         # Configure startup service
         TCPROXY_SERVICE_FILE_NAME=.tcproxy-startup.service
+        TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-startup.service
         TCPROXY_SERVICE_FILE="/etc/systemd/system/$TCPROXY_SERVICE_FILE_NAME"
         touch "$TCPROXY_SERVICE_TEMP_FILE"
         TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
@@ -495,10 +495,9 @@ remove_system_service() {
 
 install_system_service() {
     logm "Installing startup daemons..."
-    logsc sudo cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
+    logsc sudo mv $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE && logsc
     logsc sudo systemctl daemon-reload; sleep 3
     logsc sudo systemctl enable --now $TCPROXY_SERVICE_FILE_NAME; sleep 5
-    # logsc sudo systemctl start $TCPROXY_SERVICE_FILE_NAME; sleep 3
     logsc sudo systemctl is-active --quiet $TCPROXY_SERVICE_FILE_NAME; sleep 3
     if [ $? -eq 0 ]; then
         logm "Service enabled at boot."
