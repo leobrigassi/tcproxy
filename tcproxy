@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.299
+TCPROXY_VERSION=v2.0.0_beta1.300
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -8,6 +8,8 @@ define_tcproxy_env_vars() {
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env
     PUID=$(id -u)
     PGID=$(id -g)
+    USER=$(whoami)
+    GROUP=$(id -gn)
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"
     touch $LOG_FILE
     sudo chmod 770 $LOG_FILE
@@ -448,7 +450,10 @@ Wants=network-online.target
 Type=oneshot
 EnvironmentFile=$TCP_ENV
 ExecStart=$TCPROXY_PATH/tcproxy -u
+WorkingDirectory=$TCPROXY_PATH
 RemainAfterExit=true
+User=$USER
+Group=$GROUP
 
 [Install]
 WantedBy=multi-user.target" > "$TCPROXY_SERVICE_TEMP_FILE"
@@ -541,6 +546,8 @@ save_ENVs_to_file() {
     echo "TCP_ENV=$TCP_ENV" >> $TCP_ENV
     echo "PUID=$PUID" >> $TCP_ENV
     echo "PGID=$PGID" >> $TCP_ENV
+    echo "USER=$USER" >> $TCP_ENV
+    echo "GROUP=$GROUP" >> $TCP_ENV
     echo "TC_IP=$TC_IP" >> $TCP_ENV
     echo "TC_FOLDER=$TC_FOLDER" >> $TCP_ENV
     echo "TC_FSTAB_USER=$TC_FSTAB_USER" >> $TCP_ENV
