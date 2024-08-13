@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.287
+TCPROXY_VERSION=v2.0.0_beta1.288
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -101,7 +101,8 @@ update_script() {
     mv "$TEMP_FILE" "$0"
     chmod +x "$0"
     TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
-    cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"
+    sudo cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"
+    sudo chmod +x $TCP_STARTUP_SERVICE_EXEC
     if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then 
         logm "tcproxy: Script updated from $TCPROXY_VERSION to $TCPROXY_LATEST_VERSION"
     else
@@ -434,8 +435,6 @@ tcproxy_systemd_setup() {
         TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-startup.service
         TCPROXY_SERVICE_FILE="/etc/systemd/system/tcproxy-startup.service"
         TCPROXY_SERVICE_NAME=tcproxy-startup.service
-        TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
-        cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"
         chmod +x $TCP_STARTUP_SERVICE_EXEC
         touch "$TCPROXY_SERVICE_TEMP_FILE"
         echo "[Unit]
@@ -452,11 +451,6 @@ RemainAfterExit=true
 
 [Install]
 WantedBy=multi-user.target" > "$TCPROXY_SERVICE_TEMP_FILE"
-        remove_system_service
-        install_system_service
-    else
-        logm "[INFO] run ./tcproxy --enable-service to enable automatic mount at startup."
-        logm "[INFO] run ./tcproxy to mount manually"
     fi
 }
         
@@ -477,7 +471,7 @@ remove_system_service() {
 
 install_system_service() {
     logm "Installing startup daemons..."
-    logsc cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
+    logsc sudo cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
     logsc sudo systemctl daemon-reload; sleep 3
     logsc sudo systemctl enable --now $TCPROXY_SERVICE_NAME; sleep 5
     logsc sudo systemctl is-active --quiet $TCPROXY_SERVICE_NAME; sleep 3
@@ -653,6 +647,8 @@ elif [[ $1 == "--enable-service" ]]; then
     DESCR_COM="Enabling startup service..."; header
     STARTUP_MOUNT=Y
     tcproxy_systemd_setup
+    remove_system_service
+    install_system_service
     save_ENVs_to_file
     footer
 elif [[ $1 == "--disable-service" ]]; then
