@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.300
+TCPROXY_VERSION=v2.0.0_beta1.301
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -102,9 +102,9 @@ update_script() {
     curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"
     mv "$TEMP_FILE" "$0"
     chmod +x "$0"
-    TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
-    sudo cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"
-    sudo chmod +x $TCP_STARTUP_SERVICE_EXEC
+    # TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
+    # sudo cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"
+    # sudo chmod +x $TCP_STARTUP_SERVICE_EXEC
     if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then 
         logm "tcproxy: Script updated from $TCPROXY_VERSION to $TCPROXY_LATEST_VERSION"
     else
@@ -437,9 +437,9 @@ tcproxy_systemd_setup() {
         TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-startup.service
         TCPROXY_SERVICE_FILE="/etc/systemd/system/tcproxy-startup.service"
         TCPROXY_SERVICE_NAME=tcproxy-startup.service
-        TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
-        sudo cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"        
-        sudo chmod +x $TCP_STARTUP_SERVICE_EXEC
+        # TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
+        # sudo cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"        
+        # sudo chmod +x $TCP_STARTUP_SERVICE_EXEC
         touch "$TCPROXY_SERVICE_TEMP_FILE"
         echo "[Unit]
 Description=tcproxy load VM and mount on /srv/tcproxy
