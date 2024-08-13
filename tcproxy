@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.272
+TCPROXY_VERSION=v2.0.0_beta1.273
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -135,16 +135,11 @@ update_script() {
 }
 
 tcproxy_env_check() {
-    if [[ ! -e .tcproxy.env ]]; then 
-        return 1
-    else
+    if [[ -e .tcproxy.env ]]; then 
         source ".tcproxy.env"
     fi
-    if [[ ! -e .tcproxy-install.env ]]; then 
-        return 1
-    else
+    if [[ -e .tcproxy-install.env ]]; then 
         source ".tcproxy-install.env"
-        read -p "check if .tcproxy-install.env has been sourced Continue? (y/N): " CONFIRM_INSTALL
     fi
 }
 
