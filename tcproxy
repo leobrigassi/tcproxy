@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.269
+TCPROXY_VERSION=v2.0.0_beta1.270
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -192,7 +192,7 @@ github_download() {
         logm "tcproxy: Update server currenlty unavailable."
         exit 1
     fi
-    tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && rm $TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 &&
+    tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && sudo rm $TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 &&
     chmod +x tcproxy
 }
 
@@ -518,7 +518,7 @@ ssh_vm() {
 
 remove_tcproxy_env() {
     if [[ -f $TCP_ENV ]]; then 
-    rm $TCP_ENV
+    sudo rm $TCP_ENV
     fi
     logsm ".tcproxy.env removed"
 }
@@ -583,14 +583,11 @@ save_ENVs_to_file() {
 
 post_install_cleanup() {
     logm "Running post install tasks..."
-    logsc rm "$TEMP_INSTALLER_PATH/.tcproxy"
-    logsc rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy"
-    logsc rm "$TEMP_INSTALLER_PATH/.tcproxy-install.env"
-    logsc rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy-install.env"
-    logsc rm "leobrigassi.code-workspace"
-    cd ..
-    logsc rm "$TEMP_INSTALLER_PATH/.tcproxy"
-    logsc rm "$TEMP_INSTALLER_PATH/.tcproxy-install.env"
+    logsc sudo rm "$TEMP_INSTALLER_PATH/.tcproxy"
+    logsc sudo rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy"
+    logsc sudo rm "$TEMP_INSTALLER_PATH/.tcproxy-install.env"
+    logsc sudo rm "$TEMP_INSTALLER_PATH/tcproxy/.tcproxy-install.env"
+    logsc sudo rm "leobrigassi.code-workspace"
 }
 
 # tcproxy logic
@@ -625,7 +622,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     tcproxy_systemd_setup
     save_ENVs_to_file
     post_install_cleanup
-    logsc rm .tcproxy-uninstalled
+    logsc sudo rm .tcproxy-uninstalled
     logm "Installation completed in folder tcproxy/"
     tcm "setup-finished"  >/dev/null 2>&1
     footer
@@ -671,7 +668,7 @@ elif [[ $1 == "--uninstall" ]]; then
 elif [[ $1 == "--remote-log" ]]; then
     if [ -f .remote_log_enabled ]; then
         DESCR_COM="Remote-log disabled..."; header
-        rm .remote_log_enabled
+        sudo rm .remote_log_enabled
         logsm "tcproxy $TCPROXY_VERSION: remote-log-disabled."
         footer
     else
