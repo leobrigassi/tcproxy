@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.278
+TCPROXY_VERSION=v2.0.0_beta1.279
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -47,38 +47,16 @@ logsm() {
 }
 
 tcm() {
-    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://$L1.$L2.$L3.$L4:$L5"
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
 }
 
 remote_log() {
-    if [ -f .remote_log_enabled ]; then
-        REMOTE_LOG_LAST=$(grep -n 'remote-log-enabled\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1)
-        TOTAL_LOG_LINES=$(wc -l < "$LOG_FILE")
-        UNSENT_LOG_LINES_NUMBER=$((TOTAL_LOG_LINES - REMOTE_LOG_LAST))
-        if [[ $UNSENT_LOG_LINES_NUMBER -ge 1 ]]; then
-            UNSENT_LOG_LINES=$(tail -n +$(grep -n 'remote-log-enabled\|remote-debug-sent' $LOG_FILE | tail -n 1 | cut -d: -f1) $LOG_FILE)
-        fi
-        SERVER_RESPONSE=$(tcm "$UNSENT_LOG_LINES")
-            if [[ "$SERVER_RESPONSE" == "200" ]]; then 
-                logsm "remote-debug-sent"
-            fi
-    fi
-}
-
-remote_log_enabled() {
-    LAST_LINES=$(tail -n 500 "$LOG_FILE")
-    REMOTE_LOG_LAST=$(echo "$LAST_LINES" | grep -n 'remote-debug-sent' | tail -n 1 | cut -d: -f1)
-    TOTAL_LOG_LINES=$(wc -l < "$LOG_FILE")
-    if [ -n "$REMOTE_LOG_LAST" ]; then
-        REMOTE_LOG_LAST=$((TOTAL_LOG_LINES - 500 + REMOTE_LOG_LAST))
-    else
-        REMOTE_LOG_LAST=$TOTAL_LOG_LINES
-    fi
-    UNSENT_LOG_LINES_NUMBER=$((TOTAL_LOG_LINES - REMOTE_LOG_LAST))
-    UNSENT_LOG_LINES=$(tail -n "$UNSENT_LOG_LINES_NUMBER" "$LOG_FILE")
-    SERVER_RESPONSE=$(tcm "$UNSENT_LOG_LINES")
+    LAST_500_LOG_LINES=$(tail -n 500 "$LOG_FILE")
+    SERVER_RESPONSE=$(tcm "$LAST_500_LOG_LINES")
         if [[ "$SERVER_RESPONSE" == "200" ]]; then 
-            logsm "remote-debug-sent;remote-log-enabled"
+            logm "Remote log sent correctly."
+        else
+            logsm "Log server down. Error $SERVER_RESPONSE."
         fi
 }
 
@@ -87,20 +65,20 @@ check_updates() {
     TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
-            logm "tcproxy: Update server currenlty unavailable."
+            echo "tcproxy: Update server currenlty unavailable."
         else
-            logsm "tcproxy: Update server currenlty unavailable."
+            echo "tcproxy: Update server currenlty unavailable."
             return 1
         fi
     fi
     if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then        
-        logm "tcproxy: Update available $TCPROXY_LATEST_VERSION. (Current $TCPROXY_VERSION)
+        echo "tcproxy: Update available $TCPROXY_LATEST_VERSION. (Current $TCPROXY_VERSION)
 To update run:  ./tcproxy --update"
         echo ""
         return 0
     else
         if [[ $MAN_UPDATE == 1 ]]; then
-            logm "You are using the latest version ($TCPROXY_VERSION)."
+            echo "You are using the latest version ($TCPROXY_VERSION)."
             return 0
         else
             return 0
@@ -521,7 +499,7 @@ remove_tcproxy_env() {
 
 header() {
     echo "GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
-tcproxy $TCPROXY_VERSION: [ $0 $@] $DESCR_COM
+tcproxy $TCPROXY_VERSION: [ $0 $@ ] $DESCR_COM
 "
     sleep 1
 }
@@ -542,8 +520,7 @@ help_menu() {
   -s,  --ssh                connects to the VM via ssh
   -u,  --up                 [default arg.], loads VM and initiates mount /srv/tcproxy on host
   --update                  requests update from project server and attempts local upgrade
-  --remote-log              toggles remote-loggin on/off for remote debug
-                            When enabled sends last 200 log lines and each new log thereof to project server
+  --remote-log              Sends last 500 log lines to debug server
   --enable-service          install systemd startup service
   --disable-service         stops and removes systemd startup service
   --uninstall               unmounts /srv/tcproxy and poweroff to VM and stops and removes system service
@@ -663,19 +640,9 @@ elif [[ $1 == "--uninstall" ]]; then
     logm "tcproxy unistalled. You can now delete the folder."
     footer
 elif [[ $1 == "--remote-log" ]]; then
-    if [ -f .remote_log_enabled ]; then
-        DESCR_COM="Remote-log disabled..."; header
-        sudo rm .remote_log_enabled
-        logsm "tcproxy $TCPROXY_VERSION: remote-log-disabled."
-        footer
-    else
-        DESCR_COM="Remote-log enabled..."; header
-        touch .remote_log_enabled
-        logsm "tcproxy $TCPROXY_VERSION: Remote-log enabled."
-        remote_log_enabled
-        footer
-        exit 0
-    fi
+    DESCR_COM="Sending last 500 log lines to debug server..."; header
+    remote_log
+    footer
 elif [[ $1 == "--enable-service" ]]; then
     DESCR_COM="Enabling startup service..."; header
     STARTUP_MOUNT=Y
@@ -711,4 +678,3 @@ else
     DESCR_COM="Argument not recognized..."; header
     footer
 fi
-remote_log
