@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.294
+TCPROXY_VERSION=v2.0.0_beta1.295
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -464,9 +464,10 @@ remove_system_service() {
         logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
     fi
     if [[ -f $TCPROXY_SERVICE_FILE ]]; then
-        logsc sudo systemctl stop $TCPROXY_SERVICE_NAME
-        logsc sudo systemctl disable $TCPROXY_SERVICE_NAME
+        logsc sudo systemctl stop $TCPROXY_SERVICE_NAME; sleep 5
+        logsc sudo systemctl disable $TCPROXY_SERVICE_NAME; sleep 5
         logsc sudo rm $TCPROXY_SERVICE_FILE
+        logsc sudo systemctl daemon-reload
     fi
     logm "Startup daemon disabled and removed..."
 }
