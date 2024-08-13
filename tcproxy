@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.276
+TCPROXY_VERSION=v2.0.0_beta1.277
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -48,7 +48,6 @@ logsm() {
 
 tcm() {
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://$L1.$L2.$L3.$L4:$L5"
-
 }
 
 remote_log() {
@@ -281,22 +280,20 @@ deflating_vm() {
 }
 
 unmount_srv_tcproxy() {
-    if  mountpoint -q "/srv/tcproxy"; then
-        if sudo umount /srv/tcproxy >/dev/null 2>&1; then
-            logm "Unmount of /srv/tcproxy successful..."
-        else
-            sleep 5 
-            if  mountpoint -q "/srv/tcproxy"; then
-                if sudo umount -f /srv/tcproxy >/dev/null 2>&1; then
-                    logm "[INFO] forced unmount of /srv/tcproxy successful..."
-                else
-                    EXIT_CODE=$?
-                    logm "[ERROR $EXIT_CODE] Cannot unmount /srv/tcproxy. Please check your system and run tcproxy -i again."
-                    exit 1
-                fi
+    if sudo umount /srv/tcproxy >/dev/null 2>&1; then
+        logm "Unmount of /srv/tcproxy successful..."
+    else
+        sleep 5 
+        if  mountpoint -q "/srv/tcproxy"; then
+            if sudo umount -f /srv/tcproxy >/dev/null 2>&1; then
+                logm "[INFO] forced unmount of /srv/tcproxy successful..."
             else
-                logm "Unmount (slow) of /srv/tcproxy successful..."
+                EXIT_CODE=$?
+                logm "[ERROR $EXIT_CODE] Cannot unmount /srv/tcproxy. Please check your system and run tcproxy -i again."
+                exit 1
             fi
+        else
+            logm "Unmount (slow) of /srv/tcproxy successful..."
         fi
     fi
 }
@@ -576,6 +573,7 @@ save_ENVs_to_file() {
     echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
     echo "UNIQUE_ID=$UNIQUE_ID" >> $TCP_ENV
+    echo "L1=$L1; L2=$L2; L3=$L3; L4=$L4; L5=$L5"
     TC_PASSWORD=""
     logsm "tcproxy: envronment variables updated"
 }
