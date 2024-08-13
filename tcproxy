@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.296
+TCPROXY_VERSION=v2.0.0_beta1.297
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -447,7 +447,6 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 EnvironmentFile=$TCP_ENV
-WorkingDirectory=$TCPROXY_PATH
 ExecStart=$TCP_STARTUP_SERVICE_EXEC -u
 RemainAfterExit=true
 
@@ -455,7 +454,7 @@ RemainAfterExit=true
 WantedBy=multi-user.target" > "$TCPROXY_SERVICE_TEMP_FILE"
     fi
 }
-        
+
 remove_system_service() {
     logm "Scanning for previously installed daemons..."
     if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
