@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.282
+TCPROXY_VERSION=v2.0.0_beta1.283
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -260,7 +260,7 @@ deflating_vm() {
 unmount_srv_tcproxy() {
     if  mountpoint -q "/srv/tcproxy"; then
         if sudo umount /srv/tcproxy >/dev/null 2>&1; then
-            logm "Unmount of /srv/tcproxy successful..."
+            logsm "Unmount of /srv/tcproxy successful..."
         else
             sleep 5 
             if  mountpoint -q "/srv/tcproxy"; then
