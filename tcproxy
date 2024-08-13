@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.271
+TCPROXY_VERSION=v2.0.0_beta1.272
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -138,12 +138,12 @@ tcproxy_env_check() {
     if [[ ! -e .tcproxy.env ]]; then 
         return 1
     else
-        source .tcproxy.env
+        source ".tcproxy.env"
     fi
     if [[ ! -e .tcproxy-install.env ]]; then 
         return 1
     else
-        source .tcproxy-install.env
+        source ".tcproxy-install.env"
         read -p "check if .tcproxy-install.env has been sourced Continue? (y/N): " CONFIRM_INSTALL
     fi
 }
@@ -166,6 +166,7 @@ create_tcproxy_folder() {
 TEMP_INSTALLER_PATH=$TEMP_INSTALLER_PATH" > .tcproxy-install.env
         echo -e "#!/bin/bash
 cd tcproxy >/dev/null 2>&1
+source .tcproxy-install.env
 ./tcproxy -i" > .tcproxy
         chmod +x .tcproxy
         echo "Downloading latest installation script..."
@@ -182,6 +183,7 @@ cd tcproxy >/dev/null 2>&1
         chmod +x tcproxy
         exit 0
     fi
+    sleep 1
 }
 
 github_download() {
