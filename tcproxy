@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.285
+TCPROXY_VERSION=v2.0.0_beta1.286
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -476,7 +476,7 @@ remove_system_service() {
 
 install_system_service() {
     logm "Installing startup daemons..."
-    logsc sudo mv $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE && logsc
+    logsc mv $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE && logsc
     logsc sudo systemctl daemon-reload; sleep 3
     logsc sudo systemctl enable --now $TCPROXY_SERVICE_FILE_NAME; sleep 5
     logsc sudo systemctl is-active --quiet $TCPROXY_SERVICE_FILE_NAME; sleep 3
