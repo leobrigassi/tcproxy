@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.297
+TCPROXY_VERSION=v2.0.0_beta1.298
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -687,5 +687,6 @@ elif [[ $1 == "" ]]; then
     exit 0
 else
     DESCR_COM="Argument not recognized..."; header
+    help_menu
     footer
 fi
