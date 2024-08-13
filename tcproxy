@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.283
+TCPROXY_VERSION=v2.0.0_beta1.284
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -56,7 +56,7 @@ remote_log() {
         if [[ "$SERVER_RESPONSE" == "200" ]]; then 
             logm "Remote log sent correctly."
         else
-            logsm "Log server down. Error $SERVER_RESPONSE."
+            logm "[ERROR $SERVER_RESPONSE] Log server down. Try again later."
         fi
 }
 
