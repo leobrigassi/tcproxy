@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.284
+TCPROXY_VERSION=v2.0.0_beta1.285
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -122,7 +122,7 @@ tcproxy_env_check() {
 create_tcproxy_folder() {
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
-        TCPROXY_PATH=$CURRENT_PATH
+        TCPROXY_PATH=$(readlink -f .)
     else
         mkdir -p tcproxy
     fi
