@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.277
+TCPROXY_VERSION=v2.0.0_beta1.278
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -573,7 +573,7 @@ save_ENVs_to_file() {
     echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
     echo "UNIQUE_ID=$UNIQUE_ID" >> $TCP_ENV
-    echo "L1=$L1; L2=$L2; L3=$L3; L4=$L4; L5=$L5"
+    echo "L1=$L1; L2=$L2; L3=$L3; L4=$L4; L5=$L5" >> $TCP_ENV
     TC_PASSWORD=""
     logsm "tcproxy: envronment variables updated"
 }
