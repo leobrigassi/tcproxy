@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.313
+TCPROXY_VERSION=v2.0.0_beta1.315
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -76,37 +76,40 @@ create_tcproxy_folder() {
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
         TCPROXY_PATH=$(readlink -f .)
+        INSTALLER_PATH=$(pwd)
     else
         mkdir -p tcproxy
+        TCPROXY_PATH=$(readlink -f .)/tcproxy
+        INSTALLER_PATH=$(dirname "$(pwd)")
     fi
     if [ -t 0 ]; then
-        WEB_INST=0
-        touch .webinst_tcproxy
+        # WEB_INST=0
+        rm $TCPROXY_PATH/.web-install-tcproxy
     else
-        WEB_INST=1 # web install detected
-        TEMP_INSTALLER_PATH=$(readlink -f .)
-        touch .tcproxy-install.env
+        # WEB_INST=1 # web install detected
+        touch $TCPROXY_PATH/.web-install-tcproxy
+        touch .install-tcproxy.env
         touch .tcproxy
         echo -e "#!/bin/bash
-TEMP_INSTALLER_PATH=$TEMP_INSTALLER_PATH" > .tcproxy-install.env
+INSTALLER_PATH=$INSTALLER_PATH" > $TCPROXY_PATH/.web-install-tcproxy
         echo -e "#!/bin/bash
 cd tcproxy >/dev/null 2>&1
-source .tcproxy-install.env
-./tcproxy -i" > .tcproxy
-        chmod +x .tcproxy
+source .web-install-tcproxy
+$TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
         echo "Downloading latest installation script..."
         SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
         TEMP_FILE=$(mktemp)
-        curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"
-        cp .tcproxy tcproxy/.tcproxy >/dev/null 2>&1
-        cp .tcproxy-install.env tcproxy/.tcproxy-install.env >/dev/null 2>&1
-        cd tcproxy >/dev/null 2>&1
-        if [[ ! -e tcproxy ]]; then 
-            touch tcproxy
+        if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"; then
+            bash "$TEMP_FILE"
+        else
+            echo "[ERROR] Download failed. Please try again later"
+            rm -f "$TEMP_FILE"
+            footer
+            exit 1
         fi
-        mv "$TEMP_FILE" tcproxy
-        chmod +x tcproxy
-        exit 0
+        mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
+        chmod +x $TCPROXY_PATH/tcproxy
+        exit 0 # exits script to allow .tcproxy web install to continue
     fi
     sleep 1
 }
@@ -519,9 +522,10 @@ post_install_cleanup() {
     logm "Running post install tasks..."
     logsc sudo rm $TEMP_INSTALLER_PATH/.tcproxy
     logsc sudo rm $TEMP_INSTALLER_PATH/tcproxy/.tcproxy
-    logsc sudo rm $TEMP_INSTALLER_PATH/.tcproxy-install.env
-    logsc sudo rm $TEMP_INSTALLER_PATH/tcproxy/.tcproxy-install.env
+    logsc sudo rm $TEMP_INSTALLER_PATH/.install-tcproxy.env
+    logsc sudo rm $TEMP_INSTALLER_PATH/tcproxy/.install-tcproxy.env
     logsc sudo rm "leobrigassi.code-workspace"
+    logsc sudo rm $TCPROXY_PATH/.web-install-tcproxy
 }
 
 logc() {
@@ -567,21 +571,21 @@ remote_log() {
 
 # tcproxy logic
 SCRIPT_COMMAND="$0 $@"
-if [[ -e .tcproxy.env ]]; then 
-    source ".tcproxy.env"
+if [[ -e $(pwd)/.tcproxy.env ]]; then 
+    source "$(pwd)/.tcproxy.env"
 else
     set -- "--install"
     create_tcproxy_folder
 fi
-if [[ -e .tcproxy-install.env ]]; then 
-    source ".tcproxy-install.env"
+if [[ -e $(pwd)/.install-tcproxy.env ]]; then 
+    source "$(pwd)/.install-tcproxy.env"
     if [[ ! -e .webinst_tcproxy ]]; then
         echo "Partial installation detected. Please complete installation script. Defaulting to [ ./tcproxy --install ]"
     fi
     set -- "--install"
     create_tcproxy_folder
 fi
-if [ -n "$INVOCATION_ID" ]; then pwd; logsc tcproxy_up; exit 0; fi
+if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
 if [[ $WEB_INST -eq 1 ]]; then
     DESCR_COM="Web install..."; header
     create_tcproxy_folder
@@ -640,7 +644,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     logm "Installation completed in folder tcproxy/"
     tcm "setup-finished"  >/dev/null 2>&1
     footer
-elif [[ -f .tcproxy-uninstalled ]]; then
+elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
     DESCR_COM="Unsinstalled status detected. Reinstalling..."; header
     ./tcproxy --install
     exit 0
