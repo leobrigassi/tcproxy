@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.447
+TCPROXY_VERSION=v2.0.0_beta1.448
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -418,6 +418,18 @@ Group=$GROUP
 
 [Install]
 WantedBy=multi-user.target" > "$TCPROXY_SERVICE_TEMP_FILE"
+
+        touch $TCPROXY_PATH/.tcproxy-boot-load.timer
+        echo "[Unit]
+Description=tcproxy health check on VM and mount on /srv/tcproxy
+
+[Timer]
+OnBootSec=3h       # Run 3 hours after boot
+OnUnitActiveSec=3h # Run every 3 hours thereafter
+
+[Install]
+WantedBy=timers.target" > $TCPROXY_PATH/.tcproxy-boot-load.timer
+
     fi
 }
 
@@ -427,12 +439,22 @@ remove_system_service() {
         logsc sudo systemctl stop time-capsule-proxy.service
         logsc sudo systemctl disable time-capsule-proxy.service
         logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
+        logm "Found and removed boot service v0.9"
     fi
     if [[ -f $TCPROXY_SERVICE_FILE ]]; then
+        logm "Health check enabled in systemd"
         logsc sudo systemctl stop $TCPROXY_SERVICE_NAME; sleep 5
         logsc sudo systemctl disable $TCPROXY_SERVICE_NAME; sleep 5
         logsc sudo rm $TCPROXY_SERVICE_FILE
         logsc sudo systemctl daemon-reload
+        logm "Found and removed boot service v2.0.0"
+    fi
+    if [[ -f /etc/systemd/system/tcproxy-boot-load.timer ]]; then 
+        logsc sudo systemctl stop tcproxy-boot-load.timer; sleep 5
+        logsc sudo systemctl disable tcproxy-boot-load.timer; sleep 5
+        logsc sudo rm /etc/systemd/system/tcproxy-boot-load.timer
+        logsc sudo systemctl daemon-reload
+        logm "Found and removed health-check service v2.0.0"
     fi
     logm "Startup daemon disabled and removed..."
 }
@@ -447,6 +469,15 @@ install_system_service() {
         logm "Service enabled at boot."
     else
         logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE - Error code $?"
+    fi
+    logsc sudo cp $TCPROXY_PATH/.tcproxy-boot-load.timer /etc/systemd/system/tcproxy-boot-load.timer
+    logsc sudo systemctl daemon-reload; sleep 3
+    logsc sudo systemctl enable --now tcproxy-boot-load.timer; sleep 5
+    logsc sudo systemctl is-active --quiet tcproxy-boot-load.timer; sleep 3
+    if [ $? -eq 0 ]; then
+        logm "Health check enabled in systemd"
+    else
+        logm "[ERROR] Failed to start tcproxy-boot-load.timer - Error code $?"
     fi
 }
 
