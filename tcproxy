@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.338revertedto441only-tcpUP
+TCPROXY_VERSION=v2.0.0_beta1.442
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -287,10 +287,16 @@ load_VM() {
 
 check_VM_status() {
     logm "Waiting for VM to boot..."
+    MAX_RETRIES=30
+    RETRY_INTERVAL=5
+    RETRY_COUNT=0
     while ! sudo tail -f ./.vm-serial-file | grep -q "Welcome to Alpine Linux"; do
-    sleep 5 
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            logm "[ERROR] Max retries for check_VM_status reached. Exiting..."
+            exit 1
+        sleep $RETRY_INTERVAL
     done
-    sleep 10
     logm "VM up..."
 }
 
@@ -368,6 +374,7 @@ tcproxy_up() {
     done
     logm "VM samba share is accessible."
     # Verify host mount
+    RETRY_INTERVAL=10
     RETRY_COUNT=0
     while ! mountpoint -q /srv/tcproxy >/dev/null 2>&1; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
