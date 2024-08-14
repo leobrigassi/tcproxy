@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.303
+TCPROXY_VERSION=v2.0.0_beta1.304
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -526,6 +526,7 @@ help_menu() {
   -r,  --restart            restarts VM and remounts /srv/tcproxy
   -s,  --ssh                connects to the VM via ssh
   -u,  --up                 [default arg.], loads VM and initiates mount /srv/tcproxy on host
+  -v,  --version            Shows current version of tcproxy installed
   --update                  requests update from project server and attempts local upgrade
   --remote-log              Sends last 500 log lines to debug server
   --enable-service          install systemd startup service
