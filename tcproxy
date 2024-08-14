@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.326
+TCPROXY_VERSION=v2.0.0_beta1.327
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -597,7 +597,12 @@ elif [[ $1 == "--uninstall" ]]; then
     stopping_VM
     remove_system_service
     remove_tcproxy_env
-    logsc sudo rm "$TCPROXY_PATH/data.img"
+    logsc sudo rm $TCPROXY_PATH/data.img
+    logsc sudo rm id_rsa_vm
+    logsc sudo rm id_rsa_vm.pub
+    logsc sudo rm qemu.mac
+    logsc sudo rm tcproxy
+    logsc sudo rm uefi.rom
     touch .tcproxy-uninstalled
     logm "tcproxy unistalled. You can now delete the folder."
     footer
@@ -680,6 +685,7 @@ elif [[ $1 == "--enable-service" ]]; then
 elif [[ $1 == "--disable-service" ]]; then
     DESCR_COM="Disabling startup service..."; header
     remove_system_service
+    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service.service
     footer
 elif [[ $1 == "--update" ]]; then
     DESCR_COM="Updating script..."; header
