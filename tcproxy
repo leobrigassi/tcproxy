@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.307
+TCPROXY_VERSION=v2.0.0_beta1.308
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -581,19 +581,23 @@ remote_log() {
 }
 
 # tcproxy logic
-tcproxy_env_check
-set -- "$GLOBAL_ARG"
-echo "1Debug arg:$1"
+SCRIPT_COMMAND="$0 $@"
+if [[ -e .tcproxy.env ]]; then 
+    source ".tcproxy.env"
+fi
+if [[ -e .tcproxy-install.env ]]; then 
+    source ".tcproxy-install.env"
+    echo "Partial installation detected. Defaulting to [ ./tcproxy --install ]"
+    set -- "--install"
+    return 0
+fi
 if [ -n "$INVOCATION_ID" ]; then pwd; logsc tcproxy_up; exit 0; fi
 # create_tcproxy_folder
-echo "2Debug arg:$1"
 if [[ $WEB_INST -eq 1 ]]; then
     DESCR_COM="Web install..."; header
-    echo "5Debug arg:$1"
     create_tcproxy_folder
     exit 0
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-echo "3Debug arg:$1"
     DESCR_COM="Showing help menu..."; header
     help_menu
     footer
@@ -601,8 +605,18 @@ elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
     DESCR_COM="Showing current version..."; header
     logm "tcproxy: $TCPROXY_VERSION"
     footer
+elif [[ $1 == "--uninstall" ]]; then
+    DESCR_COM="Uninstalling tcproxy..."; header
+    unmount_srv_tcproxy
+    stopping_VM
+    remove_system_service
+    remove_tcproxy_env
+    logsc sudo rm "$TCPROXY_PATH/.tcproxy-startup.service"
+    logsc sudo rm "$TCPROXY_PATH/data.img"
+    touch .tcproxy-uninstalled
+    logm "tcproxy unistalled. You can now delete the folder."
+    footer
 # args selection
-echo "4Debug arg:$1"
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
     create_tcproxy_folder
