@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.325
+TCPROXY_VERSION=v2.0.0_beta1.326
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -589,7 +589,6 @@ if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     help_menu
     footer
 elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
-    DESCR_COM="Showing current version..."; header
     logm "tcproxy: $TCPROXY_VERSION"
     footer
 elif [[ $1 == "--uninstall" ]]; then
@@ -688,11 +687,6 @@ elif [[ $1 == "--update" ]]; then
     define_tcproxy_env_vars
     update_script
     save_ENVs_to_file
-    footer
-elif [[ $1 == "--test-message" ]]; then
-    DESCR_COM="Printing test message..."; header
-    logm "Test logm Message."
-    tcm "Test tcm Message."
     footer
 else
     DESCR_COM="Argument not recognized..."; header
