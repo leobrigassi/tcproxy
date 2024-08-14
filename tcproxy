@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.316
+TCPROXY_VERSION=v2.0.0_beta1.317
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -95,7 +95,7 @@ INSTALLER_PATH=$INSTALLER_PATH
 TCPROXY_PATH=$TCPROXY_PATH" > $TCPROXY_PATH/.web-install-tcproxy
         echo -e "#!/bin/bash
 cd tcproxy >/dev/null 2>&1
-source .web-install-tcproxy
+source $TCPROXY_PATH/.web-install-tcproxy
 $TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
         echo "Downloading latest installation script..."
         SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
