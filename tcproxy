@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.308
+TCPROXY_VERSION=v2.0.0_beta1.309
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -617,6 +617,14 @@ elif [[ $1 == "--uninstall" ]]; then
     logm "tcproxy unistalled. You can now delete the folder."
     footer
 # args selection
+elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
+    DESCR_COM="no argument. Defaulting to [ ./tcproxy --up ]"; header
+    echo "Loading and mounting VM..."
+    tcproxy_up
+    footer
+elif [[ $1 == "" ]]; then
+    DESCR_COM="Reinstalling..."; header
+    set -- "--install"
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
     create_tcproxy_folder
@@ -712,15 +720,6 @@ elif [[ $1 == "--test-message" ]]; then
     logm "Test logm Message."
     tcm "Test tcm Message."
     footer
-elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
-    DESCR_COM="no argument. Defaulting to [ ./tcproxy --up ]"; header
-    echo "Loading and mounting VM..."
-    tcproxy_up
-    footer
-elif [[ $1 == "" ]]; then
-    DESCR_COM="Reinstalling..."; header
-    ./tcproxy --install
-    exit 0
 else
     DESCR_COM="Argument not recognized..."; header
     help_menu
