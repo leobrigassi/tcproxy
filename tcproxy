@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.329
+TCPROXY_VERSION=v2.0.0_beta1.330
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -322,19 +322,10 @@ provision_VM() {
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 'touch /usr/local/bin/.metrics.env; touch /usr/local/bin/metrics.sh'
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "UNIQUE_ID=$UNIQUE_ID; ARCH=$ARCH; TCPROXY_VERSION=$TCPROXY_VERSION" | base64)' | base64 -d > /usr/local/bin/.metrics.env"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo '#!/bin/sh
-    source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl --connect-timeout 5 --max-time 10 -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$(uptime);$mem_usage;$(df -h | grep "mnt/tc");$(df -h | grep "dev/vda3")" "http://141.144.207.225:8000"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
+    source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl --connect-timeout 5 --max-time 10 -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$(uptime);$mem_usage;$(df -h | grep "mnt/tc");$(df -h | grep "dev/vda3")" "http://'$L1'.'$L2'.'$L3'.'$L4':'$L5'"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "chmod +x /usr/local/bin/metrics.sh; (crontab -l | grep -v '/usr/local/bin/metrics.sh'; echo '$CRONM_HM') | crontab -"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "----------------------
-tcproxy: Welcome to the VM that mounts your Time Capsule / Airport Extreme.
-
-Basic usage commands. Try:
-
-df -h /mnt/tc   Display usage stats of mounted Time Capsule disk
-free -m         Display RAM usage stats
-exit            exit this shell and return to host
-poweroff        poweroff VM
-
-To configure the VM please exit the VM and run [ ./tcproxy -i ] from the host.
+tcproxy: To configure the VM please [ exit ] the VM and run [ ./tcproxy -i ] from the host.
 
 GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
 For bug reports, questions, discussions and/or open issues visit:
