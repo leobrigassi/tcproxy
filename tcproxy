@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.311
+TCPROXY_VERSION=v2.0.0_beta1.312
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -586,14 +586,15 @@ if [[ -e .tcproxy.env ]]; then
     source ".tcproxy.env"
 else
     set -- "--install"
+    create_tcproxy_folder
 fi
 if [[ -e .tcproxy-install.env ]]; then 
     source ".tcproxy-install.env"
     echo "Partial installation detected. Defaulting to [ ./tcproxy --install ]"
     set -- "--install"
+    create_tcproxy_folder
 fi
 if [ -n "$INVOCATION_ID" ]; then pwd; logsc tcproxy_up; exit 0; fi
-# create_tcproxy_folder
 if [[ $WEB_INST -eq 1 ]]; then
     DESCR_COM="Web install..."; header
     create_tcproxy_folder
@@ -628,7 +629,6 @@ elif [[ $1 == "" ]]; then
     set -- "--install"
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
-    create_tcproxy_folder
     define_tcproxy_env_vars
     check_system_requirements
     prompt_user_inputs
