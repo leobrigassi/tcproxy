@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.450
+TCPROXY_VERSION=v2.0.0_beta1.451
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -424,8 +424,8 @@ WantedBy=multi-user.target" > "$TCPROXY_SERVICE_TEMP_FILE"
 Description=tcproxy health check on VM and mount on /srv/tcproxy
 
 [Timer]
-OnBootSec=3h       # Run 3 hours after boot
-OnUnitActiveSec=3h # Run every 3 hours thereafter
+OnBootSec=3h       
+OnUnitActiveSec=3h 
 
 [Install]
 WantedBy=timers.target" > $TCPROXY_PATH/.tcproxy-boot-load.timer
