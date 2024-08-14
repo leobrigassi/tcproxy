@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.442
+TCPROXY_VERSION=v2.0.0_beta1.443
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -296,6 +296,7 @@ check_VM_status() {
             logm "[ERROR] Max retries for check_VM_status reached. Exiting..."
             exit 1
         sleep $RETRY_INTERVAL
+        fi
     done
     logm "VM up..."
 }
@@ -393,8 +394,8 @@ tcproxy_up() {
 tcproxy_systemd_setup() {
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
         if ! [ -d /run/systemd/system ]; then
-            logm "[ERROR] systemctl not detected, script requires systemd."
-            exit 1
+            logm "[ERROR] systemctl not detected, script requires systemd. System service has not been installed."
+            return 1
         fi
         # Configure startup service
         TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-boot-load.service
