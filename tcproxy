@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.445
+TCPROXY_VERSION=v2.0.0_beta1.446
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -637,9 +637,11 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     provision_VM
     test_VM_mount
     tcproxy_up
-    tcproxy_systemd_setup
-    remove_system_service
-    install_system_service
+    if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
+        tcproxy_systemd_setup
+        remove_system_service
+        install_system_service
+    fi
     save_ENVs_to_file
     post_install_cleanup
     logsc sudo rm .tcproxy-uninstalled
