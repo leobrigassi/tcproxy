@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.327
+TCPROXY_VERSION=v2.0.0_beta1.328
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -642,7 +642,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     tcm "setup-finished"  >/dev/null 2>&1
     footer
 elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
-    DESCR_COM="Unsinstalled status detected. Reinstalling..."; header
+    echo "Unsinstalled status detected. Reinstalling..."
     ./tcproxy --install
     exit 0
 if [[ $1 != "--update" && $WEB_INST -eq 0 ]]; then check_updates; fi
