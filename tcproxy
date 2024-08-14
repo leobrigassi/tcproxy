@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.451
+TCPROXY_VERSION=v2.0.0_beta1.452
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -726,6 +726,7 @@ elif [[ $1 == "--disable-service" ]]; then
     DESCR_COM="Disabling startup service..."; header
     remove_system_service
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service
+    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.timer
     footer
 elif [[ $1 == "--update" ]]; then
     DESCR_COM="Updating script..."; header
