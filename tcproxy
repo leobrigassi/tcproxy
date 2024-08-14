@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.302
+TCPROXY_VERSION=v2.0.0_beta1.303
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -644,6 +644,10 @@ elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
 elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
     DESCR_COM="Printing last 100 lines from log..."; header
     tail -n 100 "$LOG_FILE"
+    footer
+elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
+    DESCR_COM="Showing current version..."; header
+    logm "tcproxy: $TCPROXY_VERSION"
     footer
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
