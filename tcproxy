@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.331
+TCPROXY_VERSION=v2.0.0_beta1.332
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -609,13 +609,14 @@ elif [[ $1 == "--uninstall" ]]; then
     remove_system_service
     remove_tcproxy_env
     logsc sudo rm $TCPROXY_PATH/data.img
-    logsc sudo rm id_rsa_vm
-    logsc sudo rm id_rsa_vm.pub
-    logsc sudo rm qemu.mac
-    logsc sudo rm tcproxy
-    logsc sudo rm uefi.rom
+    logsc sudo rm $TCPROXY_PATH/id_rsa_vm
+    logsc sudo rm $TCPROXY_PATH/id_rsa_vm.pub
+    logsc sudo rm $TCPROXY_PATH/qemu.mac
+    logsc sudo rm $TCPROXY_PATH/uefi.rom
+    logsc sudo rm $TCPROXY_PATH/.vm-serial-file
+    logsc sudo rm $TCPROXY_PATH/tcproxy
     touch .tcproxy-uninstalled
-    logm "tcproxy unistalled. You can now delete the folder."
+    logm "tcproxy unistalled."
     footer
 # args selection
 elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
