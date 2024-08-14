@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.322
+TCPROXY_VERSION=v2.0.0_beta1.323
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -387,9 +387,9 @@ tcproxy_systemd_setup() {
             exit 1
         fi
         # Configure startup service
-        TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.boot-startup-tcproxy.service
-        TCPROXY_SERVICE_FILE="/etc/systemd/system/boot-startup-tcproxy.service"
-        TCPROXY_SERVICE_NAME=boot-startup-tcproxy.service
+        TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-boot-load.service.service
+        TCPROXY_SERVICE_FILE="/etc/systemd/system/tcproxy-boot-load.service.service"
+        TCPROXY_SERVICE_NAME=tcproxy-boot-load.service.service
         # TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
         # sudo cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"        
         # sudo chmod +x $TCP_STARTUP_SERVICE_EXEC
@@ -520,10 +520,10 @@ save_ENVs_to_file() {
 post_install_cleanup() {
     logm "Running post install tasks..."
     logsc sudo rm "leobrigassi.code-workspace"
-    logsc sudo rm $TCPROXY_PATH/.web-install-tcproxy
     logsc sudo rm $INSTALLER_PATH/.tcproxy
+    logsc sudo rm $TCPROXY_PATH/.tcproxy
     logsc sudo rm $TCPROXY_PATH/.web-install-tcproxy
-    logsc sudo rm $TCPROXY_PATH/.boot-startup-tcproxy.service
+    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service.service
 }
 
 logc() {
