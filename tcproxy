@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.320
+TCPROXY_VERSION=v2.0.0_beta1.321
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -88,7 +88,6 @@ create_tcproxy_folder() {
     else
         # WEB_INST=1 # web install detected
         touch $TCPROXY_PATH/.web-install-tcproxy
-        touch $TCPROXY_PATH/.install-tcproxy.env
         touch $INSTALLER_PATH/.tcproxy
         echo -e "#!/bin/bash
 INSTALLER_PATH=$INSTALLER_PATH
@@ -387,9 +386,9 @@ tcproxy_systemd_setup() {
             exit 1
         fi
         # Configure startup service
-        TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-startup.service
-        TCPROXY_SERVICE_FILE="/etc/systemd/system/tcproxy-startup.service"
-        TCPROXY_SERVICE_NAME=tcproxy-startup.service
+        TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.boot-startup-tcproxy.service
+        TCPROXY_SERVICE_FILE="/etc/systemd/system/boot-startup-tcproxy.service"
+        TCPROXY_SERVICE_NAME=boot-startup-tcproxy.service
         # TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
         # sudo cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"        
         # sudo chmod +x $TCP_STARTUP_SERVICE_EXEC
@@ -519,12 +518,11 @@ save_ENVs_to_file() {
 
 post_install_cleanup() {
     logm "Running post install tasks..."
-    logsc sudo rm $TEMP_INSTALLER_PATH/.tcproxy
-    logsc sudo rm $TEMP_INSTALLER_PATH/tcproxy/.tcproxy
-    logsc sudo rm $TEMP_INSTALLER_PATH/.install-tcproxy.env
-    logsc sudo rm $TEMP_INSTALLER_PATH/tcproxy/.install-tcproxy.env
     logsc sudo rm "leobrigassi.code-workspace"
     logsc sudo rm $TCPROXY_PATH/.web-install-tcproxy
+    logsc sudo rm $INSTALLER_PATH/.tcproxy
+    logsc sudo rm $TCPROXY_PATH/.web-install-tcproxy
+    logsc sudo rm $TCPROXY_PATH/.boot-startup-tcproxy.service
 }
 
 logc() {
@@ -600,7 +598,6 @@ elif [[ $1 == "--uninstall" ]]; then
     stopping_VM
     remove_system_service
     remove_tcproxy_env
-    logsc sudo rm "$TCPROXY_PATH/.tcproxy-startup.service"
     logsc sudo rm "$TCPROXY_PATH/data.img"
     touch .tcproxy-uninstalled
     logm "tcproxy unistalled. You can now delete the folder."
@@ -668,17 +665,6 @@ elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
 elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
     DESCR_COM="Printing last 100 lines from log..."; header
     tail -n 100 "$LOG_FILE"
-    footer
-elif [[ $1 == "--uninstall" ]]; then
-    DESCR_COM="Uninstalling tcproxy..."; header
-    unmount_srv_tcproxy
-    stopping_VM
-    remove_system_service
-    remove_tcproxy_env
-    logsc sudo rm "$TCPROXY_PATH/.tcproxy-startup.service"
-    logsc sudo rm "$TCPROXY_PATH/data.img"
-    touch .tcproxy-uninstalled
-    logm "tcproxy unistalled. You can now delete the folder."
     footer
 elif [[ $1 == "--remote-log" ]]; then
     DESCR_COM="Sending last 500 log lines to debug server..."; header
