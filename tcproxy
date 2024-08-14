@@ -1,11 +1,11 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.336
+TCPROXY_VERSION=v2.0.0_beta1.333_reverted
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
     TCPROXY_PATH=$(readlink -f .)
-    TCP_ENV="$TCPROXY_PATH"/.tcproxy.env
+    TCP_ENV=$TCPROXY_PATH/.tcproxy.env
     USER=$(whoami)
     GROUP=$(id -gn)
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
@@ -66,33 +66,33 @@ update_script() {
 }
 
 create_tcproxy_folder() {
-    CURRENT_PATH="$(pwd | awk -F'/' '{print $NF}')"
+    CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
-        TCPROXY_PATH="$(readlink -f .)"
-        INSTALLER_PATH="$(dirname "$(pwd)")"
+        TCPROXY_PATH=$(readlink -f .)
+        INSTALLER_PATH=$(dirname "$(pwd)")
     else
         mkdir -p tcproxy
         TCPROXY_PATH=$(readlink -f .)/tcproxy
-        INSTALLER_PATH="$(pwd)"
+        INSTALLER_PATH=$(pwd)
     fi
     if [ -t 0 ]; then
-        if [[ -e "$TCPROXY_PATH/.web-install-tcproxy" ]]; then rm "$TCPROXY_PATH/.web-install-tcproxy"; fi
+        if [[ -e $TCPROXY_PATH/.web-install-tcproxy ]]; then rm $TCPROXY_PATH/.web-install-tcproxy; fi
     else
-        touch "$TCPROXY_PATH/.web-install-tcproxy"
-        touch "$INSTALLER_PATH/.tcproxy"
+        touch $TCPROXY_PATH/.web-install-tcproxy
+        touch $INSTALLER_PATH/.tcproxy
         echo -e "#!/bin/bash
-INSTALLER_PATH='$INSTALLER_PATH'
-TCPROXY_PATH='$TCPROXY_PATH'" > "$TCPROXY_PATH/.web-install-tcproxy"
+INSTALLER_PATH=$INSTALLER_PATH
+TCPROXY_PATH=$TCPROXY_PATH" > $TCPROXY_PATH/.web-install-tcproxy
         echo -e "#!/bin/bash
 cd tcproxy >/dev/null 2>&1
-source '$TCPROXY_PATH/.web-install-tcproxy'
-'$TCPROXY_PATH/tcproxy -i'" > "$INSTALLER_PATH/.tcproxy"; chmod +x "$INSTALLER_PATH/.tcproxy"
+source $TCPROXY_PATH/.web-install-tcproxy
+$TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
         echo "Downloading latest installation script..."
         SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
         TEMP_FILE=$(mktemp)
         if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"; then
-            mv "$TEMP_FILE" "$TCPROXY_PATH/tcproxy"
-            chmod +x "$TCPROXY_PATH/tcproxy"
+            mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
+            chmod +x $TCPROXY_PATH/tcproxy
             exit 0 # exits script to allow .tcproxy web install to continue
         else
             echo "[ERROR] Download failed. Please try again later"
@@ -105,14 +105,14 @@ source '$TCPROXY_PATH/.web-install-tcproxy'
 
 github_download() {
     logm "Downloading tcproxy suite from server..."
-    wget "https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/'$TCPROXY_BRANCH'.tar.gz" >/dev/null 2>&1
+    wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz >/dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         logsm "Download successful"
     else
         logm "tcproxy: Update server currenlty unavailable."
         exit 1
     fi
-    tar -xzf "$TCPROXY_BRANCH.tar.gz" --strip-components=1 && sudo rm "$TCPROXY_BRANCH.tar.gz" >/dev/null 2>&1 &&
+    tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && sudo rm $TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 &&
     chmod +x tcproxy
 }
 
@@ -384,7 +384,7 @@ tcproxy_systemd_setup() {
             exit 1
         fi
         # Configure startup service
-        TCPROXY_SERVICE_TEMP_FILE="$TCPROXY_PATH/.tcproxy-boot-load.service.service"
+        TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-boot-load.service.service
         TCPROXY_SERVICE_FILE="/etc/systemd/system/tcproxy-boot-load.service.service"
         TCPROXY_SERVICE_NAME=tcproxy-boot-load.service.service
         touch "$TCPROXY_SERVICE_TEMP_FILE"
@@ -489,18 +489,18 @@ save_ENVs_to_file() {
     else
         echo "# Environment variables for tcproxy, Time_Capsule_Proxy setup. Run "./tcproxy --install" to modify." > $TCP_ENV
     fi
-    echo "TCPROXY_PATH='$TCPROXY_PATH'" >> $TCP_ENV
-    echo "TCP_ENV='$TCP_ENV'" >> $TCP_ENV
+    echo "TCPROXY_PATH=$TCPROXY_PATH" >> $TCP_ENV
+    echo "TCP_ENV=$TCP_ENV" >> $TCP_ENV
     echo "USER=$USER" >> $TCP_ENV
     echo "GROUP=$GROUP" >> $TCP_ENV
     echo "TC_IP=$TC_IP" >> $TCP_ENV
-    echo "TC_FOLDER='$TC_FOLDER'" >> $TCP_ENV
+    echo "TC_FOLDER=$TC_FOLDER" >> $TCP_ENV
     echo "TC_FSTAB_USER=$TC_FSTAB_USER" >> $TCP_ENV
     echo "TC_PASSWORD=$TC_PASSWORD" >> $TCP_ENV
-    echo "TCPROXY_SERVICE_FILE='$TCPROXY_SERVICE_FILE'" >> $TCP_ENV
-    echo "TCPROXY_SERVICE_TEMP_FILE='$TCPROXY_SERVICE_TEMP_FILE'" >> $TCP_ENV
+    echo "TCPROXY_SERVICE_FILE=$TCPROXY_SERVICE_FILE" >> $TCP_ENV
+    echo "TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_SERVICE_TEMP_FILE" >> $TCP_ENV
     echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
-    echo "LOG_FILE='$LOG_FILE'" >> $TCP_ENV
+    echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
     echo "UNIQUE_ID=$UNIQUE_ID" >> $TCP_ENV
     echo "L1=$L1; L2=$L2; L3=$L3; L4=$L4; L5=$L5" >> $TCP_ENV
@@ -511,10 +511,10 @@ save_ENVs_to_file() {
 post_install_cleanup() {
     logm "Running post install tasks..."
     logsc sudo rm "leobrigassi.code-workspace"
-    logsc sudo rm "$INSTALLER_PATH/.tcproxy"
-    logsc sudo rm "$TCPROXY_PATH/.tcproxy"
-    logsc sudo rm "$TCPROXY_PATH/.web-install-tcproxy"
-    logsc sudo rm "$TCPROXY_PATH/.tcproxy-boot-load.service.service"
+    logsc sudo rm $INSTALLER_PATH/.tcproxy
+    logsc sudo rm $TCPROXY_PATH/.tcproxy
+    logsc sudo rm $TCPROXY_PATH/.web-install-tcproxy
+    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service.service
 }
 
 logc() {
@@ -590,7 +590,7 @@ elif [[ $1 == "--uninstall" ]]; then
     stopping_VM
     remove_system_service
     remove_tcproxy_env
-    logsc sudo rm "$TCPROXY_PATH"/data.img "$TCPROXY_PATH"/id_rsa_vm "$TCPROXY_PATH"/id_rsa_vm.pub "$TCPROXY_PATH"/qemu.mac "$TCPROXY_PATH"/uefi.rom "$TCPROXY_PATH"/.vm-serial-file "$TCPROXY_PATH"/tcproxy
+    logsc sudo rm $TCPROXY_PATH/data.img $TCPROXY_PATH/id_rsa_vm $TCPROXY_PATH/id_rsa_vm.pub $TCPROXY_PATH/qemu.mac $TCPROXY_PATH/uefi.rom $TCPROXY_PATH/.vm-serial-file $TCPROXY_PATH/tcproxy
     touch .tcproxy-uninstalled
     logm "tcproxy unistalled."
     footer
@@ -673,7 +673,7 @@ elif [[ $1 == "--enable-service" ]]; then
 elif [[ $1 == "--disable-service" ]]; then
     DESCR_COM="Disabling startup service..."; header
     remove_system_service
-    logsc sudo rm "$TCPROXY_PATH"/.tcproxy-boot-load.service.service
+    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service.service
     footer
 elif [[ $1 == "--update" ]]; then
     DESCR_COM="Updating script..."; header
