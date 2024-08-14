@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.333_reverted
+TCPROXY_VERSION=v2.0.0_beta1.337
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -563,6 +563,7 @@ keep_log_small() {
 }
 
 # tcproxy logic
+if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
 SCRIPT_COMMAND="$0 $@"
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
 if [[ -e $(pwd)/.web-install-tcproxy.env ]]; then 
