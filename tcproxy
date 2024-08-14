@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.305
+TCPROXY_VERSION=v2.0.0_beta1.306
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -12,11 +12,11 @@ define_tcproxy_env_vars() {
     GROUP=$(id -gn)
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"
     touch $LOG_FILE
-    sudo chmod 770 $LOG_FILE
-    HOSTNAME=$(hostname) 
-    CPU_INFO=$(cat /proc/cpuinfo | grep 'model name' | head -1)
-    MAC_ADDRESS=$(cat /sys/class/net/$(ls /sys/class/net | grep -m 1 -v lo)/address)
-    COMB_HOST_INFO="${HOSTNAME}_${CPU_INFO}_${MAC_ADDRESS}"
+    sudo chmod 770 $LOG_FILE 
+    MACHINE_ID=$(cat /etc/machine-id)
+    CPU_INFO=$(cat /proc/cpuinfo | grep -i 'model' | head -1)
+    MAC_ADDRESS=$(cat /sys/class/net/eth0/address 2>/dev/null || cat /sys/class/net/wlan0/address 2>/dev/null || echo "")
+    COMB_HOST_INFO="${MACHINE_ID}_${CPU_INFO}_${MAC_ADDRESS}"
     UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
     L1="141"; L2="144"; L3="207"; L4="225"; L5="8000"
 }
@@ -576,7 +576,10 @@ post_install_cleanup() {
 # tcproxy logic
 SCRIPT_COMMAND="$0 $@"
 tcproxy_env_check
-if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; fi
+if [ -n "$INVOCATION_ID" ]; then 
+    echo "systemdRUN"
+    logsc tcproxy_up
+fi
 create_tcproxy_folder
 if [[ $1 != "--update" && $WEB_INST -eq 0 ]]; then check_updates; fi
 if [[ $WEB_INST -eq 1 ]]; then
