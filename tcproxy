@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.448
+TCPROXY_VERSION=v2.0.0_beta1.449
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -460,7 +460,7 @@ remove_system_service() {
 }
 
 install_system_service() {
-    logm "Installing startup daemons..."
+    logm "Installing startup daemon..."
     logsc sudo cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
     logsc sudo systemctl daemon-reload; sleep 3
     logsc sudo systemctl enable --now $TCPROXY_SERVICE_NAME; sleep 5
@@ -470,6 +470,7 @@ install_system_service() {
     else
         logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE - Error code $?"
     fi
+    logm "Installing health-check daemon..."
     logsc sudo cp $TCPROXY_PATH/.tcproxy-boot-load.timer /etc/systemd/system/tcproxy-boot-load.timer
     logsc sudo systemctl daemon-reload; sleep 3
     logsc sudo systemctl enable --now tcproxy-boot-load.timer; sleep 5
@@ -562,6 +563,7 @@ post_install_cleanup() {
     logsc sudo rm $TCPROXY_PATH/.tcproxy
     logsc sudo rm $TCPROXY_PATH/.web-install-tcproxy
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service
+    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.timer
 }
 
 logc() {
@@ -719,6 +721,7 @@ elif [[ $1 == "--enable-service" ]]; then
     remove_system_service
     install_system_service
     save_ENVs_to_file
+    post_install_cleanup
     footer
 elif [[ $1 == "--disable-service" ]]; then
     DESCR_COM="Disabling startup service..."; header
