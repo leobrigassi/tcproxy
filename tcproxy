@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.334
+TCPROXY_VERSION=v2.0.0_beta1.335
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -66,14 +66,14 @@ update_script() {
 }
 
 create_tcproxy_folder() {
-    CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
+    CURRENT_PATH="$(pwd | awk -F'/' '{print $NF}')"
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
-        TCPROXY_PATH=$(readlink -f .)
-        INSTALLER_PATH=$(dirname "$(pwd)")
+        TCPROXY_PATH="$(readlink -f .)"
+        INSTALLER_PATH="$(dirname "$(pwd)")"
     else
         mkdir -p tcproxy
-        TCPROXY_PATH=$(readlink -f .)/tcproxy
-        INSTALLER_PATH=$(pwd)
+        TCPROXY_PATH="$(readlink -f .)/tcproxy"
+        INSTALLER_PATH="$(pwd)"
     fi
     if [ -t 0 ]; then
         if [[ -e "$TCPROXY_PATH/.web-install-tcproxy" ]]; then rm "$TCPROXY_PATH/.web-install-tcproxy"; fi
@@ -88,7 +88,7 @@ cd tcproxy >/dev/null 2>&1
 source '$TCPROXY_PATH/.web-install-tcproxy'
 '$TCPROXY_PATH/tcproxy -i'" > "$INSTALLER_PATH.tcproxy"; chmod +x "$INSTALLER_PATH.tcproxy"
         echo "Downloading latest installation script..."
-        SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/'$TCPROXY_BRANCH'/tcproxy"
+        SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
         TEMP_FILE=$(mktemp)
         if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"; then
             mv "$TEMP_FILE" "$TCPROXY_PATH/tcproxy"
@@ -105,14 +105,14 @@ source '$TCPROXY_PATH/.web-install-tcproxy'
 
 github_download() {
     logm "Downloading tcproxy suite from server..."
-    wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz >/dev/null 2>&1
+    wget "https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/'$TCPROXY_BRANCH'.tar.gz" >/dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         logsm "Download successful"
     else
         logm "tcproxy: Update server currenlty unavailable."
         exit 1
     fi
-    tar -xzf $TCPROXY_BRANCH.tar.gz --strip-components=1 && sudo rm $TCPROXY_BRANCH.tar.gz >/dev/null 2>&1 &&
+    tar -xzf "$TCPROXY_BRANCH.tar.gz" --strip-components=1 && sudo rm "$TCPROXY_BRANCH.tar.gz" >/dev/null 2>&1 &&
     chmod +x tcproxy
 }
 
