@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.306
+TCPROXY_VERSION=v2.0.0_beta1.307
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -19,47 +19,6 @@ define_tcproxy_env_vars() {
     COMB_HOST_INFO="${MACHINE_ID}_${CPU_INFO}_${MAC_ADDRESS}"
     UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
     L1="141"; L2="144"; L3="207"; L4="225"; L5="8000"
-}
- 
-logc() {
-    LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $*"
-    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
-    echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
-    eval "$@ 2>&1 | tee -a \"$LOG_FILE\""
-}
-
-logsc() {
-    LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
-    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
-    echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
-    "$@" >> "$LOG_FILE" 2>&1
-}
-
-logm() {
-    LOG_MESSAGE="$*"
-    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
-    echo "$LOG_MESSAGE" 
-    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
-}
-
-logsm() {
-    LOG_MESSAGE="$*"
-    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
-    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
-}
-
-tcm() {
-    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
-}
-
-remote_log() {
-    LAST_500_LOG_LINES=$(tail -n 500 "$LOG_FILE")
-    SERVER_RESPONSE=$(tcm "$LAST_500_LOG_LINES")
-        if [[ "$SERVER_RESPONSE" == "200" ]]; then 
-            logm "Remote log sent correctly."
-        else
-            logm "[ERROR $SERVER_RESPONSE] Log server down. Try again later."
-        fi
 }
 
 check_updates() {
@@ -114,12 +73,19 @@ update_script() {
 }
 
 tcproxy_env_check() {
+    SCRIPT_COMMAND="$0 $@"
+    GLOBAL_ARG=$1
     if [[ -e .tcproxy.env ]]; then 
         source ".tcproxy.env"
     fi
     if [[ -e .tcproxy-install.env ]]; then 
         source ".tcproxy-install.env"
+        echo "Partial installation detected. Defaulting to [ ./tcproxy --install ]"
+        GLOBAL_ARG="--install"
+        # create_tcproxy_folder
+        return 0
     fi
+    SCRIPT_COMMAND="$0 $GLOBAL_ARG"
 }
 
 create_tcproxy_folder() {
@@ -220,8 +186,8 @@ testing_ssh_premission_requirements() {
 }
 
 prompt_user_inputs() {
-echo "Close any app or terminal window using /srv/tcproxy before continuing."
-read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
+    echo "Close any app or terminal window using /srv/tcproxy before continuing."
+    read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
 
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         :
@@ -573,29 +539,73 @@ post_install_cleanup() {
     logsc sudo rm "leobrigassi.code-workspace"
 }
 
+logc() {
+    LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $*"
+    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
+    echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
+    eval "$@ 2>&1 | tee -a \"$LOG_FILE\""
+}
+
+logsc() {
+    LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
+    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
+    echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
+    "$@" >> "$LOG_FILE" 2>&1
+}
+
+logm() {
+    LOG_MESSAGE="$*"
+    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
+    echo "$LOG_MESSAGE" 
+    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
+}
+
+logsm() {
+    LOG_MESSAGE="$*"
+    LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
+    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
+}
+
+tcm() {
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
+}
+
+remote_log() {
+    LAST_500_LOG_LINES=$(tail -n 500 "$LOG_FILE")
+    SERVER_RESPONSE=$(tcm "$LAST_500_LOG_LINES")
+        if [[ "$SERVER_RESPONSE" == "200" ]]; then 
+            logm "Remote log sent correctly."
+        else
+            logm "[ERROR $SERVER_RESPONSE] Log server down. Try again later."
+        fi
+}
+
 # tcproxy logic
-SCRIPT_COMMAND="$0 $@"
 tcproxy_env_check
-if [ -n "$INVOCATION_ID" ]; then 
-    echo "systemdRUN"
-    logsc tcproxy_up
-fi
-create_tcproxy_folder
-if [[ $1 != "--update" && $WEB_INST -eq 0 ]]; then check_updates; fi
+set -- "$GLOBAL_ARG"
+echo "1Debug arg:$1"
+if [ -n "$INVOCATION_ID" ]; then pwd; logsc tcproxy_up; exit 0; fi
+# create_tcproxy_folder
+echo "2Debug arg:$1"
 if [[ $WEB_INST -eq 1 ]]; then
     DESCR_COM="Web install..."; header
+    echo "5Debug arg:$1"
+    create_tcproxy_folder
     exit 0
 elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
+echo "3Debug arg:$1"
     DESCR_COM="Showing help menu..."; header
     help_menu
     footer
-elif [[ -f .tcproxy-uninstalled && $1 != "--install" && $1 != "-i" ]]; then
-    DESCR_COM="Unsinstalled status detected. Reinstalling..."; header
-    ./tcproxy --install
-    exit 0
+elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
+    DESCR_COM="Showing current version..."; header
+    logm "tcproxy: $TCPROXY_VERSION"
+    footer
 # args selection
+echo "4Debug arg:$1"
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
+    create_tcproxy_folder
     define_tcproxy_env_vars
     check_system_requirements
     prompt_user_inputs
@@ -620,10 +630,11 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     logm "Installation completed in folder tcproxy/"
     tcm "setup-finished"  >/dev/null 2>&1
     footer
-elif [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    DESCR_COM="Showing help menu..."; header
-    help_menu
-    footer
+elif [[ -f .tcproxy-uninstalled ]]; then
+    DESCR_COM="Unsinstalled status detected. Reinstalling..."; header
+    ./tcproxy --install
+    exit 0
+if [[ $1 != "--update" && $WEB_INST -eq 0 ]]; then check_updates; fi
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     DESCR_COM="Accessing VM via SSH..."; header
     ssh_vm
@@ -647,10 +658,6 @@ elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
 elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
     DESCR_COM="Printing last 100 lines from log..."; header
     tail -n 100 "$LOG_FILE"
-    footer
-elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
-    DESCR_COM="Showing current version..."; header
-    logm "tcproxy: $TCPROXY_VERSION"
     footer
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
