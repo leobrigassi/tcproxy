@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.338reverted
+TCPROXY_VERSION=v2.0.0_beta1.338revertedto441only-tcpUP
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -342,41 +342,45 @@ check_smb_share() {
 }
 
 tcproxy_up() {
-    MAX_RETRIES=20
-    RETRY_INTERVAL=60
-    retry_count=0
-    failed_attempts=0
+    MAX_RETRIES=10
+    RETRY_INTERVAL=180
+    RETRY_COUNT=0
+    VM_REBOOT_COUNT=5
     logm "Checking VM status..."
     if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
         load_VM
         check_VM_status
     fi
-    while [ $retry_count -lt $MAX_RETRIES ]; do
-        if check_smb_share; then
-            logm "VM samba share is accessible."
-            break
-        else
-            retry_count=$((retry_count + 1))
-            failed_attempts=$((failed_attempts + 1))
-            logm "[INFO] Failed to access VM samba share. Attempt $retry_count/$MAX_RETRIES."
-            if [ $failed_attempts -eq 5 ]; then
-                logm "[INFO] Restarting tcproxy VM..."
-                unmount_srv_tcproxy
-                stopping_VM
-                sleep 10
-                load_VM
-            fi
-            sleep $RETRY_INTERVAL
+    while ! check_smb_share; do
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            logm "[ERROR] Max retries for check_smb_share reached. Exiting..."
+            exit 1
+        elif [ $RETRY_COUNT -eq $VM_REBOOT_COUNT ]; then
+            logm "[INFO] VM samba share still not accessible. Restarting tcproxy VM..."
+            unmount_srv_tcproxy
+            stopping_VM
+            sleep 10
+            load_VM
         fi
+        logm "[INFO] Failed to access VM samba share. Waiting 180 seconds before next attempt. Attempt $RETRY_COUNT/$MAX_RETRIES."
+        sleep $RETRY_INTERVAL
     done
+    logm "VM samba share is accessible."
     # Verify host mount
-    if ! mountpoint -q /srv/tcproxy >/dev/null 2>&1; then
+    RETRY_COUNT=0
+    while ! mountpoint -q /srv/tcproxy >/dev/null 2>&1; do
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            logm "[ERROR] Max retries for mountpoint check reached. Exiting..."
+            exit 1
+        fi
         logm "Remounting /srv/tcproxy..."
         unmount_srv_tcproxy
         logsc sudo mount -t cifs //127.0.0.1/tcproxy /srv/tcproxy/ -o password="$TC_PASSWORD""$TC_FSTAB_USER",rw,uid="$PUID",iocharset=utf8,vers=3.0,nofail,file_mode=0775,dir_mode=0775,port=50445
-    fi
+        sleep $RETRY_INTERVAL
+    done
     logm "/srv/tcproxy mounted and accessible"
-    return 0
 }
 
 tcproxy_systemd_setup() {
