@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.446
+TCPROXY_VERSION=v2.0.0_beta1.447
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -375,7 +375,7 @@ tcproxy_up() {
     done
     logm "VM samba share is accessible."
     # Verify host mount
-    RETRY_INTERVAL=10
+    RETRY_INTERVAL=5
     RETRY_COUNT=0
     while ! mountpoint -q /srv/tcproxy >/dev/null 2>&1; do
         RETRY_COUNT=$((RETRY_COUNT + 1))
