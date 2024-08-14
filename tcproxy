@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.319
+TCPROXY_VERSION=v2.0.0_beta1.320
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -101,16 +101,15 @@ $TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
         SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
         TEMP_FILE=$(mktemp)
         if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"; then
-            bash "$TEMP_FILE"
+            mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
+            chmod +x $TCPROXY_PATH/tcproxy
+            exit 0 # exits script to allow .tcproxy web install to continue
         else
             echo "[ERROR] Download failed. Please try again later"
             rm -f "$TEMP_FILE"
             footer
             exit 1
         fi
-        mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
-        chmod +x $TCPROXY_PATH/tcproxy
-        exit 0 # exits script to allow .tcproxy web install to continue
     fi
 }
 
@@ -574,6 +573,7 @@ SCRIPT_COMMAND="$0 $@"
 if [[ -e $(pwd)/.web-install-tcproxy.env ]]; then 
     source "$(pwd)/.web-install-tcproxy.env"
     set -- "--install"
+    echo $(pwd)/.web-install-tcproxy.env
 else
     if [ ! -t 0 ]; then create_tcproxy_folder; fi
 fi
