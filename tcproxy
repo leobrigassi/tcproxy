@@ -1,18 +1,14 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.332
+TCPROXY_VERSION=v2.0.0_beta1.333
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
     TCPROXY_PATH=$(readlink -f .)
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env
-    PUID=$(id -u)
-    PGID=$(id -g)
     USER=$(whoami)
     GROUP=$(id -gn)
-    LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"
-    touch $LOG_FILE
-    sudo chmod 770 $LOG_FILE 
+    LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
     MACHINE_ID=$(cat /etc/machine-id)
     CPU_INFO=$(cat /proc/cpuinfo | grep -i 'model' | head -1)
     MAC_ADDRESS=$(cat /sys/class/net/eth0/address 2>/dev/null || cat /sys/class/net/wlan0/address 2>/dev/null || echo "")
@@ -61,9 +57,6 @@ update_script() {
     curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"
     mv "$TEMP_FILE" "$0"
     chmod +x "$0"
-    # TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
-    # sudo cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"
-    # sudo chmod +x $TCP_STARTUP_SERVICE_EXEC
     if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then 
         logm "tcproxy: Script updated from $TCPROXY_VERSION to $TCPROXY_LATEST_VERSION"
     else
@@ -83,10 +76,8 @@ create_tcproxy_folder() {
         INSTALLER_PATH=$(pwd)
     fi
     if [ -t 0 ]; then
-        # WEB_INST=0
         if [[ -e $TCPROXY_PATH/.web-install-tcproxy ]]; then rm $TCPROXY_PATH/.web-install-tcproxy; fi
     else
-        # WEB_INST=1 # web install detected
         touch $TCPROXY_PATH/.web-install-tcproxy
         touch $INSTALLER_PATH/.tcproxy
         echo -e "#!/bin/bash
@@ -396,9 +387,6 @@ tcproxy_systemd_setup() {
         TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-boot-load.service.service
         TCPROXY_SERVICE_FILE="/etc/systemd/system/tcproxy-boot-load.service.service"
         TCPROXY_SERVICE_NAME=tcproxy-boot-load.service.service
-        # TCP_STARTUP_SERVICE_EXEC="$TCPROXY_PATH/.tcproxy-startup-service-exec"
-        # sudo cp --no-target-directory "$TCPROXY_PATH/tcproxy" "$TCP_STARTUP_SERVICE_EXEC"        
-        # sudo chmod +x $TCP_STARTUP_SERVICE_EXEC
         touch "$TCPROXY_SERVICE_TEMP_FILE"
         echo "[Unit]
 Description=tcproxy load VM and mount on /srv/tcproxy
@@ -503,8 +491,6 @@ save_ENVs_to_file() {
     fi
     echo "TCPROXY_PATH=$TCPROXY_PATH" >> $TCP_ENV
     echo "TCP_ENV=$TCP_ENV" >> $TCP_ENV
-    echo "PUID=$PUID" >> $TCP_ENV
-    echo "PGID=$PGID" >> $TCP_ENV
     echo "USER=$USER" >> $TCP_ENV
     echo "GROUP=$GROUP" >> $TCP_ENV
     echo "TC_IP=$TC_IP" >> $TCP_ENV
@@ -513,7 +499,6 @@ save_ENVs_to_file() {
     echo "TC_PASSWORD=$TC_PASSWORD" >> $TCP_ENV
     echo "TCPROXY_SERVICE_FILE=$TCPROXY_SERVICE_FILE" >> $TCP_ENV
     echo "TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_SERVICE_TEMP_FILE" >> $TCP_ENV
-    echo "TCP_STARTUP_SERVICE_EXEC=$TCP_STARTUP_SERVICE_EXEC" >> $TCP_ENV
     echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
     echo "LOG_FILE=$LOG_FILE" >> $TCP_ENV
     echo "ARCH=$ARCH" >> $TCP_ENV
@@ -592,9 +577,6 @@ if [[ -e $(pwd)/.tcproxy.env ]]; then
 else
     create_tcproxy_folder
 fi
-# if [[ -e $(pwd)/.install_tcproxy ]]; then
-#     echo "Partial installation detected. Please complete installation script. Defaulting to [ ./tcproxy --install ]"
-# fi
 if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     DESCR_COM="Showing help menu..."; header
     help_menu
@@ -608,13 +590,7 @@ elif [[ $1 == "--uninstall" ]]; then
     stopping_VM
     remove_system_service
     remove_tcproxy_env
-    logsc sudo rm $TCPROXY_PATH/data.img
-    logsc sudo rm $TCPROXY_PATH/id_rsa_vm
-    logsc sudo rm $TCPROXY_PATH/id_rsa_vm.pub
-    logsc sudo rm $TCPROXY_PATH/qemu.mac
-    logsc sudo rm $TCPROXY_PATH/uefi.rom
-    logsc sudo rm $TCPROXY_PATH/.vm-serial-file
-    logsc sudo rm $TCPROXY_PATH/tcproxy
+    logsc sudo rm $TCPROXY_PATH/data.img $TCPROXY_PATH/id_rsa_vm $TCPROXY_PATH/id_rsa_vm.pub $TCPROXY_PATH/qemu.mac $TCPROXY_PATH/uefi.rom $TCPROXY_PATH/.vm-serial-file $TCPROXY_PATH/tcproxy
     touch .tcproxy-uninstalled
     logm "tcproxy unistalled."
     footer
@@ -657,7 +633,7 @@ elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
     echo "Unsinstalled status detected. Reinstalling..."
     ./tcproxy --install
     exit 0
-if [[ $1 != "--update" && $WEB_INST -eq 0 ]]; then check_updates; fi
+if [[ $1 != "--update" ]]; then check_updates; fi
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     DESCR_COM="Accessing VM via SSH..."; header
     ssh_vm
