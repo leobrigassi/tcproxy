@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.330
+TCPROXY_VERSION=v2.0.0_beta1.331
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -573,6 +573,10 @@ remote_log() {
         fi
 }
 
+keep_log_small() {
+    if [[ $(wc -l < "$LOG_FILE") -gt 2000 ]]; then tail -n 2000 "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"; fi
+}
+
 # tcproxy logic
 SCRIPT_COMMAND="$0 $@"
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
@@ -706,3 +710,4 @@ else
     help_menu
     footer
 fi
+keep_log_small
