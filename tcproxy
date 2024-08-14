@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.337
+TCPROXY_VERSION=v2.0.0_beta1.338
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -8,6 +8,8 @@ define_tcproxy_env_vars() {
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env
     USER=$(whoami)
     GROUP=$(id -gn)
+    PUID=$(id -u)
+    PGID=$(id -g)
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
     MACHINE_ID=$(cat /etc/machine-id)
     CPU_INFO=$(cat /proc/cpuinfo | grep -i 'model' | head -1)
@@ -384,9 +386,9 @@ tcproxy_systemd_setup() {
             exit 1
         fi
         # Configure startup service
-        TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-boot-load.service.service
-        TCPROXY_SERVICE_FILE="/etc/systemd/system/tcproxy-boot-load.service.service"
-        TCPROXY_SERVICE_NAME=tcproxy-boot-load.service.service
+        TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_PATH/.tcproxy-boot-load.service
+        TCPROXY_SERVICE_FILE=/etc/systemd/system/tcproxy-boot-load.service
+        TCPROXY_SERVICE_NAME=tcproxy-boot-load.service
         touch "$TCPROXY_SERVICE_TEMP_FILE"
         echo "[Unit]
 Description=tcproxy load VM and mount on /srv/tcproxy
@@ -493,6 +495,8 @@ save_ENVs_to_file() {
     echo "TCP_ENV=$TCP_ENV" >> $TCP_ENV
     echo "USER=$USER" >> $TCP_ENV
     echo "GROUP=$GROUP" >> $TCP_ENV
+    echo "PUID=$PUID" >> $TCP_ENV
+    echo "PGID=$PGID" >> $TCP_ENV
     echo "TC_IP=$TC_IP" >> $TCP_ENV
     echo "TC_FOLDER=$TC_FOLDER" >> $TCP_ENV
     echo "TC_FSTAB_USER=$TC_FSTAB_USER" >> $TCP_ENV
@@ -514,7 +518,7 @@ post_install_cleanup() {
     logsc sudo rm $INSTALLER_PATH/.tcproxy
     logsc sudo rm $TCPROXY_PATH/.tcproxy
     logsc sudo rm $TCPROXY_PATH/.web-install-tcproxy
-    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service.service
+    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service
 }
 
 logc() {
@@ -674,7 +678,7 @@ elif [[ $1 == "--enable-service" ]]; then
 elif [[ $1 == "--disable-service" ]]; then
     DESCR_COM="Disabling startup service..."; header
     remove_system_service
-    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service.service
+    logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service
     footer
 elif [[ $1 == "--update" ]]; then
     DESCR_COM="Updating script..."; header
