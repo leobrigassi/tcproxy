@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.304
+TCPROXY_VERSION=v2.0.0_beta1.305
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -487,7 +487,6 @@ install_system_service() {
     else
         logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE - Error code $?"
     fi
-    sudo chown $(whoami) *
 }
 
 ssh_vm() {
