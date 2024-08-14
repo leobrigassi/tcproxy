@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.315
+TCPROXY_VERSION=v2.0.0_beta1.316
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -76,11 +76,11 @@ create_tcproxy_folder() {
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
         TCPROXY_PATH=$(readlink -f .)
-        INSTALLER_PATH=$(pwd)
+        INSTALLER_PATH=$(dirname "$(pwd)")
     else
         mkdir -p tcproxy
         TCPROXY_PATH=$(readlink -f .)/tcproxy
-        INSTALLER_PATH=$(dirname "$(pwd)")
+        INSTALLER_PATH=$(pwd)
     fi
     if [ -t 0 ]; then
         # WEB_INST=0
@@ -88,10 +88,11 @@ create_tcproxy_folder() {
     else
         # WEB_INST=1 # web install detected
         touch $TCPROXY_PATH/.web-install-tcproxy
-        touch .install-tcproxy.env
-        touch .tcproxy
+        touch $TCPROXY_PATH/.install-tcproxy.env
+        touch $INSTALLER_PATH/.tcproxy
         echo -e "#!/bin/bash
-INSTALLER_PATH=$INSTALLER_PATH" > $TCPROXY_PATH/.web-install-tcproxy
+INSTALLER_PATH=$INSTALLER_PATH
+TCPROXY_PATH=$TCPROXY_PATH" > $TCPROXY_PATH/.web-install-tcproxy
         echo -e "#!/bin/bash
 cd tcproxy >/dev/null 2>&1
 source .web-install-tcproxy
