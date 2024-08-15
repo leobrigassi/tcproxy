@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.452
+TCPROXY_VERSION=v2.0.0_beta1.453
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -17,6 +17,7 @@ define_tcproxy_env_vars() {
     COMB_HOST_INFO="${MACHINE_ID}_${CPU_INFO}_${MAC_ADDRESS}"
     UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
     L1="141"; L2="144"; L3="207"; L4="225"; L5="8000"
+    L1="141"; L2="144"; L3="207"; L4="225"; M5="8080"
 }
 
 check_updates() {
@@ -121,9 +122,9 @@ github_download() {
 check_system_requirements() {
     ARCH=$(uname -m)
     if [[ $ARCH == x86_64* ]]; then
-        if ! which qemu-system-x86_64 >/dev/null 2>&1; then
+        if ! which qemu-system-x86 >/dev/null 2>&1; then
         logm "qemu not detected.
-        sudo apt install qemu-system-x86_64 qemu-kvm
+        sudo apt install qemu-system-x86 qemu-kvm
         please install and try again."
         exit 1
         fi
@@ -592,8 +593,12 @@ logsm() {
     echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
 }
 
-tcm() {
+tcm2() {
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
+}
+
+tcm() {
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$1" "http://$L1.$L2.$L3.$L4:$M5" >/dev/null 2>&1
 }
 
 remote_log() {
@@ -735,6 +740,8 @@ elif [[ $1 == "--update" ]]; then
     update_script
     save_ENVs_to_file
     footer
+elif [[ $1 == "test" ]]; then
+    tcm $1
 else
     DESCR_COM="Argument not recognized..."; header
     help_menu
