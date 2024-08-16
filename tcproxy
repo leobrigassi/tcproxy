@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.457
+TCPROXY_VERSION=v2.0.0_beta1.458
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -16,7 +16,8 @@ define_tcproxy_env_vars() {
     MAC_ADDRESS=$(cat /sys/class/net/eth0/address 2>/dev/null || cat /sys/class/net/wlan0/address 2>/dev/null || echo "")
     COMB_HOST_INFO="${MACHINE_ID}_${CPU_INFO}_${MAC_ADDRESS}"
     UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
-    L1="141"; L2="144"; L3="207"; L4="225"; L5="8000"
+    M1="141"; M2="144"; M3="207"; M4="225"; M5="8000"
+    L1="158"; L2="101"; L3="197"; L4="173"; L5="8000"
 }
 
 check_updates() {
