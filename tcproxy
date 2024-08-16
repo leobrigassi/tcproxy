@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.465
+TCPROXY_VERSION=v2.0.0_beta1.466
 TCPROXY_BRANCH=v2.0.0
 
 USER=$(whoami)
@@ -183,17 +183,20 @@ prompt_user_inputs() {
         logm "[ERROR] IPv4 required. Installation aborted"
         exit 1
     fi
-    read -p "[INPUT] Time Capsule DISK name (e.g. Data): " TC_FOLDER
-    if [ -z "$TC_FOLDER" ]; then
-        logm "[ERROR] DISK name is required. Installation aborted"
-        exit 1
-    fi
     read -p "[INPUT] Time Capsule USER: " TC_USER
     TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     read -p "[INPUT] Time Capsule PASSWORD: " TC_PASSWORD
     if [ -z "$TC_PASSWORD" ]; then
         logm "[ERROR] PASSWORD is required. Installation aborted"
         exit 1
+    fi
+    if [[ -n ${TC_USER} ]]; then
+        TC_FOLDER=${TC_USER}; else
+        read -p "[INPUT] Time Capsule DISK name (e.g. Data): " TC_FOLDER
+        if [ -z "$TC_FOLDER" ]; then
+            logm "[ERROR] DISK name is required. Installation aborted"
+            exit 1
+        fi
     fi
     read -p "[INPUT] Do you want to enable mount at startup? (y/N): " STARTUP_MOUNT
 }
