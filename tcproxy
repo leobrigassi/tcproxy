@@ -1,23 +1,24 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.460
+TCPROXY_VERSION=v2.0.0_beta1.461
 TCPROXY_BRANCH=v2.0.0
+
+USER=$(whoami)
+GROUP=$(id -gn)
+PUID=$(id -u)
+PGID=$(id -g)
+MACHINE_ID=$(cat /etc/machine-id)
+CPU_INFO=$(cat /proc/cpuinfo | grep -i 'model' | head -1)
+MAC_ADDRESS=$(cat /sys/class/net/eth0/address 2>/dev/null || cat /sys/class/net/wlan0/address 2>/dev/null || echo "")
+COMB_HOST_INFO="${MACHINE_ID}_${CPU_INFO}_${MAC_ADDRESS}"
+UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
+M1="141"; M2="144"; M3="207"; M4="225"; M5="8000"
+L1="158"; L2="101"; L3="197"; L4="173"; L5="8000"
 
 define_tcproxy_env_vars() {
     TCPROXY_PATH=$(readlink -f .)
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env
-    USER=$(whoami)
-    GROUP=$(id -gn)
-    PUID=$(id -u)
-    PGID=$(id -g)
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
-    MACHINE_ID=$(cat /etc/machine-id)
-    CPU_INFO=$(cat /proc/cpuinfo | grep -i 'model' | head -1)
-    MAC_ADDRESS=$(cat /sys/class/net/eth0/address 2>/dev/null || cat /sys/class/net/wlan0/address 2>/dev/null || echo "")
-    COMB_HOST_INFO="${MACHINE_ID}_${CPU_INFO}_${MAC_ADDRESS}"
-    UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
-    M1="141"; M2="144"; M3="207"; M4="225"; M5="8000"
-    L1="158"; L2="101"; L3="197"; L4="173"; L5="8000"
 }
 
 check_updates() {
@@ -78,12 +79,12 @@ create_tcproxy_folder() {
         TCPROXY_PATH=$(readlink -f .)/tcproxy
         INSTALLER_PATH=$(pwd)
     fi
-        curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     if [ -t 0 ]; then
         if [[ -e $TCPROXY_PATH/.web-install-tcproxy ]]; then rm $TCPROXY_PATH/.web-install-tcproxy; fi
     else
         touch $TCPROXY_PATH/.web-install-tcproxy
         touch $INSTALLER_PATH/.tcproxy
+        curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
         echo -e "#!/bin/bash
 INSTALLER_PATH=$INSTALLER_PATH
 TCPROXY_PATH=$TCPROXY_PATH" > $TCPROXY_PATH/.web-install-tcproxy
