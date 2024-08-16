@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.466
+TCPROXY_VERSION=v2.0.0_beta1.467
 TCPROXY_BRANCH=v2.0.0
 
 USER=$(whoami)
@@ -392,7 +392,7 @@ tcproxy_up() {
         fi
         logm "Remounting /srv/tcproxy..."
         unmount_srv_tcproxy
-        logsc sudo mount -t cifs //127.0.0.1/tcproxy /srv/tcproxy -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445
+        logsc sudo mount -t cifs //127.0.0.1/tcproxy /srv/tcproxy -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID
         sleep $RETRY_INTERVAL
     done
     logm "/srv/tcproxy mounted and accessible"
