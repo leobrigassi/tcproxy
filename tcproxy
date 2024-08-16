@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.464_2
+TCPROXY_VERSION=v2.0.0_beta1.465
 TCPROXY_BRANCH=v2.0.0
 
 USER=$(whoami)
@@ -628,6 +628,8 @@ fi
 if [[ -e $(pwd)/.tcproxy.env ]]; then 
     source "$(pwd)/.tcproxy.env"
 else
+    set -- "--install"
+    SCRIPT_COMMAND="Local install"
     create_tcproxy_folder
 fi
 if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
