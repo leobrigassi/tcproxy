@@ -1,12 +1,13 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.461
+TCPROXY_VERSION=v2.0.0_beta1.462
 TCPROXY_BRANCH=v2.0.0
 
 USER=$(whoami)
 GROUP=$(id -gn)
 PUID=$(id -u)
 PGID=$(id -g)
+ARCH=$(uname -m)
 MACHINE_ID=$(cat /etc/machine-id)
 CPU_INFO=$(cat /proc/cpuinfo | grep -i 'model' | head -1)
 MAC_ADDRESS=$(cat /sys/class/net/eth0/address 2>/dev/null || cat /sys/class/net/wlan0/address 2>/dev/null || echo "")
