@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.459
+TCPROXY_VERSION=v2.0.0_beta1.460
 TCPROXY_BRANCH=v2.0.0
 
 define_tcproxy_env_vars() {
@@ -78,11 +78,11 @@ create_tcproxy_folder() {
         TCPROXY_PATH=$(readlink -f .)/tcproxy
         INSTALLER_PATH=$(pwd)
     fi
+        curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     if [ -t 0 ]; then
         if [[ -e $TCPROXY_PATH/.web-install-tcproxy ]]; then rm $TCPROXY_PATH/.web-install-tcproxy; fi
     else
         touch $TCPROXY_PATH/.web-install-tcproxy
-        curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
         touch $INSTALLER_PATH/.tcproxy
         echo -e "#!/bin/bash
 INSTALLER_PATH=$INSTALLER_PATH
