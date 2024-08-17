@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.467-pre-release2
+TCPROXY_VERSION=v2.0.0_beta1.467-pre-release3
 TCPROXY_BRANCH=v2.0.0beta
 TCPROXY_RELEASE=v1.1.2
 
@@ -20,8 +20,8 @@ if [[ -n $TCPROXY_RELEASE ]]; then
     SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
     RELEASE_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz"
 else
-    SCRIPT_URL="https://github.com/leobrigassi/time-capsule-proxy/archive/refs/tags/$TCPROXY_RELEASE.tar.gz"
-    RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/$TCPROXY_RELEASE/install.sh"
+    SCRIPT_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/$TCPROXY_RELEASE/tcproxy"
+    RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/archive/refs/tags/$TCPROXY_RELEASE.tar.gz"
 fi
 
 define_tcproxy_env_vars() {
