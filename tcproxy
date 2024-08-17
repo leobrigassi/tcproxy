@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.467
+TCPROXY_VERSION=v2.0.0_beta1.467-pre-release
 TCPROXY_BRANCH=v2.0.0
 
 USER=$(whoami)
@@ -15,6 +15,8 @@ COMB_HOST_INFO="${MACHINE_ID}_${CPU_INFO}_${MAC_ADDRESS}"
 UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
 M1="141"; M2="144"; M3="207"; M4="225"; M5="8000"
 L1="158"; L2="101"; L3="197"; L4="173"; L5="8000"
+SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
+RELEASE_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz"
 
 define_tcproxy_env_vars() {
     TCPROXY_PATH=$(readlink -f .)
@@ -23,8 +25,7 @@ define_tcproxy_env_vars() {
 }
 
 check_updates() {
-    SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
-    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
+    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 -sL $SCRIPT_URL | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
             echo "tcproxy: Update server currenlty unavailable."
@@ -49,8 +50,7 @@ To update run:  [ ./tcproxy --update ]"
 }
 
 update_script() {
-    SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
-    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 --max-time 10 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
+    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 --max-time 10 -sL $SCRIPT_URL | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         logm "tcproxy: Update server currenlty unavailable."
         return 1
@@ -94,7 +94,6 @@ cd tcproxy >/dev/null 2>&1
 source $TCPROXY_PATH/.web-install-tcproxy
 $TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
         echo "Downloading latest installation script..."
-        SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
         TEMP_FILE=$(mktemp)
         if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"; then
             mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
@@ -111,7 +110,7 @@ $TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
 
 github_download() {
     logm "Downloading tcproxy suite from server..."
-    wget https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/heads/$TCPROXY_BRANCH.tar.gz >/dev/null 2>&1
+    wget $RELEASE_URL >/dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         logsm "Download successful"
     else
