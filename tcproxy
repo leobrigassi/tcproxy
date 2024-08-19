@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.0_beta1.478
+TCPROXY_COMMIT=v2.0.0_beta1.479
 TCPROXY_BRANCH=/heads/v2.0.0beta
 TCPROXY_RELEASE=v1.1.2
 
@@ -228,10 +228,17 @@ deflating_vm() {
     sudo rm tcproxy_VM_x86.tar.gz
 }
 
-unmount_srv_tcproxy() {
-    if  mountpoint -q "/srv/tcproxy"; then
+umount_srv_tcproxy() {
+    MAX_RETRIES=10
+    RETRY_COUNT=0
+    while mountpoint -q "/srv/tcproxy"; do
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
+            exit 1
+        fi
         if sudo umount /srv/tcproxy >/dev/null 2>&1; then
-            logsm "Unmount of /srv/tcproxy successful..."
+            logsm "umount of /srv/tcproxy successful..."
         else
             sleep 5 
             if  mountpoint -q "/srv/tcproxy"; then
@@ -243,12 +250,12 @@ unmount_srv_tcproxy() {
                     exit 1
                 fi
             else
-                logm "Unmount (slow) of /srv/tcproxy successful..."
+                logm "umount (slow) of /srv/tcproxy successful..."
             fi
         fi
-    else
-        logsm "/srv/tcproxy already unmounted..."
-    fi
+        sleep 5
+    done
+    logm "umount /srv/tcproxy completed..."
 }
 
 stopping_VM() {
@@ -408,7 +415,7 @@ tcproxy_up() {
             exit 1
         elif [ $RETRY_COUNT -eq $VM_REBOOT_COUNT ]; then
             logm "[INFO] VM samba share still not accessible. Restarting tcproxy VM..."
-            unmount_srv_tcproxy
+            umount_srv_tcproxy
             stopping_VM
             sleep 10
             load_VM
@@ -427,7 +434,7 @@ tcproxy_up() {
             exit 1
         fi
         logm "Remounting /srv/tcproxy..."
-        unmount_srv_tcproxy
+        umount_srv_tcproxy
         logsc sudo mount -t cifs //127.0.0.1/tcproxy /srv/tcproxy -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID
         sleep $RETRY_INTERVAL
     done
@@ -681,7 +688,7 @@ elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
     footer
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
-    unmount_srv_tcproxy
+    umount_srv_tcproxy
     stopping_VM
     remove_system_service
     remove_tcproxy_env
@@ -706,7 +713,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     github_download
     define_tcproxy_env_vars
     deflating_vm
-    unmount_srv_tcproxy
+    umount_srv_tcproxy
     stopping_VM
     load_VM
     check_VM_status
@@ -741,12 +748,13 @@ elif [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
     footer
 elif [[ $1 == "-d" ]] || [[ $1 == "--down" ]]; then
     DESCR_COM="Unmounting share and stopping VM..."; header
-    unmount_srv_tcproxy
+    umount_srv_tcproxy
+    sleep 5
     stopping_VM
     footer
 elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
     DESCR_COM="Restarting VM and remounting share..."; header
-    unmount_srv_tcproxy
+    umount_srv_tcproxy
     stopping_VM
     sleep 5
     tcproxy_up
