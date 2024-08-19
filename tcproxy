@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.473
+TCPROXY_VERSION=v2.0.0_beta1.474
 TCPROXY_BRANCH=/heads/v2.0.0beta
 TCPROXY_RELEASE=v1.1.2
 
@@ -365,10 +365,21 @@ https://github.com/leobrigassi/time_capsule_proxy
 
 test_VM_mount() {
     if [[ -z ${TC_USER} ]]; then
-        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''
+        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''; then
+            logm "VM connected to Time Capsule..."
+        else 
+            logm "[ERROR] VM unable to connect to Time Capsule. Please check credentials and IPv4 and run install again."
+            exit 1
+        fi
     else
-        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''
-        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''
+        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/tc/'${TC_USER}''; then
+            if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/tc/'$TC_FOLDER''; then
+                logm "VM connected to Time Capsule..."
+            else
+                logm "[ERROR] VM unable to connect to Time Capsule. Please check credentials and IPv4 and run install again."
+                exit 1
+
+
     then
         logm "VM connected to Time Capsule..."
     else
