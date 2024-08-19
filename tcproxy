@@ -1,8 +1,8 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.0
-TCPROXY_BRANCH=main
-TCPROXY_RELEASE=v2.0.0
+TCPROXY_COMMIT=v2.0.1
+TCPROXY_BRANCH=/heads/v2.0.1
+TCPROXY_RELEASE=v2.0.1
 
 USER=$(whoami)
 GROUP=$(id -gn)
@@ -16,6 +16,18 @@ COMB_HOST_INFO="${MACHINE_ID}_${CPU_INFO}_${MAC_ADDRESS}"
 UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
 M1="141"; M2="144"; M3="207"; M4="225"; M5="8000"
 L1="158"; L2="101"; L3="197"; L4="173"; L5="8000"
+TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
+TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
+TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
+TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
+# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.1/tcproxy | bash; ./.tcproxy
+# Main link: wget -O - https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy | bash; ./.tcproxy
+# Dev link: wget -O - https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/dev/tcproxy | bash; ./.tcproxy
+if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
+    TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
+else
+    TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_BRANCH_URL
+fi
 
 define_tcproxy_env_vars() {
     TCPROXY_PATH=$(readlink -f .)
@@ -23,51 +35,67 @@ define_tcproxy_env_vars() {
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
 }
 
-check_updates() {
-    SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
-    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
+check_or_update_script() {
+    TCPROXY_RELEASE_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_FILE_MAIN_URL | sed -n '5p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
             echo "tcproxy: Update server currenlty unavailable."
+            echo "Visit the project page for mor information:"
+            echo "https://github.com/leobrigassi/time-capsule-proxy"
         else
             echo "tcproxy: Update server currenlty unavailable."
             return 1
         fi
     fi
-    if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then        
-        echo "tcproxy: Update available $TCPROXY_LATEST_VERSION. (Current $TCPROXY_VERSION)
-To update run:  [ ./tcproxy --update ]"
-        echo ""
-        return 0
-    else
+    if [[ $TCPROXY_RELEASE_LAST != $TCPROXY_RELEASE ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
-            echo "You are using the latest version ($TCPROXY_VERSION)."
-            return 0
+            logm "Downloading tcproxy $TCPROXY_RELEASE_LAST ..."
+            BACKUP_FILE="${0}.bak"
+            cp -f "$0" "$BACKUP_FILE"
+            TEMP_FILE=$(mktemp)
+            curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_MAIN_URL"
+            TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_MAIN_URL
+            mv "$TEMP_FILE" "$0"
+            chmod +x "$0"
+            logm "tcproxy: Script updated from $TCPROXY_COMMIT to $TCPROXY_RELEASE_LAST"
         else
+            echo "tcproxy: New update available $TCPROXY_RELEASE_LAST. (Current $TCPROXY_RELEASE)"
+            echo "To update run:  [ ./tcproxy --update ]"
+            echo ""
             return 0
         fi
-    fi
-}
-
-update_script() {
-    SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
-    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 --max-time 10 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
-    if [[ $? -ne 0 ]]; then
-        logm "tcproxy: Update server currenlty unavailable."
-        return 1
-    fi
-    logm "Downloading tcproxy $TCPROXY_LATEST_VERSION ..."
-    BACKUP_FILE="${0}.bak"
-    cp -f "$0" "$BACKUP_FILE"
-    TEMP_FILE=$(mktemp)
-    curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"
-    mv "$TEMP_FILE" "$0"
-    chmod +x "$0"
-    if [[ "$TCPROXY_VERSION" != "$TCPROXY_LATEST_VERSION" ]]; then 
-        logm "tcproxy: Script updated from $TCPROXY_VERSION to $TCPROXY_LATEST_VERSION"
     else
-        logm "tcproxy: Script $TCPROXY_LATEST_VERSION is already on latest version."
-        return 0
+        TCPROXY_COMMIT_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_FILE_DEFINED_URL | sed -n '3p' | cut -d '=' -f 2)
+        if [[ $? -ne 0 ]]; then
+            if [[ $MAN_UPDATE == 1 ]]; then
+                echo "tcproxy: Update server currenlty unavailable."
+                echo "Visit the project page for mor information:"
+                echo "https://github.com/leobrigassi/time-capsule-proxy"
+            else
+                echo "tcproxy: Update server currenlty unavailable."
+                return 1
+            fi
+        fi
+        if [[ $TCPROXY_COMMIT_LAST != $TCPROXY_COMMIT ]]; then
+            if [[ $MAN_UPDATE == 1 ]]; then
+                logm "Downloading tcproxy $TCPROXY_COMMIT_LAST ..."
+                BACKUP_FILE="${0}.bak"
+                cp -f "$0" "$BACKUP_FILE"
+                TEMP_FILE=$(mktemp)
+                curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"
+                mv "$TEMP_FILE" "$0"
+                chmod +x "$0"
+                logm "tcproxy: Script updated from $TCPROXY_COMMIT to $TCPROXY_COMMIT_LAST"
+            else
+                echo "tcproxy: New update available $TCPROXY_COMMIT_LAST. (Current $TCPROXY_COMMIT)"
+                echo "To update run:  [ ./tcproxy --update ]"
+                echo ""
+                return 0
+            fi
+        else
+            logm "tcproxy: Script $TCPROXY_LATEST_VERSION is already on latest version."
+            return 0
+        fi
     fi
 }
 
@@ -95,14 +123,14 @@ cd tcproxy >/dev/null 2>&1
 source $TCPROXY_PATH/.web-install-tcproxy
 $TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
         echo "Downloading latest installation script..."
-        SCRIPT_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.0/tcproxy"
         TEMP_FILE=$(mktemp)
-        if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"; then
+        if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"; then
             mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
             chmod +x $TCPROXY_PATH/tcproxy
             exit 0 # exits script to allow .tcproxy web install to continue
         else
             echo "[ERROR] Download failed. Please try again later"
+            echo $TCPROXY_FILE_DEFINED_URL
             rm -f "$TEMP_FILE"
             footer
             exit 1
@@ -112,14 +140,14 @@ $TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
 
 github_download() {
     logm "Downloading tcproxy suite from server..."
-    wget https://github.com/leobrigassi/time-capsule-proxy/archive/refs/tags/v2.0.0.tar.gz >/dev/null 2>&1
+    wget $TCPROXY_TAR_URL >/dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         logsm "Download successful"
     else
         logm "tcproxy: Update server currenlty unavailable."
         exit 1
     fi
-    tar -xzf $TCPROXY_RELEASE.tar.gz --strip-components=1 && sudo rm $TCPROXY_RELEASE.tar.gz >/dev/null 2>&1 &&
+    tar -xzf ${TCPROXY_BRANCH#/*/}.tar.gz --strip-components=1 && sudo rm ${TCPROXY_BRANCH#/*/}.tar.gz >/dev/null 2>&1 &&
     chmod +x tcproxy
 }
 
@@ -191,13 +219,10 @@ prompt_user_inputs() {
         logm "[ERROR] PASSWORD is required. Installation aborted"
         exit 1
     fi
-    if [[ -n ${TC_USER} ]]; then
-        TC_FOLDER=${TC_USER}; else
-        read -p "[INPUT] Time Capsule DISK name (e.g. Data): " TC_FOLDER
-        if [ -z "$TC_FOLDER" ]; then
-            logm "[ERROR] DISK name is required. Installation aborted"
-            exit 1
-        fi
+    read -p "[INPUT] Time Capsule DISK name (e.g. Data): " TC_FOLDER
+    if [ -z "$TC_FOLDER" ]; then
+        logm "[ERROR] DISK name is required. Installation aborted"
+        exit 1
     fi
     read -p "[INPUT] Do you want to enable mount at startup? (y/N): " STARTUP_MOUNT
 }
@@ -213,10 +238,17 @@ deflating_vm() {
     sudo rm tcproxy_VM_x86.tar.gz
 }
 
-unmount_srv_tcproxy() {
-    if  mountpoint -q "/srv/tcproxy"; then
+umount_srv_tcproxy() {
+    MAX_RETRIES=10
+    RETRY_COUNT=0
+    while mountpoint -q "/srv/tcproxy"; do
+        RETRY_COUNT=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+            logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
+            exit 1
+        fi
         if sudo umount /srv/tcproxy >/dev/null 2>&1; then
-            logsm "Unmount of /srv/tcproxy successful..."
+            logsm "umount of /srv/tcproxy successful..."
         else
             sleep 5 
             if  mountpoint -q "/srv/tcproxy"; then
@@ -228,12 +260,12 @@ unmount_srv_tcproxy() {
                     exit 1
                 fi
             else
-                logm "Unmount (slow) of /srv/tcproxy successful..."
+                logm "umount (slow) of /srv/tcproxy successful..."
             fi
         fi
-    else
-        logsm "/srv/tcproxy already unmounted..."
-    fi
+        sleep 5
+    done
+    logm "umount /srv/tcproxy completed..."
 }
 
 stopping_VM() {
@@ -319,7 +351,13 @@ provision_VM() {
     logsm "Configuring VM root passwd, /etc/fstab, samba"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | passwd' >/dev/null 2>&1
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab"
-    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
+    if [[ -z ${TC_USER} ]]; then
+        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
+    else
+        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "mkdir /mnt/tc/'${TC_USER}'; mkdir /mnt/tc/'$TC_FOLDER'"
+        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc/'$TC_FOLDER' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
+//'$TC_IP'/'${TC_USER}' /mnt/tc/'${TC_USER}' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
+    fi
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | smbpasswd -a root'
     SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;Provisioning_VM" "http://$L1.$L2.$L3.$L4:$L5"); SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4); SERVER_RESPONSE_MESSAGE=$(echo "$SERVER_RESPONSE" | head -c -4)
     if [ "$SERVER_RESPONSE_CODE" -eq 200 ]; then
@@ -330,7 +368,7 @@ provision_VM() {
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 'touch /usr/local/bin/.metrics.env; touch /usr/local/bin/metrics.sh'
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "UNIQUE_ID=$UNIQUE_ID; ARCH=$ARCH; TCPROXY_VERSION=$TCPROXY_VERSION" | base64)' | base64 -d > /usr/local/bin/.metrics.env"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo '#!/bin/sh
-    source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl --connect-timeout 5 --max-time 10 -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$(uptime);$mem_usage;$(df -h | grep "mnt/tc");$(df -h | grep "dev/vda3")" "http://'$L1'.'$L2'.'$L3'.'$L4':'$L5'"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
+source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl --connect-timeout 5 --max-time 10 -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$(uptime);$mem_usage;$(df -h | grep "mnt/tc");$(df -h | grep "dev/vda3")" "http://'$L1'.'$L2'.'$L3'.'$L4':'$L5'"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "chmod +x /usr/local/bin/metrics.sh; (crontab -l | grep -v '/usr/local/bin/metrics.sh'; echo '$CRONM_HM') | crontab -"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "----------------------
 tcproxy: To configure the VM please [ exit ] the VM and run [ ./tcproxy -i ] from the host.
@@ -342,12 +380,26 @@ https://github.com/leobrigassi/time_capsule_proxy
 }
 
 test_VM_mount() {
-    if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''
-    then
-        logm "VM connected to Time Capsule..."
+    if [[ -z ${TC_USER} ]]; then
+        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''; then
+            logm "VM connected to Time Capsule..."
+        else 
+            logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/$TC_FOLDER. Please check credentials and IPv4 and run install again."
+            exit 1
+        fi
     else
-        logm "[ERROR] VM unable to connect to Time Capsule. Please check credentials and IPv4 and run install again."
-        exit 1
+        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'${TC_USER}''; then
+            if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''; then
+                :
+            else
+                logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/$TC_FOLDER. Please check credentials and IPv4 and run install again."
+                exit 1
+            fi
+        logm "VM connected to Time Capsule..."
+        else
+            logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/${TC_USER}. Please check credentials and IPv4 and run install again."
+            exit 1
+        fi
     fi
 }
 
@@ -373,7 +425,7 @@ tcproxy_up() {
             exit 1
         elif [ $RETRY_COUNT -eq $VM_REBOOT_COUNT ]; then
             logm "[INFO] VM samba share still not accessible. Restarting tcproxy VM..."
-            unmount_srv_tcproxy
+            umount_srv_tcproxy
             stopping_VM
             sleep 10
             load_VM
@@ -392,7 +444,7 @@ tcproxy_up() {
             exit 1
         fi
         logm "Remounting /srv/tcproxy..."
-        unmount_srv_tcproxy
+        umount_srv_tcproxy
         logsc sudo mount -t cifs //127.0.0.1/tcproxy /srv/tcproxy -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID
         sleep $RETRY_INTERVAL
     done
@@ -605,9 +657,10 @@ tcm() {
 }
 
 remote_log() {
-    LAST_500_LOG_LINES=$(tail -n 500 "$LOG_FILE")
-    SERVER_RESPONSE=$(tcm "$LAST_500_LOG_LINES")
-        if [[ "$SERVER_RESPONSE" == "200" ]]; then 
+    LAST_100_LOG_LINES=$(tail -n 100 "$LOG_FILE")
+    SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$LAST_100_LOG_LINES" "http://$L1.$L2.$L3.$L4:$L5")
+    SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4)
+        if [[ "$SERVER_RESPONSE_CODE" == "200" ]]; then 
             logm "Remote log sent correctly."
         else
             logm "[ERROR $SERVER_RESPONSE] Log server down. Try again later."
@@ -633,7 +686,7 @@ if [[ -e $(pwd)/.tcproxy.env ]]; then
     source "$(pwd)/.tcproxy.env"
 else
     set -- "--install"
-    SCRIPT_COMMAND="Local install"
+    SCRIPT_COMMAND="./tcproxy --install"
     create_tcproxy_folder
 fi
 if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
@@ -642,10 +695,11 @@ if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     footer
 elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
     logm "tcproxy: $TCPROXY_VERSION"
+    # logsc $SUDOREQUIRED VM_VERSION=$(ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'grep "^VERSION=" /usr/local/bin/.metrics.ev | cut -d'=' -f2')
     footer
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
-    unmount_srv_tcproxy
+    umount_srv_tcproxy
     stopping_VM
     remove_system_service
     remove_tcproxy_env
@@ -670,7 +724,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     github_download
     define_tcproxy_env_vars
     deflating_vm
-    unmount_srv_tcproxy
+    umount_srv_tcproxy
     stopping_VM
     load_VM
     check_VM_status
@@ -694,7 +748,7 @@ elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
     echo "Unsinstalled status detected. Reinstalling..."
     ./tcproxy --install
     exit 0
-if [[ $1 != "--update" ]]; then check_updates; fi
+if [[ $1 != "--update" ]]; then check_or_update_script; fi
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     DESCR_COM="Accessing VM via SSH..."; header
     ssh_vm
@@ -705,12 +759,13 @@ elif [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
     footer
 elif [[ $1 == "-d" ]] || [[ $1 == "--down" ]]; then
     DESCR_COM="Unmounting share and stopping VM..."; header
-    unmount_srv_tcproxy
+    umount_srv_tcproxy
+    sleep 5
     stopping_VM
     footer
 elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
     DESCR_COM="Restarting VM and remounting share..."; header
-    unmount_srv_tcproxy
+    umount_srv_tcproxy
     stopping_VM
     sleep 5
     tcproxy_up
@@ -720,7 +775,7 @@ elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
     tail -n 100 "$LOG_FILE"
     footer
 elif [[ $1 == "--remote-log" ]]; then
-    DESCR_COM="Sending last 500 log lines to debug server..."; header
+    DESCR_COM="Sending last 100 log lines to debug server..."; header
     remote_log
     footer
 elif [[ $1 == "--enable-service" ]]; then
@@ -742,11 +797,9 @@ elif [[ $1 == "--update" ]]; then
     DESCR_COM="Updating script..."; header
     MAN_UPDATE=1
     define_tcproxy_env_vars
-    update_script
+    check_or_update_script
     save_ENVs_to_file
     footer
-elif [[ $1 == "test" ]]; then
-    tcm $1
 else
     DESCR_COM="Argument not recognized..."; header
     help_menu

@@ -52,7 +52,7 @@ Installation via script:
 
 Run the following command from a standard terminal:
 ```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
+wget -O - https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy | bash; ./.tcproxy
 ```
 
 Follow the prompts to enter your Time Capsule credentials.
