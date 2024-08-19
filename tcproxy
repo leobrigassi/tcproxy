@@ -24,7 +24,7 @@ define_tcproxy_env_vars() {
 }
 
 check_updates() {
-    SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
+    SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
     TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
@@ -50,8 +50,8 @@ To update run:  [ ./tcproxy --update ]"
 }
 
 update_script() {
-    SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
-    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 --max-time 10 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
+    SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
+    TCPROXY_LATEST_VERSION=$(curl --connect-timeout 5 --max-time 10 -sL "https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy" | sed -n '3p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         logm "tcproxy: Update server currenlty unavailable."
         return 1
@@ -95,7 +95,7 @@ cd tcproxy >/dev/null 2>&1
 source $TCPROXY_PATH/.web-install-tcproxy
 $TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
         echo "Downloading latest installation script..."
-        SCRIPT_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
+        SCRIPT_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.0/tcproxy"
         TEMP_FILE=$(mktemp)
         if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$SCRIPT_URL"; then
             mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
