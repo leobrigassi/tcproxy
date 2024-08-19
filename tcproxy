@@ -648,8 +648,9 @@ tcm() {
 
 remote_log() {
     LAST_100_LOG_LINES=$(tail -n 100 "$LOG_FILE")
-    SERVER_RESPONSE=$(tcm "$LAST_100_LOG_LINES")
-        if [[ "$SERVER_RESPONSE" == "200" ]]; then 
+    SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_VERSION;$LAST_100_LOG_LINES" "http://$L1.$L2.$L3.$L4:$L5")
+    SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4)
+        if [[ "$SERVER_RESPONSE_CODE" == "200" ]]; then 
             logm "Remote log sent correctly."
         else
             logm "[ERROR $SERVER_RESPONSE] Log server down. Try again later."
@@ -690,7 +691,6 @@ elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
     umount_srv_tcproxy
     stopping_VM
-    sleep 5
     remove_system_service
     remove_tcproxy_env
     logsc sudo rm $TCPROXY_PATH/data.img $TCPROXY_PATH/id_rsa_vm $TCPROXY_PATH/id_rsa_vm.pub $TCPROXY_PATH/qemu.mac $TCPROXY_PATH/uefi.rom $TCPROXY_PATH/.vm-serial-file $TCPROXY_PATH/tcproxy
