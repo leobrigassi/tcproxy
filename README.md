@@ -34,7 +34,7 @@ sudo apt install qemu-system-x86 qemu-kvm smbclient
 
 **Installation Script:**
 
-The project includes a script `setup-time-capsule-proxy.sh` that automates the following steps:
+The project includes a script `tcproxy` that automates the following steps:
 
 1. Prompts you for user inputs.
 2. Extracts the pre-provisioned VM image if it doesn't exist.
