@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.0_beta1.481
+TCPROXY_COMMIT=v2.0.0_beta1.482
 TCPROXY_BRANCH=/heads/v2.0.0beta
 TCPROXY_RELEASE=v1.1.2
 
@@ -690,6 +690,7 @@ elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
     umount_srv_tcproxy
     stopping_VM
+    sleep 5
     remove_system_service
     remove_tcproxy_env
     logsc sudo rm $TCPROXY_PATH/data.img $TCPROXY_PATH/id_rsa_vm $TCPROXY_PATH/id_rsa_vm.pub $TCPROXY_PATH/qemu.mac $TCPROXY_PATH/uefi.rom $TCPROXY_PATH/.vm-serial-file $TCPROXY_PATH/tcproxy
