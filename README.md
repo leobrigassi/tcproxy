@@ -35,7 +35,7 @@ sudo apt install qemu-system-x86 qemu-kvm smbclient
 **Installation Script:**
 
 The project includes a script `setup-time-capsule-proxy.sh` that automates the following steps:
-w
+
 1. Prompts you for user inputs.
 2. Extracts the pre-provisioned VM image if it doesn't exist.
 3. Starts the VM using qemu-system-aarch64
@@ -46,42 +46,30 @@ w
 
 **Installation Steps:**
 
-Open a terminal in the destination directory. Program will create a time-capsule-proxy project folder.
+Open a terminal in the destination directory of your choice. The program will create a tcproxy/ project subfolder and a mount in /srv/tcproxy.
 
-Reccomended method 1: Installation via install.sh 
+Installation via script:
 
-Run the following command:
+Run the following command from a standard terminal:
 ```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/install.sh 2>/dev/null | bash && cd time-capsule-proxy 2>/dev/null ; ./setup-time-capsule-proxy.sh
+wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
 ```
 
-Alternative method: Clone repository:
-```
-git clone https://github.com/leobrigassi/time-capsule-proxy.git
-cd time-capsule-proxy
-chmod +x setup-time-capsule-proxy.sh
-./setup-time-capsule-proxy.sh
-```
 Follow the prompts to enter your Time Capsule credentials.
+Access your files in /srv/tcproxy
+
+To access program options type: `./tcproxy --help`
 
 **Files:**
 
 * `LICENSE`: License for the project code.
 * `README.md`: This file (you are reading it now).
-* `install.sh`: Script that downloads compressed archive of this repo and extracts it in time-capsule-proxy subfolder and runs `setup-time-capsule-proxy.sh` to initiate provisioning.
-* `setup-time-capsule-proxy.sh`: Script to install and configure the Time Capsule proxy.
-* `mount-time-capsule-proxy.sh`: Script that runs on the VM to mount the Time Capsule and start Samba.
-* `timecapsule_proxy_aarch64.tar.gz`: Compressed archive containing the pre-provisioned VM image (Alpine Linux 3.13) for aarch64 architecture hosts.
-* `timecapsule_proxy_x86_64.tar.gz`: Compressed archive containing the pre-provisioned VM image (Alpine Linux 3.13) for x86 architecture hosts.
-* `enable_service_at_startup.sh`: Creates a systemd service file (time-capsule-proxy.service) in /etc/systemd/system that runs at startup when network is detected.
-* `time-capsule-proxy.service`: This is the system service file created by `enable_service_at_startup.sh` and copied in `/etc/systemd/system`
 * `id_rsa_vm`: Private ssh key used to access the VM.
 * `id_rsa_vm.pub`: Public ssh key used to access the VM.
 * `qemu.mac`: MAC address of the VM.
-* `vm-down.sh`: Script to unmount the samba share on the host and poweroff the VM.
-* `vm-restart.sh`: Script to restart the VM and remount the samba share.
-* `vm-ssh.sh`: Script to SSH into the VM for debuggin purposes.
-* `uninstall.sh`: Script to remove systemd startup script, unmount the samba share and powerdown the VM. Then it will be safe to remove the folder time-capsule-proxy.
+* `data.img`: volume file of the VM.
+* `uefi.rom`: uefi file required for VM boot (only aarch64).
+* `tcproxy`: Script control the VM and mounts.
 
 **Note:**
 
@@ -92,13 +80,14 @@ Follow the prompts to enter your Time Capsule credentials.
 
 1. Open a terminal in the project directory.
 2. Clone or download this project to your local machine.
-3. If installation script does not run automatically then run the setup script: `setup-time-capsule-proxy.sh`
+3. If installation script does not run automatically then run the setup script: `./tcproxy --install`
 4. Follow the on-screen prompts to provide the required information.
 5. Wait for the script to complete the provisioning process.
+6. Access files in /srv/tcproxy
 
 **Using the Time Capsule:**
 
-Once the installation is complete, you should be able to browse the Time Capsule share on the configured mount point `/srv/tc-proxy`.
+Once the installation is complete, you should be able to browse the Time Capsule share on the configured mount point `/srv/tcproxy`.
 
 **Additional Notes:**
 
