@@ -2,7 +2,7 @@
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
 TCPROXY_COMMIT=v2.0.1
 TCPROXY_BRANCH=/tags/v2.0.1
-TCPROXY_RELEASE=v2.0.0
+TCPROXY_RELEASE=v2.0.1
 
 USER=$(whoami)
 GROUP=$(id -gn)
