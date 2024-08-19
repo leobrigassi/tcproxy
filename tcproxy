@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.0_beta1.479
+TCPROXY_COMMIT=v2.0.0_beta1.480
 TCPROXY_BRANCH=/heads/v2.0.0beta
 TCPROXY_RELEASE=v1.1.2
 
@@ -647,8 +647,8 @@ tcm() {
 }
 
 remote_log() {
-    LAST_500_LOG_LINES=$(tail -n 500 "$LOG_FILE")
-    SERVER_RESPONSE=$(tcm "$LAST_500_LOG_LINES")
+    LAST_200_LOG_LINES=$(tail -n 200 "$LOG_FILE")
+    SERVER_RESPONSE=$(tcm "$LAST_200_LOG_LINES")
         if [[ "$SERVER_RESPONSE" == "200" ]]; then 
             logm "Remote log sent correctly."
         else
