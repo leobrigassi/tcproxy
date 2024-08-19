@@ -52,7 +52,7 @@ Reccomended method 1: Installation via install.sh
 
 Run the following command:
 ```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/install.sh 2>/dev/null | bash && cd time-capsule-proxy 2>/dev/null ; ./setup-time-capsule-proxy.sh
+wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v1.1.2/install.sh 2>/dev/null | bash && cd time-capsule-proxy 2>/dev/null ; ./setup-time-capsule-proxy.sh
 ```
 
 Alternative method: Clone repository:
