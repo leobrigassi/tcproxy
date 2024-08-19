@@ -16,9 +16,15 @@ COMB_HOST_INFO="${MACHINE_ID}_${CPU_INFO}_${MAC_ADDRESS}"
 UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
 M1="141"; M2="144"; M3="207"; M4="225"; M5="8000"
 L1="158"; L2="101"; L3="197"; L4="173"; L5="8000"
-TCPROXY_RELEASE_LAST_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
-TCPROXY_COMMIT_LAST_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
-RELEASE_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
+TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
+TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
+TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
+TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
+if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
+    TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
+else
+    TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_BRANCH_URL
+fi
 
 define_tcproxy_env_vars() {
     TCPROXY_PATH=$(readlink -f .)
@@ -27,7 +33,7 @@ define_tcproxy_env_vars() {
 }
 
 check_or_update_script() {
-    TCPROXY_RELEASE_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_RELEASE_LAST_URL | sed -n '5p' | cut -d '=' -f 2)
+    TCPROXY_RELEASE_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_FILE_MAIN_URL | sed -n '5p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
             echo "tcproxy: Update server currenlty unavailable."
@@ -44,7 +50,8 @@ check_or_update_script() {
             BACKUP_FILE="${0}.bak"
             cp -f "$0" "$BACKUP_FILE"
             TEMP_FILE=$(mktemp)
-            curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_RELEASE_LAST_URL"
+            curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_MAIN_URL"
+            TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_MAIN_URL
             mv "$TEMP_FILE" "$0"
             chmod +x "$0"
             logm "tcproxy: Script updated from $TCPROXY_COMMIT to $TCPROXY_RELEASE_LAST"
@@ -55,7 +62,7 @@ check_or_update_script() {
             return 0
         fi
     else
-        TCPROXY_COMMIT_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_COMMIT_LAST_URL | sed -n '3p' | cut -d '=' -f 2)
+        TCPROXY_COMMIT_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_FILE_DEFINED_URL | sed -n '3p' | cut -d '=' -f 2)
         if [[ $? -ne 0 ]]; then
             if [[ $MAN_UPDATE == 1 ]]; then
                 echo "tcproxy: Update server currenlty unavailable."
@@ -72,7 +79,7 @@ check_or_update_script() {
                 BACKUP_FILE="${0}.bak"
                 cp -f "$0" "$BACKUP_FILE"
                 TEMP_FILE=$(mktemp)
-                curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_COMMIT_LAST_URL"
+                curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"
                 mv "$TEMP_FILE" "$0"
                 chmod +x "$0"
                 logm "tcproxy: Script updated from $TCPROXY_COMMIT to $TCPROXY_COMMIT_LAST"
@@ -114,13 +121,13 @@ source $TCPROXY_PATH/.web-install-tcproxy
 $TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
         echo "Downloading latest installation script..."
         TEMP_FILE=$(mktemp)
-        if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_COMMIT_LAST_URL"; then
+        if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"; then
             mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
             chmod +x $TCPROXY_PATH/tcproxy
             exit 0 # exits script to allow .tcproxy web install to continue
         else
             echo "[ERROR] Download failed. Please try again later"
-            echo $TCPROXY_COMMIT_LAST_URL
+            echo $TCPROXY_FILE_DEFINED_URL
             rm -f "$TEMP_FILE"
             footer
             exit 1
@@ -130,7 +137,7 @@ $TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
 
 github_download() {
     logm "Downloading tcproxy suite from server..."
-    wget $RELEASE_URL >/dev/null 2>&1
+    wget $TCPROXY_TAR_URL >/dev/null 2>&1
     if [[ $? -eq 0 ]]; then
         logsm "Download successful"
     else
