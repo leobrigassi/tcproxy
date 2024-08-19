@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.467-9_1
+TCPROXY_VERSION=v2.0.0_beta1.467-10
 TCPROXY_BRANCH=/heads/v2.0.0beta
 TCPROXY_RELEASE=v1.1.2
 
@@ -17,7 +17,8 @@ UNIQUE_ID=$(echo -n "$COMB_HOST_INFO" | md5sum | awk '{print $1}')
 M1="141"; M2="144"; M3="207"; M4="225"; M5="8000"
 L1="158"; L2="101"; L3="197"; L4="173"; L5="8000"
 TCPROXY_RELEASE_LAST_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
-TCPROXY_COMMIT_LAST_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/$TCPROXY_BRANCH/tcproxy"
+TCPROXY_COMMIT_LAST_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#*/}/tcproxy"
+RELEASE_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
 
 define_tcproxy_env_vars() {
     TCPROXY_PATH=$(readlink -f .)
