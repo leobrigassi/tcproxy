@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_VERSION=v2.0.0_beta1.477
+TCPROXY_COMMIT=v2.0.0_beta1.478
 TCPROXY_BRANCH=/heads/v2.0.0beta
 TCPROXY_RELEASE=v1.1.2
 
@@ -47,8 +47,7 @@ check_or_update_script() {
             curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_RELEASE_LAST_URL"
             mv "$TEMP_FILE" "$0"
             chmod +x "$0"
-            update_tcproxy
-            logm "tcproxy: Script updated from $TCPROXY_RELEASE to $TCPROXY_RELEASE_LAST"
+            logm "tcproxy: Script updated from $TCPROXY_COMMIT to $TCPROXY_RELEASE_LAST"
         else
             echo "tcproxy: New update available $TCPROXY_RELEASE_LAST. (Current $TCPROXY_RELEASE)"
             echo "To update run:  [ ./tcproxy --update ]"
@@ -678,7 +677,7 @@ if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     footer
 elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
     logm "tcproxy: $TCPROXY_VERSION"
-    logsc $SUDOREQUIRED VM_VERSION=$(ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'grep "^VERSION=" /usr/local/bin/.metrics.ev | cut -d'=' -f2')
+    # logsc $SUDOREQUIRED VM_VERSION=$(ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'grep "^VERSION=" /usr/local/bin/.metrics.ev | cut -d'=' -f2')
     footer
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
