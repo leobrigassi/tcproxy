@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.3-b3
+TCPROXY_COMMIT=v2.0.3-b4
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.2
 
@@ -20,7 +20,7 @@ TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsul
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
-# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.2/tcproxy 2>/dev/null | bash; ./.tcproxy
+# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.3/tcproxy 2>/dev/null | bash; ./.tcproxy
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
 # Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash; ./.tcproxy
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
