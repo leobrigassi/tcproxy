@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.3-c3
+TCPROXY_COMMIT=v2.0.3-c4
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.2
 
@@ -441,8 +441,8 @@ tcproxy_up() {
     RETRY_INTERVAL_MO=5
     RETRY_COUNT_MO=0
     MAX_RETRIES_MO=5
-    while ! mountpoint -q /srv/tcproxy >/dev/null 2>&1; do
-        RETRY_COUNT_MO=$((RETRY_COUNT + 1))
+    while ! mountpoint -q /srv/tcproxy; do
+        RETRY_COUNT_MO=$((RETRY_COUNT_MO + 1))
         if [ $RETRY_COUNT_MO -ge $MAX_RETRIES_MO ]; then
             logm "[ERROR] Max retries for mountpoint check reached. Please reboot your system and try again. Exiting..."
             exit 1
