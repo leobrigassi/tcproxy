@@ -69,7 +69,7 @@ To access program options type: `./tcproxy --help`
 * `qemu.mac`: MAC address of the VM.
 * `data.img`: volume file of the VM.
 * `uefi.rom`: uefi file required for VM boot (only aarch64).
-* `tcproxy`: Script control the VM and mounts.
+* `tcproxy`: Script to control the VM and mounts.
 
 **Note:**
 
