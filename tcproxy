@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.3-d2
+TCPROXY_COMMIT=v2.0.3-d3
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.2
 
@@ -191,7 +191,7 @@ testing_ssh_premission_requirements() {
             SUDOREQUIRED="sudo "
             logm "[INFO] SSH privileges have been elevated."
         else
-            logm "[ERROR] Cannot SSH in the VM. Installation aborted. Error code $SUDOREQUIREDEXIT"
+            logm "[ERROR] Cannot SSH in the VM. Process aborted. Error code $SUDOREQUIREDEXIT"
             exit 1
         fi
     fi
@@ -204,24 +204,24 @@ prompt_user_inputs() {
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         :
     else
-        logm "[INFO] Installation Aborted. No change has been performed."
+        logm "[INFO] Process Aborted. No change has been performed."
         exit 1
     fi
     read -p "[INPUT] Time Capsule IPv4 (e.g. 192.168.1.10): " TC_IP
     if [ -z "$TC_IP" ]; then
-        logm "[ERROR] IPv4 required. Installation aborted"
+        logm "[ERROR] IPv4 required. Process aborted"
         exit 1
     fi
     read -p "[INPUT] Time Capsule USER: " TC_USER
     TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     read -p "[INPUT] Time Capsule PASSWORD: " TC_PASSWORD
     if [ -z "$TC_PASSWORD" ]; then
-        logm "[ERROR] PASSWORD is required. Installation aborted"
+        logm "[ERROR] PASSWORD is required. Process aborted"
         exit 1
     fi
     read -p "[INPUT] Time Capsule DISK name (e.g. Data): " TC_FOLDER
     if [ -z "$TC_FOLDER" ]; then
-        logm "[ERROR] DISK name is required. Installation aborted"
+        logm "[ERROR] DISK name is required. Process aborted"
         exit 1
     fi
     read -p "[INPUT] Do you want to enable mount at startup? (y/N): " STARTUP_MOUNT
@@ -257,10 +257,10 @@ umount_srv_tcproxy() {
             if [[ $? -eq 0 ]]; then
                 logm "[INFO] forced unmount of /srv/tcproxy successful..."
             elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
-                logm "[ERROR $$RESPONSE_F_UM] Please reboot and retry. Installation aborted."
+                logm "[ERROR $$RESPONSE_F_UM] Please reboot and retry. Process aborted."
                 exit 1
             else 
-                logm "[ERROR $$RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Installation aborted."
+                logm "[ERROR $$RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
                 exit 1
             fi
         fi
