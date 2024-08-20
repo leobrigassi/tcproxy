@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.3-c6
+TCPROXY_COMMIT=v2.0.3-c7
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.2
 
@@ -243,6 +243,32 @@ umount_srv_tcproxy() {
     RETRY_COUNT_UM=0
     echo "umount_srv_tcproxy RETRY_COUNT_UM=$RETRY_COUNT_UM"
     # while mountpoint -q "/srv/tcproxy"; do
+    while ! ls /srv/tcproxy ; do
+        RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
+        if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
+            logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
+            exit 1
+        fi
+        RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
+        if [ $? -eq 0 ]; then
+            logsm "umount of /srv/tcproxy successful..."
+        else
+            logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
+            sleep 5 
+            RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
+            if [[ $? -eq 0 ]]; then
+                logm "[INFO] forced unmount of /srv/tcproxy successful..."
+            elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
+                logm "[ERROR $$RESPONSE_F_UM] Please reboot and retry. Installation aborted."
+                exit 1
+            else 
+                logm "[ERROR $$RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Installation aborted."
+                exit 1
+            fi
+        fi
+    done
+    logm "umount /srv/tcproxy completed... RESP:$RESPONSE_UM"
+    RETRY_COUNT_UM=0
     while mountpoint -q /srv/tcproxy; do
         RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
         if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
@@ -726,7 +752,6 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     define_tcproxy_env_vars
     check_system_requirements
     prompt_user_inputs
-    umount_srv_tcproxy
     github_download
     define_tcproxy_env_vars
     deflating_vm
