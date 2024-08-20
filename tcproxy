@@ -1,8 +1,8 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.2
+TCPROXY_COMMIT=v2.0.3
 TCPROXY_BRANCH=/heads/main
-TCPROXY_RELEASE=v2.0.2
+TCPROXY_RELEASE=v2.0.3
 
 USER=$(whoami)
 GROUP=$(id -gn)
@@ -20,9 +20,9 @@ TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsul
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
-# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.1/tcproxy | bash; ./.tcproxy
+# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.3/tcproxy 2>/dev/null | bash; ./.tcproxy
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
-# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy | bash; ./.tcproxy
+# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash; ./.tcproxy
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -191,7 +191,7 @@ testing_ssh_premission_requirements() {
             SUDOREQUIRED="sudo "
             logm "[INFO] SSH privileges have been elevated."
         else
-            logm "[ERROR] Cannot SSH in the VM. Installation aborted. Error code $SUDOREQUIREDEXIT"
+            logm "[ERROR] Cannot SSH in the VM. Process aborted. Error code $SUDOREQUIREDEXIT"
             exit 1
         fi
     fi
@@ -204,24 +204,24 @@ prompt_user_inputs() {
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         :
     else
-        logm "[INFO] Installation Aborted. No change has been performed."
+        logm "[INFO] Process Aborted. No change has been performed."
         exit 1
     fi
     read -p "[INPUT] Time Capsule IPv4 (e.g. 192.168.1.10): " TC_IP
     if [ -z "$TC_IP" ]; then
-        logm "[ERROR] IPv4 required. Installation aborted"
+        logm "[ERROR] IPv4 required. Process aborted"
         exit 1
     fi
     read -p "[INPUT] Time Capsule USER: " TC_USER
     TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     read -p "[INPUT] Time Capsule PASSWORD: " TC_PASSWORD
     if [ -z "$TC_PASSWORD" ]; then
-        logm "[ERROR] PASSWORD is required. Installation aborted"
+        logm "[ERROR] PASSWORD is required. Process aborted"
         exit 1
     fi
     read -p "[INPUT] Time Capsule DISK name (e.g. Data): " TC_FOLDER
     if [ -z "$TC_FOLDER" ]; then
-        logm "[ERROR] DISK name is required. Installation aborted"
+        logm "[ERROR] DISK name is required. Process aborted"
         exit 1
     fi
     read -p "[INPUT] Do you want to enable mount at startup? (y/N): " STARTUP_MOUNT
@@ -239,57 +239,84 @@ deflating_vm() {
 }
 
 umount_srv_tcproxy() {
-    MAX_RETRIES=10
-    RETRY_COUNT=0
-    while mountpoint -q "/srv/tcproxy"; do
-        RETRY_COUNT=$((RETRY_COUNT + 1))
-        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+    MAX_RETRIES_UM=3
+    RETRY_COUNT_UM=0
+    while ! ls /srv/tcproxy > /dev/null 2>&1; do
+        RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
+        if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
             logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
             exit 1
         fi
-        if sudo umount /srv/tcproxy >/dev/null 2>&1; then
+        RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
+        if [ $? -eq 0 ]; then
             logsm "umount of /srv/tcproxy successful..."
         else
+            logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
             sleep 5 
-            if  mountpoint -q "/srv/tcproxy"; then
-                if sudo umount -f /srv/tcproxy >/dev/null 2>&1; then
-                    logm "[INFO] forced unmount of /srv/tcproxy successful..."
-                else
-                    EXIT_CODE=$?
-                    logm "[ERROR $EXIT_CODE] Cannot unmount /srv/tcproxy. Please check your system and run tcproxy -i again."
-                    exit 1
-                fi
-            else
-                logm "umount (slow) of /srv/tcproxy successful..."
+            RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
+            if [[ $? -eq 0 ]]; then
+                logm "[INFO] forced unmount of /srv/tcproxy successful..."
+            elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
+                logm "[ERROR $$RESPONSE_F_UM] Please reboot and retry. Process aborted."
+                exit 1
+            else 
+                logm "[ERROR $$RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
+                exit 1
             fi
         fi
+    done
+    RETRY_COUNT_UM=0
+    while mountpoint -q /srv/tcproxy; do
+        RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
+        if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
+            logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
+            exit 1
+        fi
+        RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
+        if [ $? -eq 0 ]; then
+            logsm "umount of /srv/tcproxy successful..."
+        else
+            logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
+            sleep 5 
+            RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
+            if [[ $? -eq 0 ]]; then
+                logm "[INFO] forced unmount of /srv/tcproxy successful..."
+            elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
+                logm "[ERROR $RESPONSE_F_UM] Please reboot and retry. Process aborted."
+                exit 1
+            else 
+                logm "[ERROR $RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
+                exit 1
+            fi
+        fi
+        logm "cannot umount /srv/tcproxy... trying again..."
         sleep 5
     done
-    logm "umount /srv/tcproxy completed..."
+    logsm "umount /srv/tcproxy completed..."
 }
 
 stopping_VM() {
     if pgrep -f "mac=02:D2:46:5B:4E:84" >/dev/null 2>&1; then
         logm "VM detected. Sending poweroff command..."
         $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "poweroff"
-        TIMEOUT=60
-        INTERVAL=5
-        ELAPSED=0
+        TIMEOUT_ST=60
+        INTERVAL_ST=5
+        ELAPSED_ST=0
         while pgrep -f "mac=02:D2:46:5B:4E:84" >/dev/null 2>&1; do
-            sleep $INTERVAL
-            ELAPSED=$((ELAPSED + INTERVAL))
-            if [ $ELAPSED -ge $TIMEOUT ]; then
-                logm "[ERROR] VM did not power down after $TIMEOUT seconds. Forcing termination..."
+            sleep $INTERVAL_ST
+            ELAPSED_ST=$((ELAPSED_ST + INTERVAL_ST))
+            if [ $ELAPSED_ST -ge $TIMEOUT_ST ]; then
+                logm "[ERROR] VM did not power down after $TIMEOUT_ST seconds. Forcing termination..."
                 sudo pkill -f "mac=02:D2:46:5B:4E:84"
                 if [ $? -eq 0 ]; then
                     logm "VM process killed."
                 else
-                    logm "[ERROR] Failed to kill VM process. Installation stopped."
+                    logm "[ERROR] Failed to kill VM process. Process aborted."
                     exit 1
                 fi
             fi
         done
-        if [ $ELAPSED -lt $TIMEOUT ]; then
+        if [ $ELAPSED_ST -lt $TIMEOUT_ST ]; then
             logm "VM powered down..."
         fi
     else 
@@ -327,12 +354,12 @@ load_VM() {
 
 check_VM_status() {
     logm "Waiting for VM to boot..."
-    MAX_RETRIES=30
-    RETRY_INTERVAL=5
-    RETRY_COUNT=0
+    MAX_RETRIES_VM_ST=30
+    RETRY_INTERVAL_VM_ST=5
+    RETRY_COUNT_VM_ST=0
     while ! sudo tail -f ./.vm-serial-file | grep -q "Welcome to Alpine Linux"; do
-        RETRY_COUNT=$((RETRY_COUNT + 1))
-        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        RETRY_COUNT_VM_ST=$((RETRY_COUNT_VM_ST + 1))
+        if [ $RETRY_COUNT_VM_ST -ge $MAX_RETRIES_VM_ST ]; then
             logm "[ERROR] Max retries for check_VM_status reached. Exiting..."
             exit 1
         fi
@@ -409,44 +436,45 @@ check_smb_share() {
 }
 
 tcproxy_up() {
-    MAX_RETRIES=10
-    RETRY_INTERVAL=180
-    RETRY_COUNT=0
-    VM_REBOOT_COUNT=5
+    MAX_RETRIES_UP=10
+    RETRY_INTERVAL_UP=180
+    RETRY_COUNT_UP=0
+    REBOOT_COUNT_VM_UP=5
     logm "Checking VM status..."
     if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
         load_VM
         check_VM_status
     fi
     while ! check_smb_share; do
-        RETRY_COUNT=$((RETRY_COUNT + 1))
-        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
+        RETRY_COUNT_UP=$((RETRY_COUNT + 1))
+        if [ $RETRY_COUNT_UP -ge $MAX_RETRIES_UP ]; then
             logm "[ERROR] Max retries for check_smb_share reached. Exiting..."
             exit 1
-        elif [ $RETRY_COUNT -eq $VM_REBOOT_COUNT ]; then
+        elif [ $RETRY_COUNT_UP -eq $REBOOT_COUNT_VM_UP ]; then
             logm "[INFO] VM samba share still not accessible. Restarting tcproxy VM..."
             umount_srv_tcproxy
             stopping_VM
             sleep 10
             load_VM
         fi
-        logm "[INFO] Failed to access VM samba share. Waiting 180 seconds before next attempt. Attempt $RETRY_COUNT/$MAX_RETRIES."
-        sleep $RETRY_INTERVAL
+        logm "[INFO] Failed to access VM samba share. Waiting 180 seconds before next attempt. Attempt $RETRY_COUNT_UP/$MAX_RETRIES_UP."
+        sleep $RETRY_INTERVAL_UP
     done
     logm "VM samba share is accessible."
     # Verify host mount
-    RETRY_INTERVAL=5
-    RETRY_COUNT=0
-    while ! mountpoint -q /srv/tcproxy >/dev/null 2>&1; do
-        RETRY_COUNT=$((RETRY_COUNT + 1))
-        if [ $RETRY_COUNT -ge $MAX_RETRIES ]; then
-            logm "[ERROR] Max retries for mountpoint check reached. Exiting..."
+    RETRY_INTERVAL_MO=5
+    RETRY_COUNT_MO=0
+    MAX_RETRIES_MO=3
+    while ! mountpoint -q /srv/tcproxy; do
+        RETRY_COUNT_MO=$((RETRY_COUNT_MO + 1))
+        if [ $RETRY_COUNT_MO -ge $MAX_RETRIES_MO ]; then
+            logm "[ERROR] Max retries for mountpoint check reached. Please reboot your system and try again. Exiting..."
             exit 1
         fi
         logm "Remounting /srv/tcproxy..."
         umount_srv_tcproxy
         logsc sudo mount -t cifs //127.0.0.1/tcproxy /srv/tcproxy -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID
-        sleep $RETRY_INTERVAL
+        sleep $RETRY_INTERVAL_MO
     done
     logm "/srv/tcproxy mounted and accessible"
 }
@@ -611,7 +639,6 @@ save_ENVs_to_file() {
     echo "ARCH=$ARCH" >> $TCP_ENV
     echo "UNIQUE_ID=$UNIQUE_ID" >> $TCP_ENV
     echo "L1=$L1; L2=$L2; L3=$L3; L4=$L4; L5=$L5" >> $TCP_ENV
-    TC_PASSWORD=""
     logsm "tcproxy: envronment variables updated"
 }
 
@@ -706,6 +733,7 @@ elif [[ $1 == "--uninstall" ]]; then
     logsc sudo rm $TCPROXY_PATH/data.img $TCPROXY_PATH/id_rsa_vm $TCPROXY_PATH/id_rsa_vm.pub $TCPROXY_PATH/qemu.mac $TCPROXY_PATH/uefi.rom $TCPROXY_PATH/.vm-serial-file $TCPROXY_PATH/tcproxy
     touch .tcproxy-uninstalled
     logm "tcproxy unistalled."
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;uninstalled" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     footer
 # args selection
 elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
@@ -733,6 +761,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     provision_VM
     test_VM_mount
     tcproxy_up
+    save_ENVs_to_file
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
         tcproxy_systemd_setup
         remove_system_service
@@ -745,7 +774,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     tcm "setup-finished"  >/dev/null 2>&1
     footer
 elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
-    echo "Unsinstalled status detected. Reinstalling..."
+    echo "Uninstalled status detected. Reinstalling..."
     ./tcproxy --install
     exit 0
 if [[ $1 != "--update" ]]; then check_or_update_script; fi
