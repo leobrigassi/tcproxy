@@ -156,14 +156,14 @@ check_system_requirements() {
     if [[ $ARCH == x86_64* ]]; then
         if ! which qemu-system-x86_64 >/dev/null 2>&1; then
         logm "qemu not detected.
-        sudo apt install qemu-system-x86 qemu-kvm
+        sudo apt install qemu-system-x86 qemu-kvm smbclient
         please install and try again."
         exit 1
         fi
     elif [[ $ARCH == aarch64* ]]; then
         if ! which qemu-system-aarch64 >/dev/null 2>&1 && ! which qemu-system-x86_64 >/dev/null 2>&1; then
         logm "Qemu not detected.
-        sudo apt install qemu-system-aarch64 qemu-kvm
+        sudo apt install qemu-system-aarch64 qemu-kvm smbclient
         Please install and try again."
         exit 1
         fi
