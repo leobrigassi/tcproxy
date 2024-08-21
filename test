@@ -5,5 +5,10 @@ INSTALL_CONFIRMATION=$(whiptail --title "Installation Confirmation" \
 if [ $? -ne 0 ]; then
     echo "Input = $? [INFO] Process Aborted. No change has been performed."
 fi
+TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
+if [ -z "$TC_IP" ]; then
+    echo "[ERROR] IPv4 required. Process aborted."
+fi
 echo "INSTALL $INSTALL_CONFIRMATION"
 echo "output $?"
+echo "TC $TC_IP"
