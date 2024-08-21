@@ -617,7 +617,7 @@ help_menu() {
   -u,  --up                 [default arg.], loads VM and initiates mount /srv/tcproxy on host
   -v,  --version            Shows current version of tcproxy installed
   --update                  requests update from project server and attempts local upgrade
-  --remote-log              Sends last 500 log lines to debug server
+  --remote-log              Sends last 100 log lines to debug server
   --enable-service          install systemd startup service
   --disable-service         stops and removes systemd startup service
   --uninstall               unmounts /srv/tcproxy and poweroff to VM and stops and removes system service
