@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.5-c1
+TCPROXY_COMMIT=v2.0.5-c2
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -744,7 +744,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
                                     --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue with the installation?" \
                                     15 60 3>&1 1>&2 2>&3)
     if [ $? -ne 0 ]; then
-        echo "[INFO] Process Aborted. No change has been performed."
+        echo "Input = $? [INFO] Process Aborted. No change has been performed."
         exit 1
     fi
     TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
