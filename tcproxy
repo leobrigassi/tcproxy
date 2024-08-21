@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.5-b0
+TCPROXY_COMMIT=v2.0.5-b1
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -755,7 +755,6 @@ keep_log_small() {
 }
 
 # tcproxy logic
-whiptail --title "Time Capsule Proxy" --msgbox "Downloading and installing the Time Capsule Proxy..." 10 50
 if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
 SCRIPT_COMMAND="$0 $@"
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
@@ -815,6 +814,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     fi
     echo "GUI out of function started"
     # Combined message box and confirmation
+    whiptail --title "Time Capsule Proxy" --msgbox "Downloading and installing the Time Capsule Proxy..." 10 50
     if ! whiptail --title "Installation Confirmation" \
                    --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue with the installation?" \
                    15 60; then
