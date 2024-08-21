@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.5-b5
+TCPROXY_COMMIT=v2.0.5-b6
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -104,38 +104,23 @@ create_tcproxy_folder() {
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
         TCPROXY_PATH=$(readlink -f .)
-        INSTALLER_PATH=$(dirname "$(pwd)")
     else
         mkdir -p tcproxy
         TCPROXY_PATH=$(readlink -f .)/tcproxy
-        INSTALLER_PATH=$(pwd)
     fi
-    if [ -t 0 ]; then
-        if [[ -e $TCPROXY_PATH/.web-install-tcproxy ]]; then rm $TCPROXY_PATH/.web-install-tcproxy; fi
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
+    echo "Downloading latest installation script..."
+    TEMP_FILE=$(mktemp)
+    if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"; then
+        mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
+        chmod +x $TCPROXY_PATH/tcproxy
+        # exit 0 # exits script to allow .tcproxy web install to continue
     else
-        touch $TCPROXY_PATH/.web-install-tcproxy
-        touch $INSTALLER_PATH/.tcproxy
-        curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
-        echo -e "#!/bin/bash
-INSTALLER_PATH=$INSTALLER_PATH
-TCPROXY_PATH=$TCPROXY_PATH" > $TCPROXY_PATH/.web-install-tcproxy
-        echo -e "#!/bin/bash
-cd tcproxy >/dev/null 2>&1
-source $TCPROXY_PATH/.web-install-tcproxy
-$TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
-        echo "Downloading latest installation script..."
-        TEMP_FILE=$(mktemp)
-        if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"; then
-            mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
-            chmod +x $TCPROXY_PATH/tcproxy
-            # exit 0 # exits script to allow .tcproxy web install to continue
-        else
-            echo "[ERROR] Download failed. Please try again later"
-            echo $TCPROXY_FILE_DEFINED_URL
-            rm -f "$TEMP_FILE"
-            footer
-            exit 1
-        fi
+        echo "[ERROR] Download failed. Please try again later"
+        echo $TCPROXY_FILE_DEFINED_URL
+        rm -f "$TEMP_FILE"
+        footer
+        exit 1
     fi
 }
 
@@ -227,51 +212,6 @@ prompt_user_inputs() {
     fi
     read -p "[INPUT] Time Capsule USB drive (optional): " TC_DISK_USB
     read -p "[INPUT] Do you want to enable mount at startup? (y/N): " STARTUP_MOUNT
-}
-
-GUI_user_inputs() {
-    echo "GUI function started"
-    # Combined message box and confirmation
-    if ! whiptail --title "Installation Confirmation" \
-                   --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue with the installation?" \
-                   15 60; then
-        echo "[INFO] Process Aborted. No change has been performed."
-        exit 1
-    fi
-
-    # Get Time Capsule IPv4
-    TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
-    if [ -z "$TC_IP" ]; then
-        echo "[ERROR] IPv4 required. Process aborted."
-        exit 1
-    fi
-
-    # Get Time Capsule USER (optional)
-    TC_USER=$(whiptail --title "Time Capsule USER" --inputbox "Enter Time Capsule USER (optional):" 8 60 "" 3>&1 1>&2 2>&3)
-
-    # Get Time Capsule PASSWORD
-    TC_PASSWORD=$(whiptail --title "Time Capsule PASSWORD" --passwordbox "Enter Time Capsule PASSWORD:" 8 60 "" 3>&1 1>&2 2>&3)
-    if [ -z "$TC_PASSWORD" ]; then
-        logm "[ERROR] PASSWORD is required. Process aborted."
-        exit 1
-    fi
-
-    # Get Time Capsule DISK name
-    TC_DISK=$(whiptail --title "Time Capsule DISK Name" --inputbox "Enter Time Capsule DISK name (e.g., Data):" 8 60 "" 3>&1 1>&2 2>&3)
-    if [ -z "$TC_DISK" ]; then
-        logm "[ERROR] DISK name is required. Process aborted."
-        exit 1
-    fi
-
-    # Get Time Capsule USB drive (optional)
-    TC_DISK_USB=$(whiptail --title "Time Capsule USB Drive" --inputbox "Enter Time Capsule USB drive (optional):" 8 60 "" 3>&1 1>&2 2>&3)
-
-    # Ask if user wants to enable mount at startup
-    if whiptail --title "Mount at Startup" --yesno "Do you want to enable mount at startup?" 8 60; then
-        STARTUP_MOUNT="yes"
-    else
-        STARTUP_MOUNT="no"
-    fi
 }
 
 deflating_vm() {
@@ -758,14 +698,7 @@ keep_log_small() {
 if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
 SCRIPT_COMMAND="$0 $@"
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
-if [[ -e $(pwd)/.web-install-tcproxy.env ]]; then 
-    source "$(pwd)/.web-install-tcproxy.env"
-    set -- "--install"
-    SCRIPT_COMMAND="Web install"
-else
-    if [ ! -t 0 ]; then create_tcproxy_folder; fi
-fi
-if [[ -e $(pwd)/.tcproxy.env ]]; then 
+if [[ -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then 
     source "$(pwd)/.tcproxy.env"
 else
     set -- "--install"
