@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.4-a0
+TCPROXY_COMMIT=v2.0.4-a1
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.3
 
@@ -212,18 +212,19 @@ prompt_user_inputs() {
         logm "[ERROR] IPv4 required. Process aborted"
         exit 1
     fi
-    read -p "[INPUT] Time Capsule USER: " TC_USER
+    read -p "[INPUT] Time Capsule USER (optional): " TC_USER
     TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     read -p "[INPUT] Time Capsule PASSWORD: " TC_PASSWORD
     if [ -z "$TC_PASSWORD" ]; then
         logm "[ERROR] PASSWORD is required. Process aborted"
         exit 1
     fi
-    read -p "[INPUT] Time Capsule DISK name (e.g. Data): " TC_FOLDER
-    if [ -z "$TC_FOLDER" ]; then
+    read -p "[INPUT] Time Capsule DISK name (e.g. Data): " TC_DISK
+    if [ -z "$TC_DISK" ]; then
         logm "[ERROR] DISK name is required. Process aborted"
         exit 1
     fi
+    read -p "[INPUT] Time Capsule USB drive (optional): " TC_DISK_USB
     read -p "[INPUT] Do you want to enable mount at startup? (y/N): " STARTUP_MOUNT
 }
 
@@ -372,18 +373,35 @@ creating_mountpoint_folder() {
     logsc sudo mkdir -p /srv/tcproxy
 }
 
+
+
+
+
+TC_DISK_USB
+
+
+
 provision_VM() {
     logm "Provisioning VM..."
     # Configure VM root passwd, /etc/fstab, samba
     logsm "Configuring VM root passwd, /etc/fstab, samba"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | passwd' >/dev/null 2>&1
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab"
-    if [[ -z ${TC_USER} ]]; then
-        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
-    else
-        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "mkdir /mnt/tc/'${TC_USER}'; mkdir /mnt/tc/'$TC_FOLDER'"
-        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_FOLDER' /mnt/tc/'$TC_FOLDER' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "mkdir /mnt/tc/'${TC_USER}' /mnt/tc/'$TC_DISK' /mnt/tc/'$TC_DISK_USB'"
+    if [[ -z ${TC_DISK_USB} ]]; then
+        if [[ -z ${TC_USER} ]]; then
+            logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
+        else
+            logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
 //'$TC_IP'/'${TC_USER}' /mnt/tc/'${TC_USER}' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
+        fi
+    elif [[ -z ${TC_USER} ]]; then
+                logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
+//'$TC_IP'/'${TC_DISK_USB}' /mnt/tc/'${TC_DISK_USB}' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
+    else
+                logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
+//'$TC_IP'/'${TC_USER}' /mnt/tc/'${TC_USER}' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
+//'$TC_IP'/'${TC_DISK_USB}' /mnt/tc/'${TC_DISK_USB}' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
     fi
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | smbpasswd -a root'
     SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;Provisioning_VM" "http://$L1.$L2.$L3.$L4:$L5"); SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4); SERVER_RESPONSE_MESSAGE=$(echo "$SERVER_RESPONSE" | head -c -4)
@@ -408,18 +426,18 @@ https://github.com/leobrigassi/time_capsule_proxy
 
 test_VM_mount() {
     if [[ -z ${TC_USER} ]]; then
-        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''; then
+        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then
             logm "VM connected to Time Capsule..."
         else 
-            logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/$TC_FOLDER. Please check credentials and IPv4 and run install again."
+            logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials and IPv4 and run install again."
             exit 1
         fi
     else
         if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'${TC_USER}''; then
-            if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_FOLDER''; then
+            if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then
                 :
             else
-                logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/$TC_FOLDER. Please check credentials and IPv4 and run install again."
+                logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials and IPv4 and run install again."
                 exit 1
             fi
         logm "VM connected to Time Capsule..."
@@ -629,7 +647,7 @@ save_ENVs_to_file() {
     echo "PUID=$PUID" >> $TCP_ENV
     echo "PGID=$PGID" >> $TCP_ENV
     echo "TC_IP=$TC_IP" >> $TCP_ENV
-    echo "TC_FOLDER=$TC_FOLDER" >> $TCP_ENV
+    echo "TC_DISK=$TC_DISK" >> $TCP_ENV
     echo "TC_FSTAB_USER=$TC_FSTAB_USER" >> $TCP_ENV
     echo "TC_PASSWORD=$TC_PASSWORD" >> $TCP_ENV
     echo "TCPROXY_SERVICE_FILE=$TCPROXY_SERVICE_FILE" >> $TCP_ENV
