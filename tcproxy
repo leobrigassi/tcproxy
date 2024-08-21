@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.5-a3
+TCPROXY_COMMIT=v2.0.5-a4
 TCPROXY_BRANCH=/heads/dev #/heads/branch or /tags/version for releases
 TCPROXY_RELEASE=v2.0.4 #currently published version on branch main
 
@@ -837,9 +837,9 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     define_tcproxy_env_vars
     check_system_requirements
     echo "main menu up"
-    main_menu
+    # main_menu
     echo "main menu down"
-    # prompt_user_inputs
+    prompt_user_inputs
     github_download
     define_tcproxy_env_vars
     deflating_vm
