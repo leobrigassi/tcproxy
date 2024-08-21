@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-e4
+TCPROXY_COMMIT=v2.1.0-e5
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -546,7 +546,7 @@ tcproxy_up() {
     RETRY_INTERVAL_MO=5
     RETRY_COUNT_MO=0
     MAX_RETRIES_MO=3
-    while ! mountpoint -q /srv/tcproxy; do
+    while ! mountpoint -q /srv/tcproxy/$TC_DISK; do
         RETRY_COUNT_MO=$((RETRY_COUNT_MO + 1))
         if [ $RETRY_COUNT_MO -ge $MAX_RETRIES_MO ]; then
             logm "[ERROR] Max retries for mountpoint check reached. Please reboot your system and try again. Exiting..."
@@ -559,7 +559,7 @@ tcproxy_up() {
         if [[ -n $TC_DISK ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_DISK /srv/tcproxy/$TC_DISK -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
         sleep $RETRY_INTERVAL_MO
     done
-    logm "/srv/tcproxy mounted and accessible"
+    logm "/srv/tcproxy/$TC_DISK mounted and accessible"
 }
 
 tcproxy_systemd_setup() {
