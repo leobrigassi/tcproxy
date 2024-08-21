@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.4-a6
+TCPROXY_COMMIT=v2.0.4-a7
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.3
 
@@ -405,7 +405,7 @@ provision_VM() {
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 'touch /usr/local/bin/.metrics.env; touch /usr/local/bin/metrics.sh'
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "UNIQUE_ID=$UNIQUE_ID; ARCH=$ARCH; TCPROXY_COMMIT=$TCPROXY_COMMIT" | base64)' | base64 -d > /usr/local/bin/.metrics.env"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo '#!/bin/sh
-source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl --connect-timeout 5 --max-time 10 -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;$(uptime);$mem_usage;$(df -h | grep 'mnt/tc\|dev/vda3')" "http://'$L1'.'$L2'.'$L3'.'$L4':'$L5'"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
+source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl --connect-timeout 5 --max-time 10 -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;$(uptime);$mem_usage;$(df -h | grep -E mnt/tc|dev/vda3)" "http://'$L1'.'$L2'.'$L3'.'$L4':'$L5'"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "chmod +x /usr/local/bin/metrics.sh; (crontab -l | grep -v '/usr/local/bin/metrics.sh'; echo '$CRONM_HM') | crontab -"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "----------------------
 tcproxy: To configure the VM please [ exit ] the VM and run [ ./tcproxy -i ] from the host.
