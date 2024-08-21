@@ -28,9 +28,11 @@ sudo apt install qemu-system-x86 qemu-kvm smbclient
 **User Inputs:**
 
 * **Time Capsule IP Address:** The IP address of your Time Capsule on your network.
-* **Disk Name:** The name of the disk on your Time Capsule that you want to mount.
 * **Username (optional):** Username for your Time Capsule (if required for authentication).
 * **Password:** Password for your Time Capsule.
+* **Disk Name:** The name of the disk on your Time Capsule that you want to mount.
+* **USB Disk Name (optional):** The name of the USB disk physically plugged in your Time Capsule
+
 
 **Installation Script:**
 
@@ -83,11 +85,7 @@ To access program options type: `./tcproxy --help`
 3. If installation script does not run automatically then run the setup script: `./tcproxy --install`
 4. Follow the on-screen prompts to provide the required information.
 5. Wait for the script to complete the provisioning process.
-6. Access files in /srv/tcproxy
-
-**Using the Time Capsule:**
-
-Once the installation is complete, you should be able to browse the Time Capsule share on the configured mount point `/srv/tcproxy`.
+6. Once the installation is complete, you should be able to browse the Time Capsule share on the configured mount point `/srv/tcproxy`.
 
 **Additional Notes:**
 
