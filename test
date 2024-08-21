@@ -1,5 +1,5 @@
 #!/bin/bash
-INSTALL_CONFIRMATION=$(whiptail --title "Installation Confirmation" \
+INSTALL_CONFIRMATION=$(whiptail --title "Installation Confirmation2" \
                                 --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue with the installation?" \
                                 15 60 3>&1 1>&2 2>&3)
 if [ $? -ne 0 ]; then
