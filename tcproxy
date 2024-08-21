@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.5-c2
+TCPROXY_COMMIT=v2.0.5-c3
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -108,6 +108,9 @@ create_tcproxy_folder() {
         mkdir -p tcproxy
         TCPROXY_PATH=$(readlink -f .)/tcproxy
     fi
+}
+
+download_latest_script() {
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     echo "Downloading latest installation script..."
     TEMP_FILE=$(mktemp)
@@ -699,6 +702,7 @@ if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains space
 SCRIPT_COMMAND="$0 $@"
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
 if [[ -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then 
+echo $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)
     source "$(pwd)/.tcproxy.env"
 else
     set -- "--install"
