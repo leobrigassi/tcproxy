@@ -1,8 +1,8 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.4
-TCPROXY_BRANCH=/heads/main
-TCPROXY_RELEASE=v2.0.4
+TCPROXY_COMMIT=v2.0.5-a1
+TCPROXY_BRANCH=/heads/dev #/heads/branch or /tags/version for releases
+TCPROXY_RELEASE=v2.0.4 #currently published version on branch main
 
 USER=$(whoami)
 GROUP=$(id -gn)
@@ -20,7 +20,7 @@ TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsul
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
-# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.3/tcproxy 2>/dev/null | bash; ./.tcproxy
+# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.4/tcproxy 2>/dev/null | bash; ./.tcproxy
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
 # Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash; ./.tcproxy
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
@@ -227,6 +227,81 @@ prompt_user_inputs() {
     read -p "[INPUT] Time Capsule USB drive (optional): " TC_DISK_USB
     read -p "[INPUT] Do you want to enable mount at startup? (y/N): " STARTUP_MOUNT
 }
+
+prompt_user_inputsGUI() {
+    # Combined message box and confirmation
+    if ! whiptail --title "Installation Confirmation" \
+                   --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue with the installation?" \
+                   15 60; then
+        logm "[INFO] Process Aborted. No change has been performed."
+        exit 1
+    fi
+
+    # Get Time Capsule IPv4
+    TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
+    if [ -z "$TC_IP" ]; then
+        logm "[ERROR] IPv4 required. Process aborted."
+        exit 1
+    fi
+
+    # Get Time Capsule USER (optional)
+    TC_USER=$(whiptail --title "Time Capsule USER" --inputbox "Enter Time Capsule USER (optional):" 8 60 "" 3>&1 1>&2 2>&3)
+
+    # Get Time Capsule PASSWORD
+    TC_PASSWORD=$(whiptail --title "Time Capsule PASSWORD" --passwordbox "Enter Time Capsule PASSWORD:" 8 60 "" 3>&1 1>&2 2>&3)
+    if [ -z "$TC_PASSWORD" ]; then
+        logm "[ERROR] PASSWORD is required. Process aborted."
+        exit 1
+    fi
+
+    # Get Time Capsule DISK name
+    TC_DISK=$(whiptail --title "Time Capsule DISK Name" --inputbox "Enter Time Capsule DISK name (e.g., Data):" 8 60 "" 3>&1 1>&2 2>&3)
+    if [ -z "$TC_DISK" ]; then
+        logm "[ERROR] DISK name is required. Process aborted."
+        exit 1
+    fi
+
+    # Get Time Capsule USB drive (optional)
+    TC_DISK_USB=$(whiptail --title "Time Capsule USB Drive" --inputbox "Enter Time Capsule USB drive (optional):" 8 60 "" 3>&1 1>&2 2>&3)
+
+    # Ask if user wants to enable mount at startup
+    if whiptail --title "Mount at Startup" --yesno "Do you want to enable mount at startup?" 8 60; then
+        STARTUP_MOUNT="yes"
+    else
+        STARTUP_MOUNT="no"
+    fi
+
+    # Example of using the collected variables
+    echo "IPv4: $TC_IP"
+    echo "USER: $TC_USER"
+    echo "PASSWORD: $TC_PASSWORD"
+    echo "DISK: $TC_DISK"
+    echo "USB DRIVE: $TC_DISK_USB"
+    echo "Mount at Startup: $STARTUP_MOUNT"
+}
+
+main_menu() {
+    CHOICE=$(whiptail --title "Choose Input Method" \
+                      --menu "Choose how you would like to enter the information:" \
+                      15 60 2 \
+                      "Text" "Use text-based prompts" \
+                      "GUI" "Use graphical interface" \
+                      3>&1 1>&2 2>&3)
+
+    case $CHOICE in
+        Text)
+            prompt_user_inputs
+            ;;
+        GUI)
+            prompt_user_inputsGUI
+            ;;
+        *)
+            logm "[INFO] Invalid choice. Exiting."
+            exit 1
+            ;;
+    esac
+}
+
 
 deflating_vm() {
     logm "Deflating VM disk..."
@@ -761,7 +836,8 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
     define_tcproxy_env_vars
     check_system_requirements
-    prompt_user_inputs
+    main_menu
+    # prompt_user_inputs
     github_download
     define_tcproxy_env_vars
     deflating_vm
