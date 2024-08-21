@@ -1,9 +1,11 @@
 #!/bin/bash
-INSTALL_CONFIRMATION=$(whiptail --title "test222" \
-                                --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue with the installation?" \
-                                15 60 3>&1 1>&2 2>&3)
-if [ $? -ne 0 ]; then
-    echo "Input = $? [INFO] Process Aborted. No change has been performed."
+whiptail --title "test223" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue with the installation?" 15 60
+INSTALL_CONFIRMATION=$?  # Store the exit status of the previous command
+
+# Check the exit status and display appropriate message
+if [ $INSTALL_CONFIRMATION -ne 0 ]; then
+    echo "Input = $INSTALL_CONFIRMATION [INFO] Process Aborted. No change has been performed."
+    exit 1
 fi
 TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
 if [ -z "$TC_IP" ]; then
