@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.5-c8
+TCPROXY_COMMIT=v2.0.5-c9
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -29,12 +29,6 @@ if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
 else
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_BRANCH_URL
 fi
-
-define_tcproxy_env_vars() {
-    TCPROXY_PATH=$(readlink -f .)
-    TCP_ENV=$TCPROXY_PATH/.tcproxy.env
-    LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
-}
 
 check_or_update_script() {
     TCPROXY_RELEASE_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_FILE_MAIN_URL | sed -n '5p' | cut -d '=' -f 2)
@@ -109,6 +103,8 @@ create_tcproxy_folder() {
         TCPROXY_PATH=$(readlink -f .)/tcproxy
         cd tcproxy
     fi
+    TCP_ENV=$TCPROXY_PATH/.tcproxy.env; if [[ ! -e $TCP_ENV ]]; then touch $TCP_ENV; fi; sudo chmod 770 $TCP_ENV
+    LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
 }
 
 download_latest_script() {
@@ -740,7 +736,6 @@ elif [[ $1 == "" ]]; then
     set -- "--install"
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
-    define_tcproxy_env_vars
     check_system_requirements
     whiptail --title "tcproxy installation GUI" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue with the installation?" 15 60
     INSTALL_CONFIRMATION=$?
