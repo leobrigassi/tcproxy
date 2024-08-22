@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-f1
+TCPROXY_COMMIT=v2.1.0-f2
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -199,7 +199,6 @@ prompt_user_inputs() {
         exit 1
     fi
     read -p "[INPUT] Time Capsule USER (optional): " TC_USER
-    TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     read -p "[INPUT] Time Capsule PASSWORD: " TC_PASSWORD
     if [ -z "$TC_PASSWORD" ]; then
         logm "[ERROR] PASSWORD is required. Process aborted"
@@ -401,6 +400,7 @@ creating_mountpoint_folder() {
 }
 
 provision_VM() {
+    TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     logm "Provisioning VM..."
     # Configure VM root passwd, /etc/fstab, samba
     logsm "Configuring VM root passwd, /etc/fstab, samba"
@@ -682,7 +682,6 @@ save_ENVs_to_file() {
     echo "TC_IP=$TC_IP" >> $TCP_ENV
     echo "TC_DISK=$TC_DISK" >> $TCP_ENV
     echo "TC_DISK_USB=$TC_DISK_USB" >> $TCP_ENV
-    echo "TC_FSTAB_USER=$TC_FSTAB_USER" >> $TCP_ENV
     echo "TC_USER=$TC_USER" >> $TCP_ENV
     echo "TC_PASSWORD=$TC_PASSWORD" >> $TCP_ENV
     echo "STARTUP_MOUNT=$STARTUP_MOUNT" >> $TCP_ENV
@@ -807,7 +806,6 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
         exit 1
     fi
     TC_USER=$(whiptail --title "Time Capsule USER" --inputbox "Enter Time Capsule USER (optional):" 8 60 "" 3>&1 1>&2 2>&3)
-    TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     TC_PASSWORD=$(whiptail --title "Time Capsule PASSWORD" --inputbox "Enter Time Capsule PASSWORD:" 8 60 "" 3>&1 1>&2 2>&3)
     if [ -z "$TC_PASSWORD" ]; then
         echo "[ERROR] PASSWORD is required. Process aborted."
@@ -902,7 +900,6 @@ elif [[ $1 == "--disable-service" ]]; then
 elif [[ $1 == "--update" ]]; then
     DESCR_COM="Updating script..."; header
     MAN_UPDATE=1
-    define_tcproxy_env_vars
     check_or_update_script
     save_ENVs_to_file
     footer
