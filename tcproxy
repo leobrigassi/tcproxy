@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-g3
+TCPROXY_COMMIT=v2.1.0-g4
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -841,7 +841,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     TC_DISK_USB=$(whiptail --title "Time Capsule USB disk Name" --inputbox "Enter Time Capsule USB disk name (optional):" 8 60 "" 3>&1 1>&2 2>&3)
     whiptail --title "Mount at Startup" --yesno "Do you want to enable mount at startup?" 8 60
     STARTUP_MOUNT_Q=$?
-    if [ $STARTUP_MOUNT_Q -ne 0 ]; then
+    if [ $STARTUP_MOUNT_Q -eq 0 ]; then
         STARTUP_MOUNT="Y"
     fi
     if [ -z "$INSTALL_CONFIRMATION" ]; then 
