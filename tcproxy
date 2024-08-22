@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-e9
+TCPROXY_COMMIT=v2.1.0-f0
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -294,7 +294,6 @@ umount_srv_tcproxy() {
         RETRY_COUNT_UM=0
         while [ $RETRY_COUNT_UM -lt $MAX_RETRIES_UM ]; do
             RESPONSE_UM=$(sudo umount "$MOUNT_POINT" 2>&1)
-            echo $RESPONSE_UM
             if [ $? -eq 0 ] || [ $? -eq 32 ]; then
                 logm "umount of $MOUNT_POINT successful..."
                 break
