@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-f2
+TCPROXY_COMMIT=v2.1.0-f3
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -285,39 +285,37 @@ umount_srv_tcproxy() {
     logm "Initiating umount routine..."
     MAX_RETRIES_UM=3
     RETRY_COUNT_UM=0
-    MOUNT_POINTS=()
-    if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS+=("/srv/tcproxy/$TC_DISK_USB"); fi
-    if [[ -n $TC_USER ]]; then MOUNT_POINTS+=("/srv/tcproxy/$TC_USER"); fi
-    if [[ -n $TC_DISK ]]; then MOUNT_POINTS+=("/srv/tcproxy/$TC_DISK"); fi
-    for MOUNT_POINT in "${MOUNT_POINTS[@]}"; do
+    MOUNT_POINTS_UM=()
+    if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK_USB"); fi
+    if [[ -n $TC_USER ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_USER"); fi
+    if [[ -n $TC_DISK ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK"); fi
+    for MOUNT_POINT_UM in "${MOUNT_POINTS_UM[@]}"; do
         RETRY_COUNT_UM=0
         while [ $RETRY_COUNT_UM -lt $MAX_RETRIES_UM ]; do
-            RESPONSE_UM=$(sudo umount "$MOUNT_POINT" 2>&1)
+            RESPONSE_UM=$(sudo umount "$MOUNT_POINT_UM" 2>&1)
             if [ $? -eq 0 ] || [ $? -eq 32 ] || echo "$RESPONSE_UM" | grep -q "not mounted"; then
-                logm "umount of $MOUNT_POINT successful..."
+                logm "umount of $MOUNT_POINT_UM successful..."
                 break
             else
-                echo $?
-                echo "$RESPONSE_UM"
-                logm "Failed to unmount $MOUNT_POINT. $RESPONSE_UM. Forcing umount..."
+                # echo $?
+                # echo "$RESPONSE_UM"
+                logm "Failed to unmount $MOUNT_POINT_UM . $RESPONSE_UM. Forcing umount..."
                 sleep 5
-                RESPONSE_F_UM=$(sudo umount -f "$MOUNT_POINT" 2>&1)
+                RESPONSE_F_UM=$(sudo umount -f "$MOUNT_POINT_UM" 2>&1)
                 if [[ $? -eq 0 ]]; then
-                    logm "[INFO] Forced unmount of $MOUNT_POINT successful..."
+                    logm "[INFO] Forced unmount of $MOUNT_POINT_UM successful..."
                     break
                 elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
                     logm "[ERROR $RESPONSE_F_UM] Please reboot and retry. Process aborted."
-                    exit 1
                 else
-                    logm "[ERROR $RESPONSE_F_UM] Cannot unmount $MOUNT_POINT. Is the mount in use? Process aborted."
-                    exit 1
+                    logm "[ERROR $RESPONSE_F_UM] Cannot unmount $MOUNT_POINT_UM . Is the mount in use?"
                 fi
             fi
             RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
-            logm "Retrying unmount for $MOUNT_POINT... attempt $RETRY_COUNT_UM"
+            logm "Retrying unmount for $MOUNT_POINT_UM ... attempt $RETRY_COUNT_UM"
         done
     done
-    logm "umount of all specified mount points completed."
+    logm "umount routine of all specified mount points completed."
 }
 
 stopping_VM() {
@@ -486,7 +484,7 @@ check_smb_share() {
 
 tcproxy_up() {
     MAX_RETRIES_UP=10
-    RETRY_INTERVAL_UP=180
+    RETRY_INTERVAL_UP=60
     RETRY_COUNT_UP=0
     REBOOT_COUNT_VM_UP=5
     logm "Checking VM status..."
@@ -510,25 +508,63 @@ tcproxy_up() {
         sleep $RETRY_INTERVAL_UP
     done
     logm "VM samba share is accessible."
-    # Verify host mount
-    RETRY_INTERVAL_MO=5
-    RETRY_COUNT_MO=0
-    MAX_RETRIES_MO=3
-    while ! mountpoint -q /srv/tcproxy/$TC_DISK; do
-        RETRY_COUNT_MO=$((RETRY_COUNT_MO + 1))
-        if [ $RETRY_COUNT_MO -ge $MAX_RETRIES_MO ]; then
-            logm "[ERROR] Max retries for mountpoint check reached. Please reboot your system and try again. Exiting..."
-            exit 1
-        fi
-        logm "Remounting /srv/tcproxy..."
-        umount_srv_tcproxy
-        if [[ -n $TC_DISK_USB ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_DISK_USB /srv/tcproxy/$TC_DISK_USB -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
-        if [[ -n $TC_USER ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_USER /srv/tcproxy/$TC_USER -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
-        if [[ -n $TC_DISK ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_DISK /srv/tcproxy/$TC_DISK -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
-        sleep $RETRY_INTERVAL_MO
-    done
-    logm "/srv/tcproxy/$TC_DISK mounted and accessible"
+    # umount_srv_tcproxy
+    mount_routine
 }
+
+mount_routine() {
+    logm "Initiating umount routine..."
+    MAX_RETRIES_M=3
+    RETRY_COUNT_M=0
+    MOUNT_POINTS_M=()
+    if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS_M+=("$TC_DISK_USB"); fi
+    if [[ -n $TC_USER ]]; then MOUNT_POINTS_M+=("$TC_USER"); fi
+    if [[ -n $TC_DISK ]]; then MOUNT_POINTS_M+=("$TC_DISK"); fi
+    for MOUNT_POINT_M in "${MOUNT_POINTS_M[@]}"; do
+        RETRY_COUNT_M=0
+        while [ $RETRY_COUNT_M -lt $MAX_RETRIES_M ]; do
+            # echo "mountpoint selected: $MOUNT_POINT_M"
+            if mountpoint -q /srv/tcproxy/$MOUNT_POINT_M; then logm "/srv/tcproxy/$MOUNT_POINT_M mounted and accessible"; break; else
+                RESPONSE_M=$(logc sudo mount -t cifs //127.0.0.1/$MOUNT_POINT_M /srv/tcproxy/$MOUNT_POINT_M -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID 2>&1)
+                if [ $? -eq 0 ]; then
+                    logm "/srv/tcproxy/$MOUNT_POINT_M mounted and accessible"
+                    break
+                else
+                    echo $?
+                    echo "$RESPONSE_M"
+                    logm "Failed to mount $MOUNT_POINT_M. $RESPONSE_M. Check system and retry."
+                    sleep 5
+                fi
+            fi
+            RETRY_COUNT_M=$((RETRY_COUNT_M + 1))
+            logm "Retrying mount for $MOUNT_POINT_M... attempt $RETRY_COUNT_M"
+        done
+    done
+    logm "mount routine of all specified mount points completed."
+
+
+
+
+
+    # RETRY_INTERVAL_MO=5
+    # RETRY_COUNT_MO=0
+    # MAX_RETRIES_MO=3
+    # while ! mountpoint -q /srv/tcproxy/$TC_DISK; do
+    #     RETRY_COUNT_MO=$((RETRY_COUNT_MO + 1))
+    #     if [ $RETRY_COUNT_MO -ge $MAX_RETRIES_MO ]; then
+    #         logm "[ERROR] Max retries for mountpoint check reached. Please reboot your system and try again. Exiting..."
+    #         exit 1
+    #     fi
+    #     logm "Remounting /srv/tcproxy..."
+    #     umount_srv_tcproxy
+    #     if [[ -n $TC_DISK_USB ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_DISK_USB /srv/tcproxy/$TC_DISK_USB -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
+    #     if [[ -n $TC_USER ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_USER /srv/tcproxy/$TC_USER -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
+    #     if [[ -n $TC_DISK ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_DISK /srv/tcproxy/$TC_DISK -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
+    #     sleep $RETRY_INTERVAL_MO
+    # done
+    # logm "/srv/tcproxy/$TC_DISK mounted and accessible"
+}
+
 
 tcproxy_systemd_setup() {
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
@@ -657,6 +693,7 @@ help_menu() {
   -s,  --ssh                connects to the VM via ssh
   -u,  --up                 [default arg.], loads VM and initiates mount /srv/tcproxy on host
   -v,  --version            Shows current version of tcproxy installed
+  --update-check            check for updates from project server 
   --update                  requests update from project server and attempts local upgrade
   --remote-log              Sends last 100 log lines to debug server
   --enable-service          install systemd startup service
@@ -852,7 +889,6 @@ elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
     echo "Uninstalled status detected. Reinstalling..."
     ./tcproxy --install
     exit 0
-if [[ $1 != "--update" ]]; then check_or_update_script; fi
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     DESCR_COM="Accessing VM via SSH..."; header
     ssh_vm
@@ -900,6 +936,12 @@ elif [[ $1 == "--disable-service" ]]; then
 elif [[ $1 == "--update" ]]; then
     DESCR_COM="Updating script..."; header
     MAN_UPDATE=1
+    check_or_update_script
+    save_ENVs_to_file
+    footer
+elif [[ $1 == "--update-check" ]]; then
+    DESCR_COM="Checking for updates..."; header
+    MAN_UPDATE=0
     check_or_update_script
     save_ENVs_to_file
     footer
