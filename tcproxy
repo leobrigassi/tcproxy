@@ -23,7 +23,7 @@ TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/rele
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
 # Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.4/tcproxy 2>/dev/null | bash; ./.tcproxy
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
-# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash; ./.tcproxy
+# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
