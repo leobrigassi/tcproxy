@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-f0
+TCPROXY_COMMIT=v2.1.0-f1
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -283,7 +283,7 @@ deflating_vm() {
 # }
 
 umount_srv_tcproxy() {
-    logs "Initiating umount routine..."
+    logm "Initiating umount routine..."
     MAX_RETRIES_UM=3
     RETRY_COUNT_UM=0
     MOUNT_POINTS=()
@@ -294,10 +294,12 @@ umount_srv_tcproxy() {
         RETRY_COUNT_UM=0
         while [ $RETRY_COUNT_UM -lt $MAX_RETRIES_UM ]; do
             RESPONSE_UM=$(sudo umount "$MOUNT_POINT" 2>&1)
-            if [ $? -eq 0 ] || [ $? -eq 32 ]; then
+            if [ $? -eq 0 ] || [ $? -eq 32 ] || echo "$RESPONSE_UM" | grep -q "not mounted"; then
                 logm "umount of $MOUNT_POINT successful..."
                 break
             else
+                echo $?
+                echo "$RESPONSE_UM"
                 logm "Failed to unmount $MOUNT_POINT. $RESPONSE_UM. Forcing umount..."
                 sleep 5
                 RESPONSE_F_UM=$(sudo umount -f "$MOUNT_POINT" 2>&1)
