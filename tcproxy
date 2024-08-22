@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-g0
+TCPROXY_COMMIT=v2.1.0-g1
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -956,9 +956,10 @@ elif [[ $1 == "--disable-service" ]]; then
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.timer
     footer
-# elif [[ $1 == "" ]]; then
-#     DESCR_COM="Setup not detected. Run [ ./tcproxy --install ] to setup your system..."; header
-#     footer
+elif [[ $1 == "" ]]; then
+    DESCR_COM="Showing help menu..."; header
+    help_menu
+    footer
 else
     DESCR_COM="Argument not recognized..."; header
     help_menu
