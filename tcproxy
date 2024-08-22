@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-f4
+TCPROXY_COMMIT=v2.1.0-f5
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -811,6 +811,13 @@ elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
     umount_srv_tcproxy
+    MOUNT_POINTS_UM=()
+    if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK_USB"); fi
+    if [[ -n $TC_USER ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_USER"); fi
+    if [[ -n $TC_DISK ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK"); fi
+    for MOUNT_POINT_UM in "${MOUNT_POINTS_UM[@]}"; do
+       logc rm /srv/tcproxy/$MOUNT_POINT_UM
+    done
     stopping_VM
     remove_system_service
     remove_tcproxy_env
