@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-f5
+TCPROXY_COMMIT=v2.1.0-f8
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -184,7 +184,8 @@ testing_ssh_premission_requirements() {
 }
 
 prompt_user_inputs() {
-    echo "Close any app or terminal window using /srv/tcproxy before continuing."
+    echo "GUI closed unexpectedly. Running text based setup.
+Close any app or terminal window using /srv/tcproxy before continuing."
     read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
 
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
@@ -810,20 +811,23 @@ elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
     footer
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
+    if [[ -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then echo "Installation not detected. Process aborted."; footer; exit 1; fi
     umount_srv_tcproxy
     MOUNT_POINTS_UM=()
     if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK_USB"); fi
     if [[ -n $TC_USER ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_USER"); fi
     if [[ -n $TC_DISK ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK"); fi
     for MOUNT_POINT_UM in "${MOUNT_POINTS_UM[@]}"; do
-       logc rm /srv/tcproxy/$MOUNT_POINT_UM
+       logc rm $MOUNT_POINT_UM
     done
     stopping_VM
     remove_system_service
     remove_tcproxy_env
-    logsc sudo rm $TCPROXY_PATH/data.img $TCPROXY_PATH/id_rsa_vm $TCPROXY_PATH/id_rsa_vm.pub $TCPROXY_PATH/qemu.mac $TCPROXY_PATH/uefi.rom $TCPROXY_PATH/.vm-serial-file $TCPROXY_PATH/tcproxy
+    logsc sudo rm $TCPROXY_PATH/data.img $TCPROXY_PATH/id_rsa_vm $TCPROXY_PATH/id_rsa_vm.pub $TCPROXY_PATH/qemu.mac $TCPROXY_PATH/uefi.rom $TCPROXY_PATH/.vm-serial-file
     touch .tcproxy-uninstalled
-    logm "tcproxy unistalled."
+    logm "tcproxy unistalled. You may now remove the folder:
+$TCPROXY_PATH
+"
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;uninstalled" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     footer
 # args selection
@@ -832,9 +836,6 @@ elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
     echo "Loading and mounting VM..."
     tcproxy_up
     footer
-elif [[ $1 == "" ]]; then
-    DESCR_COM="Reinstalling..."; header
-    set -- "--install"
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
     check_system_requirements
@@ -951,6 +952,9 @@ elif [[ $1 == "--update-check" ]]; then
     MAN_UPDATE=0
     check_or_update_script
     save_ENVs_to_file
+    footer
+elif [[ $1 == "" ]]; then
+    DESCR_COM="Setup not detected. Run [ ./tcproxy --install ] to setup your system..."; header
     footer
 else
     DESCR_COM="Argument not recognized..."; header
