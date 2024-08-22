@@ -1,8 +1,9 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.0.4
+TCPROXY_COMMIT=v2.1.0
 TCPROXY_BRANCH=/heads/main
-TCPROXY_RELEASE=v2.0.4
+TCPROXY_RELEASE=v2.1.0
+#/heads/branch or /tags/version for releases
 
 USER=$(whoami)
 GROUP=$(id -gn)
@@ -20,20 +21,14 @@ TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsul
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
-# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.3/tcproxy 2>/dev/null | bash; ./.tcproxy
+# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.0.4/tcproxy 2>/dev/null | bash; ./.tcproxy
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
-# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash; ./.tcproxy
+# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_BRANCH_URL
 fi
-
-define_tcproxy_env_vars() {
-    TCPROXY_PATH=$(readlink -f .)
-    TCP_ENV=$TCPROXY_PATH/.tcproxy.env
-    LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
-}
 
 check_or_update_script() {
     TCPROXY_RELEASE_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_FILE_MAIN_URL | sed -n '5p' | cut -d '=' -f 2)
@@ -89,7 +84,7 @@ check_or_update_script() {
             else
                 echo "tcproxy: New update available $TCPROXY_COMMIT_LAST. (Current $TCPROXY_COMMIT)"
                 echo "To update run:  [ ./tcproxy --update ]"
-                echo ""
+                # echo ""
                 return 0
             fi
         else
@@ -103,38 +98,29 @@ create_tcproxy_folder() {
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
         TCPROXY_PATH=$(readlink -f .)
-        INSTALLER_PATH=$(dirname "$(pwd)")
     else
         mkdir -p tcproxy
         TCPROXY_PATH=$(readlink -f .)/tcproxy
-        INSTALLER_PATH=$(pwd)
+        cd tcproxy
     fi
-    if [ -t 0 ]; then
-        if [[ -e $TCPROXY_PATH/.web-install-tcproxy ]]; then rm $TCPROXY_PATH/.web-install-tcproxy; fi
+    TCP_ENV=$TCPROXY_PATH/.tcproxy.env; if [[ ! -e $TCP_ENV ]]; then touch $TCP_ENV; fi; sudo chmod 770 $TCP_ENV
+    LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
+}
+
+download_latest_script() {
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
+    echo "Downloading latest installation script..."
+    TEMP_FILE=$(mktemp)
+    if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"; then
+        mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
+        chmod +x $TCPROXY_PATH/tcproxy
+        # exit 0 # exits script to allow .tcproxy web install to continue
     else
-        touch $TCPROXY_PATH/.web-install-tcproxy
-        touch $INSTALLER_PATH/.tcproxy
-        curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
-        echo -e "#!/bin/bash
-INSTALLER_PATH=$INSTALLER_PATH
-TCPROXY_PATH=$TCPROXY_PATH" > $TCPROXY_PATH/.web-install-tcproxy
-        echo -e "#!/bin/bash
-cd tcproxy >/dev/null 2>&1
-source $TCPROXY_PATH/.web-install-tcproxy
-$TCPROXY_PATH/tcproxy -i" > .tcproxy; chmod +x .tcproxy
-        echo "Downloading latest installation script..."
-        TEMP_FILE=$(mktemp)
-        if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"; then
-            mv "$TEMP_FILE" $TCPROXY_PATH/tcproxy
-            chmod +x $TCPROXY_PATH/tcproxy
-            exit 0 # exits script to allow .tcproxy web install to continue
-        else
-            echo "[ERROR] Download failed. Please try again later"
-            echo $TCPROXY_FILE_DEFINED_URL
-            rm -f "$TEMP_FILE"
-            footer
-            exit 1
-        fi
+        echo "[ERROR] Download failed. Please try again later"
+        echo $TCPROXY_FILE_DEFINED_URL
+        rm -f "$TEMP_FILE"
+        footer
+        exit 1
     fi
 }
 
@@ -198,7 +184,8 @@ testing_ssh_premission_requirements() {
 }
 
 prompt_user_inputs() {
-    echo "Close any app or terminal window using /srv/tcproxy before continuing."
+    echo "GUI closed unexpectedly. Running text based setup.
+Close any app or terminal window using /srv/tcproxy before continuing."
     read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
 
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
@@ -213,7 +200,6 @@ prompt_user_inputs() {
         exit 1
     fi
     read -p "[INPUT] Time Capsule USER (optional): " TC_USER
-    TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     read -p "[INPUT] Time Capsule PASSWORD: " TC_PASSWORD
     if [ -z "$TC_PASSWORD" ]; then
         logm "[ERROR] PASSWORD is required. Process aborted"
@@ -239,61 +225,97 @@ deflating_vm() {
     sudo rm tcproxy_VM_x86.tar.gz
 }
 
+# umount_srv_tcproxy() {
+#     MAX_RETRIES_UM=3
+#     RETRY_COUNT_UM=0
+#     while ! ls /srv/tcproxy > /dev/null 2>&1; do
+#         RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
+#         if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
+#             logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
+#             exit 1
+#         fi
+#         RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
+#         if [ $? -eq 0 ]; then
+#             logsm "umount of /srv/tcproxy successful..."
+#         else
+#             logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
+#             sleep 5 
+#             RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
+#             if [[ $? -eq 0 ]]; then
+#                 logm "[INFO] forced unmount of /srv/tcproxy successful..."
+#             elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
+#                 logm "[ERROR $$RESPONSE_F_UM] Please reboot and retry. Process aborted."
+#                 exit 1
+#             else 
+#                 logm "[ERROR $$RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
+#                 exit 1
+#             fi
+#         fi
+#     done
+#     RETRY_COUNT_UM=0
+#     while mountpoint -q /srv/tcproxy; do
+#         RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
+#         if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
+#             logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
+#             exit 1
+#         fi
+#         RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
+#         if [ $? -eq 0 ]; then
+#             logsm "umount of /srv/tcproxy successful..."
+#         else
+#             logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
+#             sleep 5 
+#             RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
+#             if [[ $? -eq 0 ]]; then
+#                 logm "[INFO] forced unmount of /srv/tcproxy successful..."
+#             elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
+#                 logm "[ERROR $RESPONSE_F_UM] Please reboot and retry. Process aborted."
+#                 exit 1
+#             else 
+#                 logm "[ERROR $RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
+#                 exit 1
+#             fi
+#         fi
+#         logm "cannot umount /srv/tcproxy... trying again..."
+#         sleep 5
+#     done
+#     logsm "umount /srv/tcproxy completed..."
+# }
+
 umount_srv_tcproxy() {
+    logm "Initiating umount routine..."
     MAX_RETRIES_UM=3
     RETRY_COUNT_UM=0
-    while ! ls /srv/tcproxy > /dev/null 2>&1; do
-        RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
-        if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
-            logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
-            exit 1
-        fi
-        RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
-        if [ $? -eq 0 ]; then
-            logsm "umount of /srv/tcproxy successful..."
-        else
-            logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
-            sleep 5 
-            RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
-            if [[ $? -eq 0 ]]; then
-                logm "[INFO] forced unmount of /srv/tcproxy successful..."
-            elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
-                logm "[ERROR $$RESPONSE_F_UM] Please reboot and retry. Process aborted."
-                exit 1
-            else 
-                logm "[ERROR $$RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
-                exit 1
+    MOUNT_POINTS_UM=()
+    if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK_USB"); fi
+    if [[ -n $TC_USER ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_USER"); fi
+    if [[ -n $TC_DISK ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK"); fi
+    for MOUNT_POINT_UM in "${MOUNT_POINTS_UM[@]}"; do
+        RETRY_COUNT_UM=0
+        while [ $RETRY_COUNT_UM -lt $MAX_RETRIES_UM ]; do
+            RESPONSE_UM=$(sudo umount "$MOUNT_POINT_UM" 2>&1)
+            if [ $? -eq 0 ] || [ $? -eq 32 ] || echo "$RESPONSE_UM" | grep -q "not mounted"; then
+                logm "umount of $MOUNT_POINT_UM successful..."
+                break
+            else
+                if ! mountpoint -q /srv/tcproxy/$MOUNT_POINT_M; then logsm "/srv/tcproxy/$MOUNT_POINT_M not a mountpoint"; break; fi
+                logm "Failed to unmount $MOUNT_POINT_UM . $RESPONSE_UM. Forcing umount..."
+                sleep 5
+                RESPONSE_F_UM=$(sudo umount -f "$MOUNT_POINT_UM" 2>&1)
+                if [[ $? -eq 0 ]]; then
+                    logm "[INFO] Forced unmount of $MOUNT_POINT_UM successful..."
+                    break
+                elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
+                    logm "[ERROR $RESPONSE_F_UM] Please reboot and retry. Process aborted."
+                else
+                    logm "[ERROR $RESPONSE_F_UM] Cannot unmount $MOUNT_POINT_UM . Is the mount in use?"
+                fi
             fi
-        fi
+            RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
+            logm "Retrying unmount for $MOUNT_POINT_UM ... attempt $RETRY_COUNT_UM"
+        done
     done
-    RETRY_COUNT_UM=0
-    while mountpoint -q /srv/tcproxy; do
-        RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
-        if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
-            logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
-            exit 1
-        fi
-        RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
-        if [ $? -eq 0 ]; then
-            logsm "umount of /srv/tcproxy successful..."
-        else
-            logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
-            sleep 5 
-            RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
-            if [[ $? -eq 0 ]]; then
-                logm "[INFO] forced unmount of /srv/tcproxy successful..."
-            elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
-                logm "[ERROR $RESPONSE_F_UM] Please reboot and retry. Process aborted."
-                exit 1
-            else 
-                logm "[ERROR $RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
-                exit 1
-            fi
-        fi
-        logm "cannot umount /srv/tcproxy... trying again..."
-        sleep 5
-    done
-    logsm "umount /srv/tcproxy completed..."
+    logm "umount routine of all specified mount points completed."
 }
 
 stopping_VM() {
@@ -370,31 +392,46 @@ check_VM_status() {
 }
 
 creating_mountpoint_folder() {
-    logsc sudo mkdir -p /srv/tcproxy
+    logsc sudo mkdir -p /srv/tcproxy/$TC_DISK_USB
+    logsc sudo mkdir -p /srv/tcproxy/$TC_USER
+    logsc sudo mkdir -p /srv/tcproxy/$TC_DISK
 }
 
 provision_VM() {
+    TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     logm "Provisioning VM..."
     # Configure VM root passwd, /etc/fstab, samba
     logsm "Configuring VM root passwd, /etc/fstab, samba"
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | passwd' >/dev/null 2>&1
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "cp /etc/fstab /etc/fstab.bak && sed '/#_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line/d' /etc/fstab.bak > /etc/fstab.new && cp /etc/fstab.new /etc/fstab"
-    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "mkdir /mnt/tc/'${TC_USER}' /mnt/tc/'$TC_DISK' /mnt/tc/'$TC_DISK_USB'"
-    if [[ -z ${TC_DISK_USB} ]]; then
-        if [[ -z ${TC_USER} ]]; then
-            logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
-        else
-            logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
-//'$TC_IP'/'${TC_USER}' /mnt/tc/'${TC_USER}' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
-        fi
-    elif [[ -z ${TC_USER} ]]; then
-                logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
-//'$TC_IP'/'${TC_DISK_USB}' /mnt/tc/'${TC_DISK_USB}' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
-    else
-                logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
-//'$TC_IP'/'${TC_USER}' /mnt/tc/'${TC_USER}' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line
-//'$TC_IP'/'${TC_DISK_USB}' /mnt/tc/'${TC_DISK_USB}' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new && mv /etc/fstab.new /etc/fstab'
-    fi
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "mkdir /mnt/tc/'$TC_USER' /mnt/tc/'$TC_DISK' /mnt/tc/'$TC_DISK_USB'"
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'sed -i "/\\[tcproxy\\]/,\$d" /etc/samba/smb.conf'
+    if [[ -n $TC_DISK_USB ]]; then logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '[$TC_DISK_USB]
+path = /mnt/tc/$TC_DISK_USB
+browsable = yes
+read only = no
+force user = root' >> /etc/samba/smb.conf
+
+"; fi
+    if [[ -n $TC_USER ]]; then logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '[$TC_USER]
+path = /mnt/tc/$TC_USER
+browsable = yes
+read only = no
+force user = root' >> /etc/samba/smb.conf
+
+"; fi
+    if [[ -n $TC_DISK ]]; then logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '[$TC_DISK]
+path = /mnt/tc/$TC_DISK
+browsable = yes
+read only = no
+force user = root' >> /etc/samba/smb.conf
+
+"; fi
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "rc-service samba restart"
+    if [[ -n $TC_DISK_USB ]]; then logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK_USB' /mnt/tc/'$TC_DISK_USB' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new';fi
+    if [[ -n $TC_USER ]]; then logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_USER' /mnt/tc/'$TC_USER' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new'; fi
+    if [[ -n $TC_DISK ]]; then logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new'; fi
+    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mv /etc/fstab.new /etc/fstab'
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | smbpasswd -a root'
     SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;Provisioning_VM" "http://$L1.$L2.$L3.$L4:$L5"); SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4); SERVER_RESPONSE_MESSAGE=$(echo "$SERVER_RESPONSE" | head -c -4)
     if [ "$SERVER_RESPONSE_CODE" -eq 200 ]; then
@@ -417,37 +454,20 @@ https://github.com/leobrigassi/time_capsule_proxy
 }
 
 test_VM_mount() {
-    if [[ -z ${TC_USER} ]]; then
-        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then
-            logm "VM connected to Time Capsule..."
-        else 
-            logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials and IPv4 and run install again."
-            exit 1
-        fi
-    else
-        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'${TC_USER}''; then
-            if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then
-                :
-            else
-                logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials and IPv4 and run install again."
-                exit 1
-            fi
-        logm "VM connected to Time Capsule..."
-        else
-            logm "[ERROR] VM unable to connect to Time Capsule folder $TC_IP/${TC_USER}. Please check credentials and IPv4 and run install again."
-            exit 1
-        fi
-    fi
+    if [[ -n $TC_DISK_USB ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK_USB''; then logm "$TC_DISK_USB mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK_USB. Please check credentials or IPv4 and run install again."; fi; fi
+    if [[ -n $TC_USER ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_USER''; then logm "$TC_USER mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_USER. Please check credentials or IPv4 and run install again."; fi; fi
+    if [[ -n $TC_DISK ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then logm "$TC_DISK mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials or IPv4 and run install again."; fi; fi
 }
 
 check_smb_share() {
-    smbclient //127.0.0.1/tcproxy -U root%$TC_PASSWORD --port=50445 -c 'exit'
-    return $?
+    if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/$TC_DISK_USB -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
+    if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/$TC_USER -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
+    if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/$TC_DISK -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
 }
 
 tcproxy_up() {
     MAX_RETRIES_UP=10
-    RETRY_INTERVAL_UP=180
+    RETRY_INTERVAL_UP=60
     RETRY_COUNT_UP=0
     REBOOT_COUNT_VM_UP=5
     logm "Checking VM status..."
@@ -471,23 +491,63 @@ tcproxy_up() {
         sleep $RETRY_INTERVAL_UP
     done
     logm "VM samba share is accessible."
-    # Verify host mount
-    RETRY_INTERVAL_MO=5
-    RETRY_COUNT_MO=0
-    MAX_RETRIES_MO=3
-    while ! mountpoint -q /srv/tcproxy; do
-        RETRY_COUNT_MO=$((RETRY_COUNT_MO + 1))
-        if [ $RETRY_COUNT_MO -ge $MAX_RETRIES_MO ]; then
-            logm "[ERROR] Max retries for mountpoint check reached. Please reboot your system and try again. Exiting..."
-            exit 1
-        fi
-        logm "Remounting /srv/tcproxy..."
-        umount_srv_tcproxy
-        logsc sudo mount -t cifs //127.0.0.1/tcproxy /srv/tcproxy -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID
-        sleep $RETRY_INTERVAL_MO
-    done
-    logm "/srv/tcproxy mounted and accessible"
+    # umount_srv_tcproxy
+    mount_routine
 }
+
+mount_routine() {
+    logm "Initiating umount routine..."
+    MAX_RETRIES_M=3
+    RETRY_COUNT_M=0
+    MOUNT_POINTS_M=()
+    if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS_M+=("$TC_DISK_USB"); fi
+    if [[ -n $TC_USER ]]; then MOUNT_POINTS_M+=("$TC_USER"); fi
+    if [[ -n $TC_DISK ]]; then MOUNT_POINTS_M+=("$TC_DISK"); fi
+    for MOUNT_POINT_M in "${MOUNT_POINTS_M[@]}"; do
+        RETRY_COUNT_M=0
+        while [ $RETRY_COUNT_M -lt $MAX_RETRIES_M ]; do
+            # echo "mountpoint selected: $MOUNT_POINT_M"
+            if mountpoint -q /srv/tcproxy/$MOUNT_POINT_M; then logm "/srv/tcproxy/$MOUNT_POINT_M mounted and accessible"; break; else
+                RESPONSE_M=$(logc sudo mount -t cifs //127.0.0.1/$MOUNT_POINT_M /srv/tcproxy/$MOUNT_POINT_M -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID 2>&1)
+                if [ $? -eq 0 ]; then
+                    logm "/srv/tcproxy/$MOUNT_POINT_M mounted and accessible"
+                    break
+                else
+                    echo $?
+                    echo "$RESPONSE_M"
+                    logm "Failed to mount $MOUNT_POINT_M. $RESPONSE_M. Check system and retry."
+                    sleep 5
+                fi
+            fi
+            RETRY_COUNT_M=$((RETRY_COUNT_M + 1))
+            logm "Retrying mount for $MOUNT_POINT_M... attempt $RETRY_COUNT_M"
+        done
+    done
+    logm "mount routine of all specified mount points completed."
+
+
+
+
+
+    # RETRY_INTERVAL_MO=5
+    # RETRY_COUNT_MO=0
+    # MAX_RETRIES_MO=3
+    # while ! mountpoint -q /srv/tcproxy/$TC_DISK; do
+    #     RETRY_COUNT_MO=$((RETRY_COUNT_MO + 1))
+    #     if [ $RETRY_COUNT_MO -ge $MAX_RETRIES_MO ]; then
+    #         logm "[ERROR] Max retries for mountpoint check reached. Please reboot your system and try again. Exiting..."
+    #         exit 1
+    #     fi
+    #     logm "Remounting /srv/tcproxy..."
+    #     umount_srv_tcproxy
+    #     if [[ -n $TC_DISK_USB ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_DISK_USB /srv/tcproxy/$TC_DISK_USB -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
+    #     if [[ -n $TC_USER ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_USER /srv/tcproxy/$TC_USER -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
+    #     if [[ -n $TC_DISK ]]; then logsc sudo mount -t cifs //127.0.0.1/$TC_DISK /srv/tcproxy/$TC_DISK -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID; fi
+    #     sleep $RETRY_INTERVAL_MO
+    # done
+    # logm "/srv/tcproxy/$TC_DISK mounted and accessible"
+}
+
 
 tcproxy_systemd_setup() {
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
@@ -616,6 +676,7 @@ help_menu() {
   -s,  --ssh                connects to the VM via ssh
   -u,  --up                 [default arg.], loads VM and initiates mount /srv/tcproxy on host
   -v,  --version            Shows current version of tcproxy installed
+  --update-check            check for updates from project server 
   --update                  requests update from project server and attempts local upgrade
   --remote-log              Sends last 100 log lines to debug server
   --enable-service          install systemd startup service
@@ -640,8 +701,10 @@ save_ENVs_to_file() {
     echo "PGID=$PGID" >> $TCP_ENV
     echo "TC_IP=$TC_IP" >> $TCP_ENV
     echo "TC_DISK=$TC_DISK" >> $TCP_ENV
-    echo "TC_FSTAB_USER=$TC_FSTAB_USER" >> $TCP_ENV
+    echo "TC_DISK_USB=$TC_DISK_USB" >> $TCP_ENV
+    echo "TC_USER=$TC_USER" >> $TCP_ENV
     echo "TC_PASSWORD=$TC_PASSWORD" >> $TCP_ENV
+    echo "STARTUP_MOUNT=$STARTUP_MOUNT" >> $TCP_ENV
     echo "TCPROXY_SERVICE_FILE=$TCPROXY_SERVICE_FILE" >> $TCP_ENV
     echo "TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_SERVICE_TEMP_FILE" >> $TCP_ENV
     echo "SUDOREQUIRED=$SUDOREQUIRED" >> $TCP_ENV
@@ -712,23 +775,10 @@ keep_log_small() {
 if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
 SCRIPT_COMMAND="$0 $@"
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
-if [[ -e $(pwd)/.web-install-tcproxy.env ]]; then 
-    source "$(pwd)/.web-install-tcproxy.env"
-    set -- "--install"
-    SCRIPT_COMMAND="Web install"
-else
-    if [ ! -t 0 ]; then create_tcproxy_folder; fi
-fi
-if [[ -e $(pwd)/.tcproxy.env ]]; then 
-    source "$(pwd)/.tcproxy.env"
-else
-    set -- "--install"
-    SCRIPT_COMMAND="./tcproxy --install"
-    echo
-    echo "[WARNING] Installation not detected. Defaulting to [./tcproxy --install]"
-    echo
-    create_tcproxy_folder
-fi
+if [ ! -t 0 ]; then set -- "--install"; fi
+if [[ -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] && [[ -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then 
+    source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env"
+else echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."; create_tcproxy_folder; fi
 if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     DESCR_COM="Showing help menu..."; header
     help_menu
@@ -739,31 +789,66 @@ elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
     footer
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
+    if [[ ! -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] || [[ ! -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."; footer; exit 1; fi
     umount_srv_tcproxy
+    MOUNT_POINTS_UM=()
+    if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK_USB"); fi
+    if [[ -n $TC_USER ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_USER"); fi
+    if [[ -n $TC_DISK ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK"); fi
+    for MOUNT_POINT_UM in "${MOUNT_POINTS_UM[@]}"; do
+       logc rm $MOUNT_POINT_UM
+    done
     stopping_VM
     remove_system_service
     remove_tcproxy_env
-    logsc sudo rm $TCPROXY_PATH/data.img $TCPROXY_PATH/id_rsa_vm $TCPROXY_PATH/id_rsa_vm.pub $TCPROXY_PATH/qemu.mac $TCPROXY_PATH/uefi.rom $TCPROXY_PATH/.vm-serial-file $TCPROXY_PATH/tcproxy
+    logsc sudo rm $TCPROXY_PATH/data.img $TCPROXY_PATH/id_rsa_vm $TCPROXY_PATH/id_rsa_vm.pub $TCPROXY_PATH/qemu.mac $TCPROXY_PATH/uefi.rom $TCPROXY_PATH/.vm-serial-file
     touch .tcproxy-uninstalled
-    logm "tcproxy unistalled."
+    logm "tcproxy unistalled. You may now remove the folder:
+$TCPROXY_PATH
+"
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;uninstalled" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     footer
-# args selection
-elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
+elif [[ $1 == "" ]] && [[ ! $TC_PASSWORD == "" ]]; then
     DESCR_COM="no argument. Defaulting to [ ./tcproxy --up ]"; header
     echo "Loading and mounting VM..."
     tcproxy_up
     footer
-elif [[ $1 == "" ]]; then
-    DESCR_COM="Reinstalling..."; header
-    set -- "--install"
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
-    define_tcproxy_env_vars
+    create_tcproxy_folder
     check_system_requirements
-    prompt_user_inputs
+    whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue?" 15 60
+    INSTALL_CONFIRMATION=$?
+    if [ $INSTALL_CONFIRMATION -ne 0 ]; then
+        echo "[INFO] Process Aborted. No change has been performed."
+        prompt_user_inputs
+    fi
+    TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
+    if [ -z "$TC_IP" ]; then
+        echo "[ERROR] IPv4 required. Process aborted."
+        exit 1
+    fi
+    TC_USER=$(whiptail --title "Time Capsule USER" --inputbox "Enter Time Capsule USER (optional):" 8 60 "" 3>&1 1>&2 2>&3)
+    TC_PASSWORD=$(whiptail --title "Time Capsule PASSWORD" --inputbox "Enter Time Capsule PASSWORD:" 8 60 "" 3>&1 1>&2 2>&3)
+    if [ -z "$TC_PASSWORD" ]; then
+        echo "[ERROR] PASSWORD is required. Process aborted."
+        exit 1
+    fi
+    TC_DISK=$(whiptail --title "Time Capsule DISK name" --inputbox "Enter Time Capsule DISK name (e.g., Data):" 8 60 "" 3>&1 1>&2 2>&3)
+    # if [ -z "$TC_DISK" ]; then
+    #     echo "[ERROR] DISK name is required. Process aborted."
+    #     exit 1
+    # fi
+    TC_DISK_USB=$(whiptail --title "Time Capsule USB disk Name" --inputbox "Enter Time Capsule USB disk name (optional):" 8 60 "" 3>&1 1>&2 2>&3)
+    whiptail --title "Mount at Startup" --yesno "Do you want to enable mount at startup?" 8 60
+    STARTUP_MOUNT_Q=$?
+    if [ $STARTUP_MOUNT_Q -eq 0 ]; then
+        STARTUP_MOUNT="Y"
+    fi
+    if [ -z "$INSTALL_CONFIRMATION" ]; then 
+        prompt_user_inputs
+    fi
     github_download
-    define_tcproxy_env_vars
     deflating_vm
     umount_srv_tcproxy
     stopping_VM
@@ -786,21 +871,47 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     logm "Installation completed in folder tcproxy/"
     tcm "setup-finished"  >/dev/null 2>&1
     footer
-elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
-    echo "Uninstalled status detected. Reinstalling..."
-    ./tcproxy --install
-    exit 0
-if [[ $1 != "--update" ]]; then check_or_update_script; fi
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     DESCR_COM="Accessing VM via SSH..."; header
     ssh_vm
     footer
+elif [[ $1 == "--update" ]]; then
+    if [[ ! -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] || [[ ! -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then create_tcproxy_folder; fi
+    DESCR_COM="Updating script..."; header
+    MAN_UPDATE=1
+    check_or_update_script
+    save_ENVs_to_file
+    footer
+elif [[ $1 == "--update-check" ]]; then
+    DESCR_COM="Checking for updates..."; header
+    MAN_UPDATE=0
+    check_or_update_script
+    save_ENVs_to_file
+    footer
+elif [[ $1 == "--remote-log" ]]; then
+    DESCR_COM="Sending last 100 log lines to debug server..."; header
+    remote_log
+    footer
+elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
+    DESCR_COM="Printing last 100 lines from log..."; header
+    tail -n 100 "$LOG_FILE"
+    footer
+elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
+    DESCR_COM="[WARNING] file .tcproxy-uninstalled detected."; header
+    echo "Uninstalled status detected. Run [./tcproxy --install] to setup your system."
+    footer
+    # exit 0
+elif [[ ! -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] || [[ ! -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] || [[ -z $TC_PASSWORD ]]; then 
+    DESCR_COM="[WARNING]"; header
+    echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."
+    footer
+    exit 1
 elif [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
     DESCR_COM="Loading and mounting VM..."; header
     tcproxy_up
     footer
 elif [[ $1 == "-d" ]] || [[ $1 == "--down" ]]; then
-    DESCR_COM="Unmounting share and stopping VM..."; header
+    DESCR_COM="Umounting share and stopping VM..."; header
     umount_srv_tcproxy
     sleep 5
     stopping_VM
@@ -811,14 +922,6 @@ elif [[ $1 == "-r" ]] || [[ $1 == "--restart" ]]; then
     stopping_VM
     sleep 5
     tcproxy_up
-    footer
-elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
-    DESCR_COM="Printing last 100 lines from log..."; header
-    tail -n 100 "$LOG_FILE"
-    footer
-elif [[ $1 == "--remote-log" ]]; then
-    DESCR_COM="Sending last 100 log lines to debug server..."; header
-    remote_log
     footer
 elif [[ $1 == "--enable-service" ]]; then
     DESCR_COM="Enabling startup service..."; header
@@ -835,16 +938,13 @@ elif [[ $1 == "--disable-service" ]]; then
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.timer
     footer
-elif [[ $1 == "--update" ]]; then
-    DESCR_COM="Updating script..."; header
-    MAN_UPDATE=1
-    define_tcproxy_env_vars
-    check_or_update_script
-    save_ENVs_to_file
+elif [[ $1 == "" ]]; then
+    DESCR_COM="Showing help menu..."; header
+    help_menu
     footer
 else
     DESCR_COM="Argument not recognized..."; header
     help_menu
     footer
 fi
-keep_log_small
+if [[ ! -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] || [[ ! -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then create_tcproxy_folder; fi; keep_log_small
