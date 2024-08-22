@@ -1,13 +1,12 @@
 ## README.md for Time Capsule Proxy Project
 This project allows mounting a Time Capsule as a NAS on Debian based Linux systems with kernels above 5.15, which no longer support the `sec=ntlm` mount flag.
 
-**Installation Script:**
-Installation via script (from a standard terminal):
+**Installation via script (from a standard terminal):**
 ```
 wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
 ```
 
-Test (dev) Branch:
+**Test (dev) Branch:**
 ```
 wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash
 ```
