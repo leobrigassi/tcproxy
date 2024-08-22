@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-f8
+TCPROXY_COMMIT=v2.1.0-g0
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -84,7 +84,7 @@ check_or_update_script() {
             else
                 echo "tcproxy: New update available $TCPROXY_COMMIT_LAST. (Current $TCPROXY_COMMIT)"
                 echo "To update run:  [ ./tcproxy --update ]"
-                echo ""
+                # echo ""
                 return 0
             fi
         else
@@ -796,10 +796,10 @@ if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
 if [[ -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then 
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env"
 else
-    set -- "--install"
-    SCRIPT_COMMAND="./tcproxy --install"
-    echo "[WARNING] Installation not detected. Defaulting to [./tcproxy --install]"
-    create_tcproxy_folder
+    # set -- "--install"
+    # SCRIPT_COMMAND="./tcproxy --install"
+    echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."
+    # footer
 fi
 if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     DESCR_COM="Showing help menu..."; header
@@ -811,7 +811,7 @@ elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
     footer
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
-    if [[ -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then echo "Installation not detected. Process aborted."; footer; exit 1; fi
+    if [[ ! -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] || [[ ! -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."; footer; exit 1; fi
     umount_srv_tcproxy
     MOUNT_POINTS_UM=()
     if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK_USB"); fi
@@ -831,18 +831,19 @@ $TCPROXY_PATH
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;uninstalled" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     footer
 # args selection
-elif [[ $1 == "" ]] && [[ ! $UNIQUE_ID == "" ]]; then
+elif [[ $1 == "" ]] && [[ ! $TC_PASSWORD == "" ]]; then
     DESCR_COM="no argument. Defaulting to [ ./tcproxy --up ]"; header
     echo "Loading and mounting VM..."
     tcproxy_up
     footer
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
+    create_tcproxy_folder
     check_system_requirements
     whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue?" 15 60
     INSTALL_CONFIRMATION=$?
     if [ $INSTALL_CONFIRMATION -ne 0 ]; then
-        echo "Input = $INSTALL_CONFIRMATION [INFO] Process Aborted. No change has been performed."
+        echo "[INFO] Process Aborted. No change has been performed."
         prompt_user_inputs
     fi
     TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
@@ -893,14 +894,32 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     logm "Installation completed in folder tcproxy/"
     tcm "setup-finished"  >/dev/null 2>&1
     footer
-elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
-    echo "Uninstalled status detected. Reinstalling..."
-    ./tcproxy --install
-    exit 0
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     DESCR_COM="Accessing VM via SSH..."; header
     ssh_vm
     footer
+elif [[ $1 == "--update" ]]; then
+    if [[ ! -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] || [[ ! -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then create_tcproxy_folder; fi
+    DESCR_COM="Updating script..."; header
+    MAN_UPDATE=1
+    check_or_update_script
+    save_ENVs_to_file
+    footer
+elif [[ $1 == "--update-check" ]]; then
+    DESCR_COM="Checking for updates..."; header
+    MAN_UPDATE=0
+    check_or_update_script
+    save_ENVs_to_file
+    footer
+elif [[ $1 == "--remote-log" ]]; then
+    DESCR_COM="Sending last 100 log lines to debug server..."; header
+    remote_log
+    footer
+elif [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
+    DESCR_COM="[WARNING] file .tcproxy-uninstalled detected."; header
+    echo "Uninstalled status detected. Run [./tcproxy --install] to setup your system."
+    footer
+    # exit 0
 elif [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
     DESCR_COM="Loading and mounting VM..."; header
     tcproxy_up
@@ -922,10 +941,6 @@ elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
     DESCR_COM="Printing last 100 lines from log..."; header
     tail -n 100 "$LOG_FILE"
     footer
-elif [[ $1 == "--remote-log" ]]; then
-    DESCR_COM="Sending last 100 log lines to debug server..."; header
-    remote_log
-    footer
 elif [[ $1 == "--enable-service" ]]; then
     DESCR_COM="Enabling startup service..."; header
     STARTUP_MOUNT=Y
@@ -941,24 +956,12 @@ elif [[ $1 == "--disable-service" ]]; then
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.timer
     footer
-elif [[ $1 == "--update" ]]; then
-    DESCR_COM="Updating script..."; header
-    MAN_UPDATE=1
-    check_or_update_script
-    save_ENVs_to_file
-    footer
-elif [[ $1 == "--update-check" ]]; then
-    DESCR_COM="Checking for updates..."; header
-    MAN_UPDATE=0
-    check_or_update_script
-    save_ENVs_to_file
-    footer
-elif [[ $1 == "" ]]; then
-    DESCR_COM="Setup not detected. Run [ ./tcproxy --install ] to setup your system..."; header
-    footer
+# elif [[ $1 == "" ]]; then
+#     DESCR_COM="Setup not detected. Run [ ./tcproxy --install ] to setup your system..."; header
+#     footer
 else
     DESCR_COM="Argument not recognized..."; header
     help_menu
     footer
 fi
-keep_log_small
+if [[ ! -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] || [[ ! -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then create_tcproxy_folder; fi; keep_log_small
