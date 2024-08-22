@@ -3,7 +3,7 @@ This project allows mounting a Time Capsule as a NAS on Debian based Linux syste
 
 **Installation via script (from a standard terminal):**
 ```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
+wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash
 ```
 
 **Test (dev) Branch:**
