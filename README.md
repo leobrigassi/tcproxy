@@ -1,6 +1,31 @@
 ## README.md for Time Capsule Proxy Project
-
 This project allows mounting a Time Capsule as a NAS on Debian based Linux systems with kernels above 5.15, which no longer support the `sec=ntlm` mount flag.
+
+**Installation via script (from a standard terminal):**
+```
+wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
+```
+
+**Test (dev) Branch:**
+```
+wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash
+```
+
+
+The project includes a script `tcproxy` that automates the following steps:
+
+1. Prompts you for user inputs.
+2. Extracts the pre-provisioned VM image if it doesn't exist.
+3. Starts the VM using qemu-system-aarch64
+4. Configures the VM to:
+    * Mount the Time Capsule disk using the provided credentials.
+    * Set up Samba to share the mounted disk with the host system.
+5. Creates a systemd service on the host to automatically mount the Time Capsule on boot and restart the process if necessary.
+
+Follow the prompts to enter your Time Capsule credentials.
+Access your files in /srv/tcproxy
+
+To access program options type: `./tcproxy --help`
 
 **How it works:**
 
@@ -32,35 +57,6 @@ sudo apt install qemu-system-x86 qemu-kvm smbclient
 * **Password:** Password for your Time Capsule.
 * **Disk Name:** The name of the disk on your Time Capsule that you want to mount.
 * **USB Disk Name (optional):** The name of the USB disk physically plugged in your Time Capsule
-
-
-**Installation Script:**
-
-The project includes a script `tcproxy` that automates the following steps:
-
-1. Prompts you for user inputs.
-2. Extracts the pre-provisioned VM image if it doesn't exist.
-3. Starts the VM using qemu-system-aarch64
-4. Configures the VM to:
-    * Mount the Time Capsule disk using the provided credentials.
-    * Set up Samba to share the mounted disk with the host system.
-5. Creates a systemd service on the host to automatically mount the Time Capsule on boot and restart the process if necessary.
-
-**Installation Steps:**
-
-Open a terminal in the destination directory of your choice. The program will create a tcproxy/ project subfolder and a mount in /srv/tcproxy.
-
-Installation via script:
-
-Run the following command from a standard terminal:
-```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash; ./.tcproxy
-```
-
-Follow the prompts to enter your Time Capsule credentials.
-Access your files in /srv/tcproxy
-
-To access program options type: `./tcproxy --help`
 
 **Files:**
 
