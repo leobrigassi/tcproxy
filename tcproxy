@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-f3
+TCPROXY_COMMIT=v2.1.0-f4
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -831,7 +831,7 @@ elif [[ $1 == "" ]]; then
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
     check_system_requirements
-    whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue with the installation?" 15 60
+    whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue?" 15 60
     INSTALL_CONFIRMATION=$?
     if [ $INSTALL_CONFIRMATION -ne 0 ]; then
         echo "Input = $INSTALL_CONFIRMATION [INFO] Process Aborted. No change has been performed."
@@ -849,10 +849,10 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
         exit 1
     fi
     TC_DISK=$(whiptail --title "Time Capsule DISK name" --inputbox "Enter Time Capsule DISK name (e.g., Data):" 8 60 "" 3>&1 1>&2 2>&3)
-    if [ -z "$TC_DISK" ]; then
-        echo "[ERROR] DISK name is required. Process aborted."
-        exit 1
-    fi
+    # if [ -z "$TC_DISK" ]; then
+    #     echo "[ERROR] DISK name is required. Process aborted."
+    #     exit 1
+    # fi
     TC_DISK_USB=$(whiptail --title "Time Capsule USB disk Name" --inputbox "Enter Time Capsule USB disk name (optional):" 8 60 "" 3>&1 1>&2 2>&3)
     whiptail --title "Mount at Startup" --yesno "Do you want to enable mount at startup?" 8 60
     STARTUP_MOUNT_Q=$?
