@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0-e8
+TCPROXY_COMMIT=v2.1.0-e9
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.0.4
 #/heads/branch or /tags/version for releases
@@ -283,11 +283,10 @@ deflating_vm() {
 # }
 
 umount_srv_tcproxy() {
+    logs "Initiating umount routine..."
     MAX_RETRIES_UM=3
     RETRY_COUNT_UM=0
-
-    # List of directories to unmount
-    MOUNT_POINTS=()  # Initialize an empty array
+    MOUNT_POINTS=()
     if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS+=("/srv/tcproxy/$TC_DISK_USB"); fi
     if [[ -n $TC_USER ]]; then MOUNT_POINTS+=("/srv/tcproxy/$TC_USER"); fi
     if [[ -n $TC_DISK ]]; then MOUNT_POINTS+=("/srv/tcproxy/$TC_DISK"); fi
