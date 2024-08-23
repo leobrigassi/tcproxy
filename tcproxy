@@ -1,10 +1,10 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-d2
-TCPROXY_BRANCH=/heads/dev
+TCPROXY_COMMIT=v2.1.1-d8
+TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
-
+SOURCE_URL=$1
 USER=$(whoami)
 GROUP=$(id -gn)
 PUID=$(id -u)
@@ -23,7 +23,7 @@ TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/rele
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
 # Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.1.0/tcproxy | bash
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy | bash
-# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy | bash
+# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy | BETA= bash
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -780,25 +780,6 @@ keep_log_small() {
 }
 
 # tcproxy logic
-if [[ $TCPROXY_BRANCH == "/heads/beta" ]] || [[ $TCPROXY_BRANCH == "/heads/dev" ]]; then
-    BETA_WARNING="You have selected the beta branch of tcproxy.
-What we are testing:
-- additional sudo checks for users with lower privileges. Such users will be prompted for sudo password
-- additional checks for user inputs. If USERNAME is not provided then at least DISK or USB_DISK must be provided.
-
-Do you want to continue?"
-    echo "------------------------------------------------------------------"
-    echo "---------- YOU HAVE SELECTED THE BETA BRANCH OF TCPROXY ----------"
-    echo "---------- please provide your feedback on: ----------------------"
-    echo "---------- https://github.com/leobrigassi/time-capsule-proxy -----"
-    echo "------------------------------------------------------------------"
-    countdown 7
-    whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "$BETA_WARNING" 15 60
-    BETA_CONFIRMATION=$?
-    if [ $BETA_CONFIRMATION -ne 0 ]; then
-        echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
-    fi
-fi
 echo ""
 echo "tcproxy requires sudo privileges to install. If prompted insert your sudo credentials:"
 if sudo -n true 2>/dev/null; then echo "Sudo session is active and validated."
@@ -856,6 +837,39 @@ elif [[ $1 == "" ]] && [[ ! $TC_PASSWORD == "" ]]; then
     footer
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
+    if [ -v BETA ]; then
+    BETA_WARNING="You have selected the BETA branch of tcproxy.
+What we are testing:
+- additional sudo checks for users with lower privileges. Such users will be prompted for sudo password
+- additional checks for user inputs. If USERNAME is not provided then at least DISK or USB_DISK must be provided.
+
+Do you want to continue?"
+        echo "------------------------------------------------------------------"
+        echo "---------- You have selected the BETA branch of tcproxy ----------"
+        echo "---------- please provide your feedback on: ----------------------"
+        echo "---------- https://github.com/leobrigassi/time-capsule-proxy -----"
+        echo "------------------------------------------------------------------"
+        countdown 7
+        whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "$BETA_WARNING" 15 60
+        BETA_CONFIRMATION=$?
+        if [ $BETA_CONFIRMATION -ne 0 ]; then
+            echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
+        fi
+    elif [ -v DEV ]; then
+        DEV_WARNING="You have selected the DEV branch of tcproxy.
+This is intended for DEV testing ONLY."
+        echo "------------------------------------------------------------------"
+        echo "---------- You have selected the DEV branch of tcproxy -----------"
+        echo "---------- This is intended for DEV testing ONLY.---------------"
+        echo "---------- https://github.com/leobrigassi/time-capsule-proxy -----"
+        echo "------------------------------------------------------------------"
+        countdown 7
+        whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "$DEV_WARNING" 15 60
+        DEV_CONFIRMATION=$?
+        if [ $DEV_CONFIRMATION -ne 0 ]; then
+            echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
+        fi
+    fi
     create_tcproxy_folder
     download_latest_script
     check_system_requirements
