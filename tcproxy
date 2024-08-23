@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-d9
+TCPROXY_COMMIT=v2.1.1-e5
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -224,63 +224,6 @@ deflating_vm() {
     sudo rm tcproxy_VM_x86.tar.gz
 }
 
-# umount_srv_tcproxy() {
-#     MAX_RETRIES_UM=3
-#     RETRY_COUNT_UM=0
-#     while ! ls /srv/tcproxy > /dev/null 2>&1; do
-#         RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
-#         if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
-#             logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
-#             exit 1
-#         fi
-#         RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
-#         if [ $? -eq 0 ]; then
-#             logsm "umount of /srv/tcproxy successful..."
-#         else
-#             logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
-#             sleep 5 
-#             RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
-#             if [[ $? -eq 0 ]]; then
-#                 logm "[INFO] forced unmount of /srv/tcproxy successful..."
-#             elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
-#                 logm "[ERROR $$RESPONSE_F_UM] Please reboot and retry. Process aborted."
-#                 exit 1
-#             else 
-#                 logm "[ERROR $$RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
-#                 exit 1
-#             fi
-#         fi
-#     done
-#     RETRY_COUNT_UM=0
-#     while mountpoint -q /srv/tcproxy; do
-#         RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
-#         if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
-#             logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
-#             exit 1
-#         fi
-#         RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
-#         if [ $? -eq 0 ]; then
-#             logsm "umount of /srv/tcproxy successful..."
-#         else
-#             logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
-#             sleep 5 
-#             RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
-#             if [[ $? -eq 0 ]]; then
-#                 logm "[INFO] forced unmount of /srv/tcproxy successful..."
-#             elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
-#                 logm "[ERROR $RESPONSE_F_UM] Please reboot and retry. Process aborted."
-#                 exit 1
-#             else 
-#                 logm "[ERROR $RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
-#                 exit 1
-#             fi
-#         fi
-#         logm "cannot umount /srv/tcproxy... trying again..."
-#         sleep 5
-#     done
-#     logsm "umount /srv/tcproxy completed..."
-# }
-
 umount_srv_tcproxy() {
     logm "Initiating umount routine..."
     MAX_RETRIES_UM=3
@@ -353,10 +296,10 @@ load_VM() {
         -cpu host \
         -m 256 \
         -boot order=c \
-        -drive file=data.img,format=qcow2,if=virtio \
+        -drive file=$TCPROXY_PATH/data.img,format=qcow2,if=virtio \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
-        -device virtio-net,netdev=net0,mac=$(cat qemu.mac) \
-        -serial file:./.vm-serial-file \
+        -device virtio-net,netdev=net0,mac=$(cat $TCPROXY_PATH/qemu.mac) \
+        -serial file:$TCPROXY_PATH/.vm-serial-file \
         -daemonize \
         -display none
     elif [[ $ARCH == aarch64* ]]; then
@@ -364,11 +307,11 @@ load_VM() {
         -M virt,accel=kvm \
         -cpu host \
         -m 256 \
-        -drive file=data.img,format=qcow2,if=virtio \
-        -bios uefi.rom \
-        -device virtio-net-device,netdev=net0,mac=$(cat qemu.mac) \
+        -drive file=$TCPROXY_PATH/data.img,format=qcow2,if=virtio \
+        -bios $TCPROXY_PATH/uefi.rom \
+        -device virtio-net-device,netdev=net0,mac=$(cat $TCPROXY_PATH/qemu.mac) \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
-        -serial file:./.vm-serial-file \
+        -serial file:$TCPROXY_PATH/.vm-serial-file \
         -daemonize \
         -display none
     fi
@@ -379,7 +322,7 @@ check_VM_status() {
     MAX_RETRIES_VM_ST=30
     RETRY_INTERVAL_VM_ST=5
     RETRY_COUNT_VM_ST=0
-    while ! sudo tail -f ./.vm-serial-file | grep -q "Welcome to Alpine Linux"; do
+    while ! sudo tail -f $TCPROXY_PATH/.vm-serial-file | grep -q "Welcome to Alpine Linux"; do
         RETRY_COUNT_VM_ST=$((RETRY_COUNT_VM_ST + 1))
         if [ $RETRY_COUNT_VM_ST -ge $MAX_RETRIES_VM_ST ]; then
             logm "[ERROR] Max retries for check_VM_status reached. Exiting..."
@@ -568,7 +511,6 @@ Wants=network-online.target
 Type=oneshot
 EnvironmentFile=$TCP_ENV
 ExecStart=$TCPROXY_PATH/tcproxy -u
-WorkingDirectory=$TCPROXY_PATH
 RemainAfterExit=true
 User=$USER
 Group=$GROUP
