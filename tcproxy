@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-b2
+TCPROXY_COMMIT=v2.1.1-b3
 TCPROXY_BRANCH=/heads/pre-dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -186,13 +186,11 @@ testing_ssh_premission_requirements() {
 prompt_user_inputs() {
     echo "GUI closed unexpectedly. Running text based setup.
 Close any app or terminal window using /srv/tcproxy before continuing."
-
     read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
-
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         :
     else
-        logm "[INFO] Process Aborted. No change has been performed."
+        logm "[INFO] Setup aborted. tcproxy has not been installed."
         exit 1
     fi
     read -p "[INPUT] Time Capsule IPv4 (e.g. 192.168.1.10): " TC_IP
@@ -833,12 +831,10 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
     create_tcproxy_folder
     check_system_requirements
-    read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
     whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue?" 15 60
     INSTALL_CONFIRMATION=$?
     if [ $INSTALL_CONFIRMATION -ne 0 ]; then
-        echo "[INFO] Process Aborted. tcproxy has not been installed."
-        read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
+        echo "[INFO] GUI Process Aborted. tcproxy has not been installed."
         prompt_user_inputs
     fi
     TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
@@ -863,9 +859,6 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     if [ $STARTUP_MOUNT_Q -eq 0 ]; then
         STARTUP_MOUNT="Y"
     fi
-    # if [ -z "$INSTALL_CONFIRMATION" ]; then 
-    #     prompt_user_inputs
-    # fi
     github_download
     deflating_vm
     umount_srv_tcproxy
