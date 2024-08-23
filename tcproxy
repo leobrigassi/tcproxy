@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-d9
+TCPROXY_COMMIT=v2.1.1-e0
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -568,7 +568,6 @@ Wants=network-online.target
 Type=oneshot
 EnvironmentFile=$TCP_ENV
 ExecStart=$TCPROXY_PATH/tcproxy -u
-WorkingDirectory=$TCPROXY_PATH
 RemainAfterExit=true
 User=$USER
 Group=$GROUP
