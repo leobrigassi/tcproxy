@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-d6
+TCPROXY_COMMIT=v2.1.1-d7
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -23,7 +23,7 @@ TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/rele
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
 # Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.1.0/tcproxy | bash
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy | bash
-# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy | bash
+# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy | BETA= bash
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -837,7 +837,7 @@ elif [[ $1 == "" ]] && [[ ! $TC_PASSWORD == "" ]]; then
     footer
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
-    if [[ $TCPROXY_BRANCH == "/heads/beta" ]]; then
+    if [ -v BETA ]; then
     echo "SOURCE_URL: $SOURCE_URL"
     BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
@@ -856,7 +856,7 @@ Do you want to continue?"
         if [ $BETA_CONFIRMATION -ne 0 ]; then
             echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
         fi
-    elif [[ $TCPROXY_BRANCH == "/heads/dev" ]]; then
+    elif [ -v DEV ]; then
         DEV_WARNING="You have selected the DEV branch of tcproxy.
 This is intended for DEV testing ONLY."
         echo "------------------------------------------------------------------"
