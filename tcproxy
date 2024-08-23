@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-f7
+TCPROXY_COMMIT=v2.1.1-f8
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -45,7 +45,7 @@ check_or_update_script() {
     if [[ $TCPROXY_RELEASE_LAST != $TCPROXY_RELEASE ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
             logm "Downloading tcproxy $TCPROXY_RELEASE_LAST ..."
-            BACKUP_FILE="${0}.bak"
+            BACKUP_FILE="$TCPROXY_COMMIT_${0}_bakup"
             cp -f "$0" "$BACKUP_FILE"
             TEMP_FILE=$(mktemp)
             curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_MAIN_URL"
@@ -802,7 +802,7 @@ Do you want to continue?"
         DEV_WARNING="You have selected the DEV branch of tcproxy.
 This is intended for DEV testing ONLY."
         echo "-------------------------------------------------------"
-        echo "-- tcproxy DEV version: $TCPROXY_COMMIT"---------------"
+        echo "-- tcproxy DEV version: $TCPROXY_COMMIT---------------"
         echo "-- This is intended for DEV testing ONLY. -------------"
         echo "-- https://github.com/leobrigassi/time-capsule-proxy --"
         echo "-------------------------------------------------------"
