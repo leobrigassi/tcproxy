@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-e9
+TCPROXY_COMMIT=v2.1.1-f0
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -592,7 +592,7 @@ ssh_vm() {
 countdown() {
     local SECONDS=$1
     while [ $SECONDS -gt 0 ]; do
-        echo -ne "Time remaining: ${SECONDS} seconds\033[0K\r"
+        echo -ne "Continuing in ... ${SECONDS} seconds\033[0K\r"
         sleep 1
         ((SECONDS--))
     done
