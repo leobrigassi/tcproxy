@@ -1,10 +1,10 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-d4
+TCPROXY_COMMIT=v2.1.1-d6
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
-
+SOURCE_URL=$1
 USER=$(whoami)
 GROUP=$(id -gn)
 PUID=$(id -u)
@@ -838,6 +838,7 @@ elif [[ $1 == "" ]] && [[ ! $TC_PASSWORD == "" ]]; then
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
     if [[ $TCPROXY_BRANCH == "/heads/beta" ]]; then
+    echo "SOURCE_URL: $SOURCE_URL"
     BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
 - additional sudo checks for users with lower privileges. Such users will be prompted for sudo password
