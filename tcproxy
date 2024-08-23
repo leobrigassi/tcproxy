@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-e6
+TCPROXY_COMMIT=v2.1.1-e7
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -21,9 +21,10 @@ TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsul
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
-# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.1.0/tcproxy | bash
+# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.1.1/tcproxy | bash
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy | bash
-# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy | BETA= bash
+# BETA link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/beta/tcproxy | BETA= bash
+# DEV link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/dev/beta/tcproxy | DEV= bash
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -723,6 +724,7 @@ keep_log_small() {
 }
 
 # tcproxy logic
+if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
 echo ""
 echo "tcproxy requires sudo privileges to install. If prompted insert your sudo credentials:"
 if sudo -n true 2>/dev/null; then echo "Sudo session is active and validated."
