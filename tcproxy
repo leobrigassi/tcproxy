@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-e2
+TCPROXY_COMMIT=v2.1.1-e3
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -353,9 +353,9 @@ load_VM() {
         -cpu host \
         -m 256 \
         -boot order=c \
-        -drive file=data.img,format=qcow2,if=virtio \
+        -drive file=$TPROXY_PATH/data.img,format=qcow2,if=virtio \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
-        -device virtio-net,netdev=net0,mac=$(cat qemu.mac) \
+        -device virtio-net,netdev=net0,mac=$(cat $TPROXY_PATH/qemu.mac) \
         -serial file:$TPROXY_PATH/.vm-serial-file \
         -daemonize \
         -display none
@@ -364,9 +364,9 @@ load_VM() {
         -M virt,accel=kvm \
         -cpu host \
         -m 256 \
-        -drive file=data.img,format=qcow2,if=virtio \
-        -bios uefi.rom \
-        -device virtio-net-device,netdev=net0,mac=$(cat qemu.mac) \
+        -drive file=$TPROXY_PATH/data.img,format=qcow2,if=virtio \
+        -bios $TPROXY_PATH/uefi.rom \
+        -device virtio-net-device,netdev=net0,mac=$(cat $TPROXY_PATH/qemu.mac) \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
         -serial file:$TPROXY_PATH/.vm-serial-file \
         -daemonize \
