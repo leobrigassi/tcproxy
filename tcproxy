@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-a3
+TCPROXY_COMMIT=v2.1.1-a4
 TCPROXY_BRANCH=/heads/pre-dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -105,6 +105,7 @@ create_tcproxy_folder() {
     fi
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env; if [[ ! -e $TCP_ENV ]]; then touch $TCP_ENV; fi; sudo chmod 770 $TCP_ENV
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
+    download_latest_script
 }
 
 download_latest_script() {
