@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-a2
+TCPROXY_COMMIT=v2.1.1-a3
 TCPROXY_BRANCH=/heads/pre-dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -773,13 +773,14 @@ keep_log_small() {
 
 # tcproxy logic
 echo ""
-echo "tcproxy requires sudo privileges to install. If prompted insert your sudo credentials."
-echo ""
+echo "tcproxy requires sudo privileges to install. If prompted insert your sudo credentials:"
 SUDO_OUTPUT=$(sudo -v 2>&1)
-if sudo -n true 2>/dev/null; then
+if sudo -n false 2>/dev/null; then
     echo "Sudo session is active and validated."
 else
-    echo "Sudo session is not active. A password is required. Please run [ ./tcproxy --install ] from the install directory and insert your sudo password when prompted."
+    echo "Sudo session is not active. A password is required."
+    echo "Please run [ ./tcproxy --install ] from the install directory and insert your sudo password when prompted."
+    exit 1
 fi
 read -p "[INPUT] Continue? (y/N): " SUDOPASSWORDTEST
 
