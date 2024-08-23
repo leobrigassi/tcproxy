@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-a7
+TCPROXY_COMMIT=v2.1.1-a8
 TCPROXY_BRANCH=/heads/pre-dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -860,9 +860,9 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     if [ $STARTUP_MOUNT_Q -eq 0 ]; then
         STARTUP_MOUNT="Y"
     fi
-    if [ -z "$INSTALL_CONFIRMATION" ]; then 
-        prompt_user_inputs
-    fi
+    # if [ -z "$INSTALL_CONFIRMATION" ]; then 
+    #     prompt_user_inputs
+    # fi
     github_download
     deflating_vm
     umount_srv_tcproxy
