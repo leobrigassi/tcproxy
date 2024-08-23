@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-d8
+TCPROXY_COMMIT=v2.1.1-d9
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -845,7 +845,8 @@ What we are testing:
 
 Do you want to continue?"
         echo "------------------------------------------------------------------"
-        echo "---------- You have selected the BETA branch of tcproxy ----------"
+        echo "---------- BETA branch of tcproxy with version: ------------------"
+        echo "           $TCPROXY_COMMIT"
         echo "---------- please provide your feedback on: ----------------------"
         echo "---------- https://github.com/leobrigassi/time-capsule-proxy -----"
         echo "------------------------------------------------------------------"
@@ -859,8 +860,9 @@ Do you want to continue?"
         DEV_WARNING="You have selected the DEV branch of tcproxy.
 This is intended for DEV testing ONLY."
         echo "------------------------------------------------------------------"
-        echo "---------- You have selected the DEV branch of tcproxy -----------"
-        echo "---------- This is intended for DEV testing ONLY.---------------"
+        echo "---------- DEV branch of tcproxy version: ------------------------"
+        echo "           $TCPROXY_COMMIT"
+        echo "---------- This is intended for DEV testing ONLY. ----------------"
         echo "---------- https://github.com/leobrigassi/time-capsule-proxy -----"
         echo "------------------------------------------------------------------"
         countdown 7
