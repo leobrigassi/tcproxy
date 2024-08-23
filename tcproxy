@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-c7
+TCPROXY_COMMIT=v2.1.1-c8
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -780,7 +780,7 @@ keep_log_small() {
 }
 
 # tcproxy logic
-if [[ $TCPROXY_BRANCH == *"beta"* ]]; then
+if [[ $TCPROXY_BRANCH == "/heads/beta" ]]; then
     BETA_WARNING="You have selected the beta branch of tcproxy.\nWhat we are testing:\n - additional sudo checks for users with lower privileges. Such users will be prompted for sudo password\n - additional checks for user inputs. If USERNAME is not provided then at least DISK or USB_DISK must be provided.\n\nDo you want to continue?"
     echo "------------------------------------------------------------------"
     echo "---------- YOU HAVE SELECTED THE BETA BRANCH OF TCPROXY ----------"
