@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-a8
+TCPROXY_COMMIT=v2.1.1-a9
 TCPROXY_BRANCH=/heads/pre-dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -186,6 +186,7 @@ testing_ssh_premission_requirements() {
 prompt_user_inputs() {
     echo "GUI closed unexpectedly. Running text based setup.
 Close any app or terminal window using /srv/tcproxy before continuing."
+
     read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
 
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
@@ -836,6 +837,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     INSTALL_CONFIRMATION=$?
     if [ $INSTALL_CONFIRMATION -ne 0 ]; then
         echo "[INFO] Process Aborted. No change has been performed."
+        read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
         prompt_user_inputs
     fi
     TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
