@@ -1,10 +1,9 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-f6
+TCPROXY_COMMIT=v2.1.1-f7
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
-SOURCE_URL=$1
 USER=$(whoami)
 GROUP=$(id -gn)
 PUID=$(id -u)
@@ -725,13 +724,14 @@ keep_log_small() {
 
 # tcproxy logic
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
-echo ""
-echo "tcproxy requires sudo privileges to install. If prompted insert your sudo credentials:"
-if sudo -n true 2>/dev/null; then echo "Sudo session is active and validated."
+SCRIPT_COMMAND="$0 $@"
+# echo ""
+# echo "tcproxy requires sudo privileges to install. If prompted insert your sudo credentials:"
+if sudo -n true 2>/dev/null; then : # echo "Sudo session is active and validated."
 else
     SUDO_OUTPUT=$(sudo -v 2>&1)
     if sudo -n true 2>/dev/null; then
-        echo "Sudo session is active and validated."
+        echo "Sudo session is now active and validated."
     else
         echo "Sudo session is not active. A password is required."
         echo "Please run [ ./tcproxy --install ] from the install directory [ tcproxy/ ] and insert your sudo password when prompted."
@@ -741,8 +741,6 @@ else
     fi
 fi
 if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
-SCRIPT_COMMAND="$0 $@"
-if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
 if [ ! -t 0 ]; then set -- "--install"; WEB_INSTALL="TRUE"; fi
 if [[ -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] && [[ -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then 
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env"
