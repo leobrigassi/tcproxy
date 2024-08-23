@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-e8
+TCPROXY_COMMIT=v2.1.1-e9
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -24,7 +24,7 @@ TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/
 # Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.1.1/tcproxy | bash
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy | bash
 # BETA link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/beta/tcproxy | BETA= bash
-# DEV link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/dev/beta/tcproxy | DEV= bash
+# DEV link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy | DEV= bash
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -292,7 +292,7 @@ stopping_VM() {
 
 load_VM() {
     if [[ $ARCH == x86_64* ]]; then
-        qemu-system-x86_64 \
+        sudo qemu-system-x86_64 \
         -M q35,accel=kvm \
         -cpu host \
         -m 256 \
@@ -304,7 +304,7 @@ load_VM() {
         -daemonize \
         -display none
     elif [[ $ARCH == aarch64* ]]; then
-        qemu-system-aarch64 \
+        sudo qemu-system-aarch64 \
         -M virt,accel=kvm \
         -cpu host \
         -m 256 \
