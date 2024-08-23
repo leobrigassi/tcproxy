@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-f4
+TCPROXY_COMMIT=v2.1.1-f5
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -540,14 +540,14 @@ remove_system_service() {
         logsc sudo systemctl stop time-capsule-proxy.service
         logsc sudo systemctl disable time-capsule-proxy.service
         logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
-        logm "Found and removed boot service v0.9"
+        logm "Found and removed boot service v1"
     fi
     if [[ -f $TCPROXY_SERVICE_FILE ]]; then
         logsc sudo systemctl stop $TCPROXY_SERVICE_NAME; sleep 5
         logsc sudo systemctl disable $TCPROXY_SERVICE_NAME; sleep 5
         logsc sudo rm $TCPROXY_SERVICE_FILE
         logsc sudo systemctl daemon-reload
-        logm "Found and removed boot service v2.0.0"
+        logm "Found and removed boot service v2"
     fi
     if [[ -f /etc/systemd/system/tcproxy-boot-load.timer ]]; then 
         logsc sudo systemctl stop tcproxy-boot-load.timer; sleep 5
