@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-a9
+TCPROXY_COMMIT=v2.1.1-b0
 TCPROXY_BRANCH=/heads/pre-dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -836,7 +836,7 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue?" 15 60
     INSTALL_CONFIRMATION=$?
     if [ $INSTALL_CONFIRMATION -ne 0 ]; then
-        echo "[INFO] Process Aborted. No change has been performed."
+        echo "[INFO] Process Aborted. tcproxy has not been installed."
         read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
         prompt_user_inputs
     fi
