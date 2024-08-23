@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-a6
+TCPROXY_COMMIT=v2.1.1-a7
 TCPROXY_BRANCH=/heads/pre-dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -105,7 +105,6 @@ create_tcproxy_folder() {
     fi
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env; if [[ ! -e $TCP_ENV ]]; then touch $TCP_ENV; fi; sudo chmod 770 $TCP_ENV
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"; if [[ ! -e $LOG_FILE ]]; then touch $LOG_FILE; fi; sudo chmod 770 $LOG_FILE
-    download_latest_script
 }
 
 download_latest_script() {
@@ -775,8 +774,7 @@ keep_log_small() {
 # tcproxy logic
 echo ""
 echo "tcproxy requires sudo privileges to install. If prompted insert your sudo credentials:"
-if sudo -n true 2>/dev/null; then
-    echo "Sudo session is active and validated."
+if sudo -n true 2>/dev/null; then echo "Sudo session is active and validated."
 else
     SUDO_OUTPUT=$(sudo -v 2>&1)
     if sudo -n true 2>/dev/null; then
@@ -785,12 +783,10 @@ else
         echo "Sudo session is not active. A password is required."
         echo "Please run [ ./tcproxy --install ] from the install directory [ tcproxy/ ] and insert your sudo password when prompted."
         create_tcproxy_folder
+        download_latest_script
         exit 1
     fi
 fi
-read -p "[INPUT] Continue? (y/N): " SUDOPASSWORDTEST
-
-
 if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
 SCRIPT_COMMAND="$0 $@"
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
