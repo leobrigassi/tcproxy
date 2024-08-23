@@ -8,7 +8,7 @@ wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/
 
 **Test (beta) Branch:**
 ```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/beta/tcproxy 2>/dev/null | bash
+wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/beta/tcproxy 2>/dev/null | BETA= bash
 ```
 
 
