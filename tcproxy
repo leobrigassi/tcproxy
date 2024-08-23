@@ -1,7 +1,7 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-c1
-TCPROXY_BRANCH=/heads/pre-dev
+TCPROXY_COMMIT=v2.1.1-c2
+TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
 
@@ -645,6 +645,16 @@ ssh_vm() {
     logsm "ssh-out"
 }
 
+countdown() {
+    local SECONDS=$1
+    while [ $SECONDS -gt 0 ]; do
+        echo -ne "Time remaining: ${SECONDS} seconds\033[0K\r"
+        sleep 1
+        ((SECONDS--))
+    done
+    echo ""
+}
+
 remove_tcproxy_env() {
     if [[ -f $TCP_ENV ]]; then 
     sudo rm $TCP_ENV
@@ -770,6 +780,14 @@ keep_log_small() {
 }
 
 # tcproxy logic
+if TCPROXY_BRANCH == "heads/beta"; then
+    BETA_WARNING="You have selected the beta branch of tcproxy.\nWhat we are testing:\n - additional sudo checks for users with lower privileges. Such users will be prompted for sudo password\n - additional checks for user inputs. If USERNAME is not provided then at least DISK or USB_DISK must be provided.\n\nDo you want to continue?"
+    whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "$BETA_WARNING" 15 60
+    BETA_CONFIRMATION=$?
+    if [ $BETA_CONFIRMATION -ne 0 ]; then
+        echo "GUI Process Aborted. tcproxy has not been installed."; countdown 5; exit 1
+    fi
+fi
 echo ""
 echo "tcproxy requires sudo privileges to install. If prompted insert your sudo credentials:"
 if sudo -n true 2>/dev/null; then echo "Sudo session is active and validated."
