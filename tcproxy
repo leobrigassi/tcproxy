@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.1-a0
+TCPROXY_COMMIT=v2.1.1-a1
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.0
 #/heads/branch or /tags/version for releases
@@ -772,6 +772,19 @@ keep_log_small() {
 }
 
 # tcproxy logic
+sudo_output=$(sudo -v 2>&1)
+
+# Check if the output contains the word 'password'
+if echo "$sudo_output" | grep -q "password"; then
+    echo "Sudo is asking for a password."
+    # Handle the case where sudo asks for a password
+else
+    echo "Sudo did not ask for a password."
+    # Handle the case where no password is required
+fi
+read -p "[INPUT] Continue? (y/N): " SUDOPASSWORDTEST
+
+
 if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
 SCRIPT_COMMAND="$0 $@"
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
