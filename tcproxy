@@ -1,10 +1,9 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.0
+TCPROXY_COMMIT=v2.1.2
 TCPROXY_BRANCH=/heads/main
-TCPROXY_RELEASE=v2.1.0
+TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
-
 USER=$(whoami)
 GROUP=$(id -gn)
 PUID=$(id -u)
@@ -21,9 +20,10 @@ TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsul
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
-# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.1.0/tcproxy | bash
-# Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy | bash
-# Dev link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy | bash
+# Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.1.1/tcproxy 2>/dev/null | bash
+# Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash
+# BETA link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/beta/tcproxy 2>/dev/null | BETA= bash
+# DEV link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy?$(date +%s) 2>/dev/null | DEV= bash
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -45,7 +45,7 @@ check_or_update_script() {
     if [[ $TCPROXY_RELEASE_LAST != $TCPROXY_RELEASE ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
             logm "Downloading tcproxy $TCPROXY_RELEASE_LAST ..."
-            BACKUP_FILE="${0}.bak"
+            BACKUP_FILE="$TCPROXY_COMMIT_${0}_bakup"
             cp -f "$0" "$BACKUP_FILE"
             TEMP_FILE=$(mktemp)
             curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_MAIN_URL"
@@ -187,11 +187,10 @@ prompt_user_inputs() {
     echo "GUI closed unexpectedly. Running text based setup.
 Close any app or terminal window using /srv/tcproxy before continuing."
     read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
-
     if [[ "$CONFIRM_INSTALL" =~ ^[Yy]$ ]]; then
         :
     else
-        logm "[INFO] Process Aborted. No change has been performed."
+        logm "[INFO] Setup aborted. tcproxy has not been installed."
         exit 1
     fi
     read -p "[INPUT] Time Capsule IPv4 (e.g. 192.168.1.10): " TC_IP
@@ -224,63 +223,6 @@ deflating_vm() {
     sudo rm tcproxy_VM_aarch64.tar.gz
     sudo rm tcproxy_VM_x86.tar.gz
 }
-
-# umount_srv_tcproxy() {
-#     MAX_RETRIES_UM=3
-#     RETRY_COUNT_UM=0
-#     while ! ls /srv/tcproxy > /dev/null 2>&1; do
-#         RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
-#         if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
-#             logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
-#             exit 1
-#         fi
-#         RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
-#         if [ $? -eq 0 ]; then
-#             logsm "umount of /srv/tcproxy successful..."
-#         else
-#             logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
-#             sleep 5 
-#             RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
-#             if [[ $? -eq 0 ]]; then
-#                 logm "[INFO] forced unmount of /srv/tcproxy successful..."
-#             elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
-#                 logm "[ERROR $$RESPONSE_F_UM] Please reboot and retry. Process aborted."
-#                 exit 1
-#             else 
-#                 logm "[ERROR $$RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
-#                 exit 1
-#             fi
-#         fi
-#     done
-#     RETRY_COUNT_UM=0
-#     while mountpoint -q /srv/tcproxy; do
-#         RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
-#         if [ $RETRY_COUNT_UM -ge $MAX_RETRIES_UM ]; then
-#             logm "[ERROR] Max retries for umount_srv_tcproxy reached. Exiting..."
-#             exit 1
-#         fi
-#         RESPONSE_UM=$(sudo umount /srv/tcproxy 2>&1)
-#         if [ $? -eq 0 ]; then
-#             logsm "umount of /srv/tcproxy successful..."
-#         else
-#             logm "Failed to unmount /srv/tcproxy. $RESPONSE_UM"
-#             sleep 5 
-#             RESPONSE_F_UM=$(sudo umount -f /srv/tcproxy 2>&1); 
-#             if [[ $? -eq 0 ]]; then
-#                 logm "[INFO] forced unmount of /srv/tcproxy successful..."
-#             elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
-#                 logm "[ERROR $RESPONSE_F_UM] Please reboot and retry. Process aborted."
-#                 exit 1
-#             else 
-#                 logm "[ERROR $RESPONSE_F_UM] Cannot unmount /srv/tcproxy. Is the mount in use? Process aborted."
-#                 exit 1
-#             fi
-#         fi
-#         logm "cannot umount /srv/tcproxy... trying again..."
-#         sleep 5
-#     done
-#     logsm "umount /srv/tcproxy completed..."
-# }
 
 umount_srv_tcproxy() {
     logm "Initiating umount routine..."
@@ -354,10 +296,10 @@ load_VM() {
         -cpu host \
         -m 256 \
         -boot order=c \
-        -drive file=data.img,format=qcow2,if=virtio \
+        -drive file=$TCPROXY_PATH/data.img,format=qcow2,if=virtio \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
-        -device virtio-net,netdev=net0,mac=$(cat qemu.mac) \
-        -serial file:./.vm-serial-file \
+        -device virtio-net,netdev=net0,mac=$(cat $TCPROXY_PATH/qemu.mac) \
+        -serial file:$TCPROXY_PATH/.vm-serial-file \
         -daemonize \
         -display none
     elif [[ $ARCH == aarch64* ]]; then
@@ -365,11 +307,11 @@ load_VM() {
         -M virt,accel=kvm \
         -cpu host \
         -m 256 \
-        -drive file=data.img,format=qcow2,if=virtio \
-        -bios uefi.rom \
-        -device virtio-net-device,netdev=net0,mac=$(cat qemu.mac) \
+        -drive file=$TCPROXY_PATH/data.img,format=qcow2,if=virtio \
+        -bios $TCPROXY_PATH/uefi.rom \
+        -device virtio-net-device,netdev=net0,mac=$(cat $TCPROXY_PATH/qemu.mac) \
         -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
-        -serial file:./.vm-serial-file \
+        -serial file:$TCPROXY_PATH/.vm-serial-file \
         -daemonize \
         -display none
     fi
@@ -380,7 +322,7 @@ check_VM_status() {
     MAX_RETRIES_VM_ST=30
     RETRY_INTERVAL_VM_ST=5
     RETRY_COUNT_VM_ST=0
-    while ! sudo tail -f ./.vm-serial-file | grep -q "Welcome to Alpine Linux"; do
+    while ! sudo grep -q "Welcome to Alpine Linux" $TCPROXY_PATH/.vm-serial-file; do
         RETRY_COUNT_VM_ST=$((RETRY_COUNT_VM_ST + 1))
         if [ $RETRY_COUNT_VM_ST -ge $MAX_RETRIES_VM_ST ]; then
             logm "[ERROR] Max retries for check_VM_status reached. Exiting..."
@@ -597,21 +539,21 @@ remove_system_service() {
         logsc sudo systemctl stop time-capsule-proxy.service
         logsc sudo systemctl disable time-capsule-proxy.service
         logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
-        logm "Found and removed boot service v0.9"
+        logm "Found and removed boot service v1"
     fi
     if [[ -f $TCPROXY_SERVICE_FILE ]]; then
         logsc sudo systemctl stop $TCPROXY_SERVICE_NAME; sleep 5
         logsc sudo systemctl disable $TCPROXY_SERVICE_NAME; sleep 5
         logsc sudo rm $TCPROXY_SERVICE_FILE
         logsc sudo systemctl daemon-reload
-        logm "Found and removed boot service v2.0.0"
+        logm "Found and removed boot service v2"
     fi
     if [[ -f /etc/systemd/system/tcproxy-boot-load.timer ]]; then 
         logsc sudo systemctl stop tcproxy-boot-load.timer; sleep 5
         logsc sudo systemctl disable tcproxy-boot-load.timer; sleep 5
         logsc sudo rm /etc/systemd/system/tcproxy-boot-load.timer
         logsc sudo systemctl daemon-reload
-        logm "Found and removed health-check service v2.0.0"
+        logm "Found and removed health-check service v2"
     fi
     logm "Startup daemon disabled and removed..."
 }
@@ -644,6 +586,16 @@ ssh_vm() {
     logsm "ssh-in"
     $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022
     logsm "ssh-out"
+}
+
+countdown() {
+    local SECONDS=$1
+    while [ $SECONDS -gt 0 ]; do
+        echo -ne "Continuing in ... ${SECONDS} seconds\033[0K\r"
+        sleep 1
+        ((SECONDS--))
+    done
+    echo ""
 }
 
 remove_tcproxy_env() {
@@ -720,7 +672,6 @@ post_install_cleanup() {
     logsc sudo rm "leobrigassi.code-workspace"
     logsc sudo rm $INSTALLER_PATH/.tcproxy
     logsc sudo rm $TCPROXY_PATH/.tcproxy
-    logsc sudo rm $TCPROXY_PATH/.web-install-tcproxy
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.timer
 }
@@ -772,10 +723,25 @@ keep_log_small() {
 }
 
 # tcproxy logic
-if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
-SCRIPT_COMMAND="$0 $@"
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
-if [ ! -t 0 ]; then set -- "--install"; fi
+SCRIPT_COMMAND="$0 $@"
+# echo ""
+# echo "tcproxy requires sudo privileges to install. If prompted insert your sudo credentials:"
+if sudo -n true 2>/dev/null; then : # echo "Sudo session is active and validated."
+else
+    SUDO_OUTPUT=$(sudo -v 2>&1)
+    if sudo -n true 2>/dev/null; then
+        echo "Sudo session is now active and validated."
+    else
+        echo "Sudo session is not active. A password is required."
+        echo "Please run [ ./tcproxy --install ] from the install directory [ tcproxy/ ] and insert your sudo password when prompted."
+        create_tcproxy_folder
+        download_latest_script
+        exit 1
+    fi
+fi
+if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
+if [ ! -t 0 ]; then set -- "--install"; WEB_INSTALL="TRUE"; fi
 if [[ -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] && [[ -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then 
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env"
 else echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."; create_tcproxy_folder; fi
@@ -785,7 +751,6 @@ if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
     footer
 elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
     logm "tcproxy: $TCPROXY_COMMIT"
-    # logsc $SUDOREQUIRED VM_VERSION=$(ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'grep "^VERSION=" /usr/local/bin/.metrics.ev | cut -d'=' -f2')
     footer
 elif [[ $1 == "--uninstall" ]]; then
     DESCR_COM="Uninstalling tcproxy..."; header
@@ -795,9 +760,9 @@ elif [[ $1 == "--uninstall" ]]; then
     if [[ -n $TC_DISK_USB ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK_USB"); fi
     if [[ -n $TC_USER ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_USER"); fi
     if [[ -n $TC_DISK ]]; then MOUNT_POINTS_UM+=("/srv/tcproxy/$TC_DISK"); fi
-    for MOUNT_POINT_UM in "${MOUNT_POINTS_UM[@]}"; do
-       logc rm $MOUNT_POINT_UM
-    done
+    # for MOUNT_POINT_UM in "${MOUNT_POINTS_UM[@]}"; do
+    #    logc rm -r $MOUNT_POINT_UM
+    # done
     stopping_VM
     remove_system_service
     remove_tcproxy_env
@@ -815,13 +780,46 @@ elif [[ $1 == "" ]] && [[ ! $TC_PASSWORD == "" ]]; then
     footer
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
+    if [ -v BETA ]; then
+    BETA_WARNING="You have selected the BETA branch of tcproxy.
+What we are testing:
+- additional sudo checks for users with lower privileges. Such users will be prompted for sudo password
+- additional checks for user inputs. If USERNAME is not provided then at least DISK or USB_DISK must be provided.
+
+Do you want to continue?"
+        echo "-------------------------------------------------------"
+        echo "-- tcproxy BETA version: $TCPROXY_COMMIT"
+        echo "-- please provide your feedback on: -------------------"
+        echo "-- https://github.com/leobrigassi/time-capsule-proxy --"
+        echo "-------------------------------------------------------"
+        countdown 7
+        whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "$BETA_WARNING" 15 60
+        BETA_CONFIRMATION=$?
+        if [ $BETA_CONFIRMATION -ne 0 ]; then
+            echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
+        fi
+    elif [ -v DEV ]; then
+        DEV_WARNING="You have selected the DEV branch of tcproxy.
+This is intended for DEV testing ONLY."
+        echo "-------------------------------------------------------"
+        echo "-- tcproxy DEV version: $TCPROXY_COMMIT"
+        echo "-- This is intended for DEV testing ONLY. -------------"
+        echo "-- https://github.com/leobrigassi/time-capsule-proxy --"
+        echo "-------------------------------------------------------"
+        countdown 7
+        whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "$DEV_WARNING" 15 60
+        DEV_CONFIRMATION=$?
+        if [ $DEV_CONFIRMATION -ne 0 ]; then
+            echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
+        fi
+    fi
     create_tcproxy_folder
+    download_latest_script
     check_system_requirements
     whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue?" 15 60
     INSTALL_CONFIRMATION=$?
     if [ $INSTALL_CONFIRMATION -ne 0 ]; then
-        echo "[INFO] Process Aborted. No change has been performed."
-        prompt_user_inputs
+        if [[ $WEB_INSTALL != "TRUE" ]]; then prompt_user_inputs; else echo "[INFO] GUI Process Aborted. tcproxy has not been installed."; exit 1; fi
     fi
     TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
     if [ -z "$TC_IP" ]; then
@@ -834,19 +832,16 @@ elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
         echo "[ERROR] PASSWORD is required. Process aborted."
         exit 1
     fi
-    TC_DISK=$(whiptail --title "Time Capsule DISK name" --inputbox "Enter Time Capsule DISK name (e.g., Data):" 8 60 "" 3>&1 1>&2 2>&3)
-    # if [ -z "$TC_DISK" ]; then
-    #     echo "[ERROR] DISK name is required. Process aborted."
-    #     exit 1
-    # fi
+    TC_DISK=$(whiptail --title "Time Capsule DISK name" --inputbox "Enter Time Capsule DISK name e.g., Data (optional):" 8 60 "" 3>&1 1>&2 2>&3)
     TC_DISK_USB=$(whiptail --title "Time Capsule USB disk Name" --inputbox "Enter Time Capsule USB disk name (optional):" 8 60 "" 3>&1 1>&2 2>&3)
+    if [ -z "$TC_USER" ] && [ -z "$TC_DISK" ] && [ -z "$TC_DISK_USB" ]; then
+        echo "[ERROR] Nothing to mount. At least one input among User, DISK or USB Disk is required. Process aborted."
+        exit 1
+    fi
     whiptail --title "Mount at Startup" --yesno "Do you want to enable mount at startup?" 8 60
     STARTUP_MOUNT_Q=$?
     if [ $STARTUP_MOUNT_Q -eq 0 ]; then
         STARTUP_MOUNT="Y"
-    fi
-    if [ -z "$INSTALL_CONFIRMATION" ]; then 
-        prompt_user_inputs
     fi
     github_download
     deflating_vm
