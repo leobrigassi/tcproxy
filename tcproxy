@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-a5
+TCPROXY_COMMIT=v2.1.2-a6
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -699,6 +699,12 @@ keep_log_small() {
     if [[ $(wc -l < "$LOG_FILE") -gt 2000 ]]; then tail -n 2000 "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"; fi
 }
 
+stats_disabled_message() {
+    DESCR_COM="Function disabled. To enable please reinstall..."; header
+    help_menu
+    footer
+}
+
 # tcproxy logic
 if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
 SCRIPT_COMMAND="$0 $@"
@@ -743,7 +749,7 @@ elif [[ $1 == "--uninstall" ]]; then
     logm "tcproxy unistalled. You may now remove the folder:
 $TCPROXY_PATH
 "
-    if [[ $STATS != 0 ]]; then curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;uninstalled" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1; fi
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;uninstalled" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     footer
 elif [[ $1 == "" ]] && [[ ! $TC_PASSWORD == "" ]]; then
     DESCR_COM="no argument. Defaulting to [ ./tcproxy --up ]"; header
@@ -838,6 +844,7 @@ elif [[ $1 == "--update" ]]; then
             check_or_update_script
             save_ENVs_to_file
             footer
+        else stats_disabled_message
         fi
 elif [[ $1 == "--update-check" ]]; then
     if [[ $STATS != 0 ]]; then
@@ -846,12 +853,14 @@ elif [[ $1 == "--update-check" ]]; then
         check_or_update_script
         save_ENVs_to_file
         footer
+    else stats_disabled_message
     fi
 elif [[ $1 == "--remote-log" ]]; then
     if [[ $STATS != 0 ]]; then
         DESCR_COM="Sending last 100 log lines to debug server..."; header
         remote_log
         footer
+    else stats_disabled_message
     fi
 elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
     DESCR_COM="Printing last 100 lines from log..."; header
