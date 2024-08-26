@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-b1
+TCPROXY_COMMIT=v2.1.2-b2
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -29,7 +29,6 @@ if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
 else
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_BRANCH_URL
 fi
-
 MISSING_DEPS=0
 for cmd in bash sudo whoami id uname cat md5sum awk grep head readlink pwd chmod mkdir touch rm ssh whiptail smbclient; do
     if ! command -v $cmd &> /dev/null; then
