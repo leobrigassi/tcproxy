@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-a0
+TCPROXY_COMMIT=v2.1.2-a1
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -108,7 +108,7 @@ create_tcproxy_folder() {
 }
 
 download_latest_script() {
-    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     echo "Downloading latest installation script..."
     TEMP_FILE=$(mktemp)
     if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"; then
@@ -140,27 +140,21 @@ github_download() {
 check_system_requirements() {
     ARCH=$(uname -m)
     if [[ $ARCH == x86_64* ]]; then
-        if ! which qemu-system-x86_64 >/dev/null 2>&1; then
-        logm "qemu not detected.
-        sudo apt install qemu-system-x86 qemu-kvm smbclient
+        if ! which qemu-system-x86_64 >/dev/null 2>&1 && ! which smbclient >/dev/null 2>&1; then
+        logm "Dependencies not detected.
+        sudo apt install curl qemu-system-x86 qemu-kvm smbclient
         please install and try again."
         exit 1
         fi
     elif [[ $ARCH == aarch64* ]]; then
-        if ! which qemu-system-aarch64 >/dev/null 2>&1 && ! which qemu-system-x86_64 >/dev/null 2>&1; then
-        logm "Qemu not detected.
-        sudo apt install qemu-system-aarch64 qemu-kvm smbclient
+        if ! which qemu-system-aarch64 >/dev/null 2>&1 && ! which qemu-system-x86_64 >/dev/null 2>&1 && ! which smbclient >/dev/null 2>&1; then
+        logm "Dependencies not detected.
+        sudo apt install curl qemu-system-aarch64 qemu-kvm smbclient
         Please install and try again."
         exit 1
         fi
     else
         logm "System not supported. Please run from x86_64 or aarch64 systems."
-        exit 1
-    fi
-    if ! which smbclient >/dev/null 2>&1; then
-        logm "smbclient is required for this script to work correctly. 
-        sudo apt install smbclient
-        Please install and try again."
         exit 1
     fi
 }
@@ -375,17 +369,19 @@ force user = root' >> /etc/samba/smb.conf
     if [[ -n $TC_DISK ]]; then logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo "//'$TC_IP'/'$TC_DISK' /mnt/tc/'$TC_DISK' cifs _netdev,x-systemd.after=network-online.target'$TC_FSTAB_USER',password='$TC_PASSWORD',sec=ntlm,uid=0,vers=1.0,rw,file_mode=0777,dir_mode=0777 0 0 #_Run_setup-vm-proxy-time-capsule.sh_on_host_to_edit_this_line" | tee -a /etc/fstab.new'; fi
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mv /etc/fstab.new /etc/fstab'
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'echo -e "'$TC_PASSWORD'\n'$TC_PASSWORD'" | smbpasswd -a root'
-    SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;Provisioning_VM" "http://$L1.$L2.$L3.$L4:$L5"); SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4); SERVER_RESPONSE_MESSAGE=$(echo "$SERVER_RESPONSE" | head -c -4)
+    SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;Provisioning_VM;" "http://$L1.$L2.$L3.$L4:$L5"); SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4); SERVER_RESPONSE_MESSAGE=$(echo "$SERVER_RESPONSE" | head -c -4)
     if [ "$SERVER_RESPONSE_CODE" -eq 200 ]; then
         SEC_TOT=$SERVER_RESPONSE_MESSAGE; else logsm "Failed to get a valid response from log server. Status Code: $SERVER_RESPONSE_CODE"
         SEC_TOT=$(shuf -i 0-86400 -n 1)
     fi
     SEC_TOT=$SERVER_RESPONSE_MESSAGE; SEC_TOT=$((SEC_TOT % 86400)); CRON_H=$(($((SEC_TOT % 86400)) / 3600)); CRON_M=$((($((SEC_TOT % 86400)) % 3600) / 60)); CRONM_HM="$CRON_M $CRON_H * * * /usr/local/bin/metrics.sh"
-    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 'touch /usr/local/bin/.metrics.env; touch /usr/local/bin/metrics.sh'
-    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "UNIQUE_ID=$UNIQUE_ID; ARCH=$ARCH; TCPROXY_COMMIT=$TCPROXY_COMMIT" | base64)' | base64 -d > /usr/local/bin/.metrics.env"
-    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo '#!/bin/sh
-source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl --connect-timeout 5 --max-time 10 -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;$(uptime);$mem_usage;$(df -h | grep -E "mnt/tc|dev/vda3")" "http://'$L1'.'$L2'.'$L3'.'$L4':'$L5'"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
-    logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "chmod +x /usr/local/bin/metrics.sh; (crontab -l | grep -v '/usr/local/bin/metrics.sh'; echo '$CRONM_HM') | crontab -"
+    if [[ $STATS != 0 ]]; then
+        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 'touch /usr/local/bin/.metrics.env; touch /usr/local/bin/metrics.sh'
+        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "UNIQUE_ID=$UNIQUE_ID; ARCH=$ARCH; TCPROXY_COMMIT=$TCPROXY_COMMIT; STATS=$STATS" | base64)' | base64 -d > /usr/local/bin/.metrics.env"
+        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo '#!/bin/sh
+    source /usr/local/bin/.metrics.env; mem_usage=$(awk '\''/MemTotal/ {total=$2} /MemAvailable/ {available=$2} END {printf "%.2f MB / %.2f MB, Free: %.2f MB", (total-available)/1024, total/1024, available/1024}'\'' /proc/meminfo); curl --connect-timeout 5 --max-time 10 -s -o /dev/null -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;$(uptime);$mem_usage;$(df -h | grep -E "mnt/tc|dev/vda3")" "http://'$L1'.'$L2'.'$L3'.'$L4':'$L5'"' | base64)' | base64 -d > /usr/local/bin/metrics.sh"
+        logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "chmod +x /usr/local/bin/metrics.sh; (crontab -l | grep -v '/usr/local/bin/metrics.sh'; echo '$CRONM_HM') | crontab -"
+    fi
     logsc $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p 50022 "echo '$(echo "----------------------
 tcproxy: To configure the VM please [ exit ] the VM and run [ ./tcproxy -i ] from the host.
 
@@ -704,12 +700,12 @@ logsm() {
 }
 
 tcm() {
-    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;$1" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
+    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;$1" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
 }
 
 remote_log() {
     LAST_100_LOG_LINES=$(tail -n 100 "$LOG_FILE")
-    SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;$LAST_100_LOG_LINES" "http://$L1.$L2.$L3.$L4:$L5")
+    SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;$LAST_100_LOG_LINES" "http://$L1.$L2.$L3.$L4:$L5")
     SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4)
         if [[ "$SERVER_RESPONSE_CODE" == "200" ]]; then 
             logm "Remote log sent correctly."
@@ -771,7 +767,7 @@ elif [[ $1 == "--uninstall" ]]; then
     logm "tcproxy unistalled. You may now remove the folder:
 $TCPROXY_PATH
 "
-    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;uninstalled" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
+    if [[ $STATS != 0 ]]; then curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;uninstalled" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1; fi
     footer
 elif [[ $1 == "" ]] && [[ ! $TC_PASSWORD == "" ]]; then
     DESCR_COM="no argument. Defaulting to [ ./tcproxy --up ]"; header
@@ -872,21 +868,27 @@ elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     footer
 elif [[ $1 == "--update" ]]; then
     if [[ ! -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] || [[ ! -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then create_tcproxy_folder; fi
-    DESCR_COM="Updating script..."; header
-    MAN_UPDATE=1
-    check_or_update_script
-    save_ENVs_to_file
-    footer
+        if [[ $STATS != 0 ]]; then
+            DESCR_COM="Updating script..."; header
+            MAN_UPDATE=1
+            check_or_update_script
+            save_ENVs_to_file
+            footer
+        fi
 elif [[ $1 == "--update-check" ]]; then
-    DESCR_COM="Checking for updates..."; header
-    MAN_UPDATE=0
-    check_or_update_script
-    save_ENVs_to_file
-    footer
+    if [[ $STATS != 0 ]]; then
+        DESCR_COM="Checking for updates..."; header
+        MAN_UPDATE=0
+        check_or_update_script
+        save_ENVs_to_file
+        footer
+    fi
 elif [[ $1 == "--remote-log" ]]; then
-    DESCR_COM="Sending last 100 log lines to debug server..."; header
-    remote_log
-    footer
+    if [[ $STATS != 0 ]]; then
+        DESCR_COM="Sending last 100 log lines to debug server..."; header
+        remote_log
+        footer
+    fi
 elif [[ $1 == "-l" ]] || [[ $1 == "--log" ]]; then
     DESCR_COM="Printing last 100 lines from log..."; header
     tail -n 100 "$LOG_FILE"
