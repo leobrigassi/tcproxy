@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-d3
+TCPROXY_COMMIT=v2.1.2-d4
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -315,7 +315,7 @@ load_VM() {
             logm "[ERROR] Max retries for load_VM reached. Exiting..."
             exit 1
         fi
-        logm "VM down... attempting to restart..."
+        logm "VM down... attempting to boot..."
         if [[ $ARCH == x86_64* ]]; then
             sudo qemu-system-x86_64 \
             -M q35,accel=kvm \
@@ -446,7 +446,8 @@ tcproxy_up() {
     RETRY_COUNT_UP=0
     REBOOT_COUNT_VM_UP=5
     logm "Checking VM status..."
-    if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
+    # if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
+    if ! pgrep -f "mac=02:D2:46:5B:4E:84"; then
         load_VM
         check_VM_status
     fi
