@@ -775,7 +775,7 @@ if [[ -z "$LOG_FILE" || ! -f "$LOG_FILE" ]]; then
     exit 1
 fi
     DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
-if [ -n "$INVOCATION_ID" ]; then tcproxy_up; exit 0; fi
+# if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
     DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 SCRIPT_COMMAND="$0 $@"
     DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
