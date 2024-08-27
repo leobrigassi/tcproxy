@@ -1,8 +1,8 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-d2
+TCPROXY_COMMIT=v2.1.3
 TCPROXY_BRANCH=/heads/beta
-TCPROXY_RELEASE=v2.1.2
+TCPROXY_RELEASE=v2.1.3
 #/heads/branch or /tags/version for releases
 USER=$(whoami)
 GROUP=$(id -gn)
@@ -24,6 +24,7 @@ TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash
 # BETA link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/beta/tcproxy 2>/dev/null | BETA= bash
 # DEV link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy?$(date +%s) 2>/dev/null | DEV= bash
+SCRIPT_COMMAND="$0 $@"
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -306,31 +307,44 @@ stopping_VM() {
 }
 
 load_VM() {
-    if [[ $ARCH == x86_64* ]]; then
-        sudo qemu-system-x86_64 \
-        -M q35,accel=kvm \
-        -cpu host \
-        -m 256 \
-        -boot order=c \
-        -drive file=$TCPROXY_PATH/data.img,format=qcow2,if=virtio \
-        -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
-        -device virtio-net,netdev=net0,mac=$(cat $TCPROXY_PATH/qemu.mac) \
-        -serial file:$TCPROXY_PATH/.vm-serial-file \
-        -daemonize \
-        -display none
-    elif [[ $ARCH == aarch64* ]]; then
-        sudo qemu-system-aarch64 \
-        -M virt,accel=kvm \
-        -cpu host \
-        -m 256 \
-        -drive file=$TCPROXY_PATH/data.img,format=qcow2,if=virtio \
-        -bios $TCPROXY_PATH/uefi.rom \
-        -device virtio-net-device,netdev=net0,mac=$(cat $TCPROXY_PATH/qemu.mac) \
-        -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
-        -serial file:$TCPROXY_PATH/.vm-serial-file \
-        -daemonize \
-        -display none
-    fi
+    MAX_RETRIES_VM_UP=10
+    RETRY_INTERVAL_VM_UP=15
+    RETRY_COUNT_VM_UP=0
+    while ! pgrep -f "mac=02:D2:46:5B:4E:84" >/dev/null 2>&1; do
+        RETRY_COUNT_VM_UP=$((RETRY_COUNT_VM_ST + 1))
+        if [ $RETRY_COUNT_VM_UP -ge $MAX_RETRIES_VM_UP ]; then
+            logm "[ERROR] Max retries for load_VM reached. Exiting..."
+            exit 1
+        fi
+        logm "VM down... attempting to boot..."
+        if [[ $ARCH == x86_64* ]]; then
+            sudo qemu-system-x86_64 \
+            -M q35,accel=kvm \
+            -cpu host \
+            -m 256 \
+            -boot order=c \
+            -drive file=$TCPROXY_PATH/data.img,format=qcow2,if=virtio \
+            -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
+            -device virtio-net,netdev=net0,mac=$(cat $TCPROXY_PATH/qemu.mac) \
+            -serial file:$TCPROXY_PATH/.vm-serial-file \
+            -daemonize \
+            -display none
+        elif [[ $ARCH == aarch64* ]]; then
+            sudo qemu-system-aarch64 \
+            -M virt,accel=kvm \
+            -cpu host \
+            -m 256 \
+            -drive file=$TCPROXY_PATH/data.img,format=qcow2,if=virtio \
+            -bios $TCPROXY_PATH/uefi.rom \
+            -device virtio-net-device,netdev=net0,mac=$(cat $TCPROXY_PATH/qemu.mac) \
+            -netdev user,id=net0,hostfwd=tcp::50022-:22,hostfwd=tcp::50445-:445 \
+            -serial file:$TCPROXY_PATH/.vm-serial-file \
+            -daemonize \
+            -display none
+        fi
+        sleep $RETRY_INTERVAL_VM_UP
+    done
+    logm "VM launched..."
 }
 
 check_VM_status() {
@@ -433,7 +447,8 @@ tcproxy_up() {
     RETRY_COUNT_UP=0
     REBOOT_COUNT_VM_UP=5
     logm "Checking VM status..."
-    if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
+    # if ! pgrep -f "mac=02:D2:46:5B:4E:84" > /dev/null 2>&1; then
+    if ! pgrep -f "mac=02:D2:46:5B:4E:84"; then
         load_VM
         check_VM_status
     fi
@@ -508,7 +523,7 @@ Wants=network-online.target
 [Service]
 Type=oneshot
 EnvironmentFile=$TCP_ENV
-ExecStart=$TCPROXY_PATH/tcproxy -u
+ExecStart=$TCPROXY_PATH/tcproxy --startup-boot
 WorkingDirectory=$TCPROXY_PATH
 RemainAfterExit=true
 User=$USER
@@ -522,8 +537,8 @@ WantedBy=multi-user.target" > "$TCPROXY_SERVICE_TEMP_FILE"
 Description=tcproxy health check on VM and mount on /srv/tcproxy
 
 [Timer]
-OnBootSec=3h       
-OnUnitActiveSec=3h 
+OnBootSec=3m
+OnUnitActiveSec=15m
 
 [Install]
 WantedBy=timers.target" > $TCPROXY_PATH/.tcproxy-boot-load.timer
@@ -734,11 +749,8 @@ if [[ -z "$LOG_FILE" || ! -f "$LOG_FILE" ]]; then
     echo "[ERROR] LOG_FILE is not initialized or does not exist."
     exit 1
 fi
-SCRIPT_COMMAND="$0 $@"
-if [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
-    DESCR_COM="Loading and mounting VM..."; header
+if [[ $1 == "--startup-boot" ]]; then
     tcproxy_up
-    footer
     exit 0
 fi
 #if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
@@ -868,6 +880,11 @@ This is intended for DEV testing ONLY."
     logm "Installation completed in folder tcproxy/"
     tcm "setup-finished"  >/dev/null 2>&1
     footer
+elif [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
+    DESCR_COM="Loading and mounting VM..."; header
+    tcproxy_up
+    footer
+    exit 0
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     DESCR_COM="Accessing VM via SSH..."; header
     ssh_vm
