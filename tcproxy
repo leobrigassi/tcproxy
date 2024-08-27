@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-c8
+TCPROXY_COMMIT=v2.1.2-c9
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -420,9 +420,11 @@ test_VM_mount() {
 }
 
 check_smb_share() {
-    if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/$TC_DISK_USB -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
-    if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/$TC_USER -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
-    if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/$TC_DISK -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
+    VM_SMB_CHECK=0
+    if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/$TC_DISK_USB -U root%$TC_PASSWORD --port=50445 -c 'exit'; if [[ $? -ne 0 ]]; then echo "Failed to access $TC_DISK_USB"; VM_SMB_CHECK=$?; else echo "$TC_DISK_USB in VM OK"; fi ; fi
+    if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/$TC_USER -U root%$TC_PASSWORD --port=50445 -c 'exit'; if [[ $? -ne 0 ]]; then echo "Failed to access $TC_USER"; VM_SMB_CHECK=$?; else echo "$TC_USER in VM OK"; fi ; fi
+    if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/$TC_DISK -U root%$TC_PASSWORD --port=50445 -c 'exit'; if [[ $? -ne 0 ]]; then echo "Failed to access $TC_DISK"; VM_SMB_CHECK=$?; else echo "$TC_DISK in VM OK"; fi ; fi
+    return $VM_SMB_CHECK
 }
 
 tcproxy_up() {
@@ -456,7 +458,7 @@ tcproxy_up() {
 }
 
 mount_routine() {
-    logm "Initiating umount routine..."
+    logm "Initiating mount routine..."
     MAX_RETRIES_M=3
     RETRY_COUNT_M=0
     MOUNT_POINTS_M=()
