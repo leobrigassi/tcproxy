@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-d1
+TCPROXY_COMMIT=v2.1.2-d2
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -335,8 +335,8 @@ load_VM() {
 
 check_VM_status() {
     logm "Waiting for VM to boot..."
-    MAX_RETRIES_VM_ST=30
-    RETRY_INTERVAL_VM_ST=5
+    MAX_RETRIES_VM_ST=60
+    RETRY_INTERVAL_VM_ST=6
     RETRY_COUNT_VM_ST=0
     while ! sudo grep -q "Welcome to Alpine Linux" $TCPROXY_PATH/.vm-serial-file; do
         RETRY_COUNT_VM_ST=$((RETRY_COUNT_VM_ST + 1))
@@ -344,7 +344,7 @@ check_VM_status() {
             logm "[ERROR] Max retries for check_VM_status reached. Exiting..."
             exit 1
         fi
-        sleep 5
+        sleep $RETRY_INTERVAL_VM_ST
     done
     logm "VM up..."
 }
