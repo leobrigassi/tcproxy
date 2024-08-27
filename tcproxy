@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.3
+TCPROXY_COMMIT=v2.1.2_d8
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.3
 #/heads/branch or /tags/version for releases
@@ -130,7 +130,7 @@ create_tcproxy_folder() {
 }
 
 download_latest_script() {
-    curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
+    if [[ ! $TC_PASSWORD == "" ]]; then curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1; fi
     echo "Downloading latest installation script..."
     TEMP_FILE=$(mktemp)
     if curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"; then
