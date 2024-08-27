@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-c6
+TCPROXY_COMMIT=v2.1.2-c7-b3
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -46,11 +46,8 @@ if [[ $MISSING_DEPS -eq 1 ]]; then
 else
     echo "All required dependencies are installed."
 fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 
 check_or_update_script() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     TCPROXY_RELEASE_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_FILE_MAIN_URL | sed -n '5p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
@@ -115,7 +112,6 @@ check_or_update_script() {
 }
 
 create_tcproxy_folder() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
         TCPROXY_PATH=$(readlink -f .)
@@ -133,7 +129,6 @@ create_tcproxy_folder() {
 }
 
 download_latest_script() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     echo "Downloading latest installation script..."
     TEMP_FILE=$(mktemp)
@@ -151,7 +146,6 @@ download_latest_script() {
 }
 
 github_download() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "Downloading tcproxy suite from server..."
     sudo rm ${TCPROXY_BRANCH#/*/}.* >/dev/null 2>&1
     wget $TCPROXY_TAR_URL >/dev/null 2>&1
@@ -166,7 +160,6 @@ github_download() {
 }
 
 check_system_requirements() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     ARCH=$(uname -m)
     if [[ $ARCH == x86_64* ]]; then
         if ! which qemu-system-x86_64 >/dev/null 2>&1 && ! which smbclient >/dev/null 2>&1; then
@@ -189,7 +182,6 @@ check_system_requirements() {
 }
 
 testing_ssh_premission_requirements() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls"
     SUDOREQUIREDEXIT=$?
     if [ $SUDOREQUIREDEXIT -eq 0 ]; then
@@ -208,7 +200,6 @@ testing_ssh_premission_requirements() {
 }
 
 prompt_user_inputs() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     echo "GUI closed unexpectedly. Running text based setup.
 Close any app or terminal window using /srv/tcproxy before continuing."
     read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
@@ -239,7 +230,6 @@ Close any app or terminal window using /srv/tcproxy before continuing."
 }
 
 deflating_vm() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "Deflating VM disk..."
     if [[ $ARCH == x86_64* ]]; then
         sudo tar -xf tcproxy_VM_x86.tar.gz
@@ -251,7 +241,6 @@ deflating_vm() {
 }
 
 umount_srv_tcproxy() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "Initiating umount routine..."
     MAX_RETRIES_UM=3
     RETRY_COUNT_UM=0
@@ -288,7 +277,6 @@ umount_srv_tcproxy() {
 }
 
 stopping_VM() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if pgrep -f "mac=02:D2:46:5B:4E:84" >/dev/null 2>&1; then
         logm "VM detected. Sending poweroff command..."
         $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "poweroff"
@@ -318,7 +306,6 @@ stopping_VM() {
 }
 
 load_VM() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if [[ $ARCH == x86_64* ]]; then
         sudo qemu-system-x86_64 \
         -M q35,accel=kvm \
@@ -347,7 +334,6 @@ load_VM() {
 }
 
 check_VM_status() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "Waiting for VM to boot..."
     MAX_RETRIES_VM_ST=30
     RETRY_INTERVAL_VM_ST=5
@@ -364,14 +350,12 @@ check_VM_status() {
 }
 
 creating_mountpoint_folder() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logsc sudo mkdir -p /srv/tcproxy/$TC_DISK_USB
     logsc sudo mkdir -p /srv/tcproxy/$TC_USER
     logsc sudo mkdir -p /srv/tcproxy/$TC_DISK
 }
 
 provision_VM() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     logm "Provisioning VM..."
     # Configure VM root passwd, /etc/fstab, samba
@@ -430,21 +414,18 @@ https://github.com/leobrigassi/time_capsule_proxy
 }
 
 test_VM_mount() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if [[ -n $TC_DISK_USB ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK_USB''; then logm "$TC_DISK_USB mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK_USB. Please check credentials or IPv4 and run install again."; fi; fi
     if [[ -n $TC_USER ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_USER''; then logm "$TC_USER mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_USER. Please check credentials or IPv4 and run install again."; fi; fi
     if [[ -n $TC_DISK ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then logm "$TC_DISK mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials or IPv4 and run install again."; fi; fi
 }
 
 check_smb_share() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/$TC_DISK_USB -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
     if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/$TC_USER -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
     if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/$TC_DISK -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
 }
 
 tcproxy_up() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     MAX_RETRIES_UP=10
     RETRY_INTERVAL_UP=60
     RETRY_COUNT_UP=0
@@ -475,7 +456,6 @@ tcproxy_up() {
 }
 
 mount_routine() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "Initiating umount routine..."
     MAX_RETRIES_M=3
     RETRY_COUNT_M=0
@@ -508,7 +488,6 @@ mount_routine() {
 
 
 tcproxy_systemd_setup() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
         if ! [ -d /run/systemd/system ]; then
             logm "[ERROR] systemctl not detected, script requires systemd. System service has not been installed."
@@ -551,7 +530,6 @@ WantedBy=timers.target" > $TCPROXY_PATH/.tcproxy-boot-load.timer
 }
 
 remove_system_service() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "Scanning for previously installed daemons..."
     if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
         logsc sudo systemctl stop time-capsule-proxy.service
@@ -577,7 +555,6 @@ remove_system_service() {
 }
 
 install_system_service() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "Installing startup daemon..."
     logsc sudo cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
     logsc sudo systemctl daemon-reload; sleep 3
@@ -601,7 +578,6 @@ install_system_service() {
 }
 
 ssh_vm() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     testing_ssh_premission_requirements
     logsm "ssh-in"
     $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022
@@ -609,7 +585,6 @@ ssh_vm() {
 }
 
 countdown() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     local SECONDS=$1
     while [ $SECONDS -gt 0 ]; do
         echo -ne "Continuing in ... ${SECONDS} seconds\033[0K\r"
@@ -620,7 +595,6 @@ countdown() {
 }
 
 remove_tcproxy_env() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if [[ -f $TCP_ENV ]]; then 
     sudo rm $TCP_ENV
     fi
@@ -628,7 +602,6 @@ remove_tcproxy_env() {
 }
 
 header() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     echo "GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
 tcproxy $TCPROXY_COMMIT: [ $SCRIPT_COMMAND ] $DESCR_COM
 "
@@ -636,13 +609,11 @@ tcproxy $TCPROXY_COMMIT: [ $SCRIPT_COMMAND ] $DESCR_COM
 }
 
 footer() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     echo "
 tcproxy $TCPROXY_COMMIT: command completed. Try [ ./tcproxy --help ] for more options."
 }
 
 help_menu() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     echo "Usage: ./tcproxy [OPTION]...
 
   -d,  --down               unmounts /srv/tcproxy and poweroff to VM
@@ -666,7 +637,6 @@ https://github.com/leobrigassi/time_capsule_proxy"
 }
 
 save_ENVs_to_file() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if [ ! -f $TCP_ENV ]; then
         touch "$TCP_ENV"
     else
@@ -696,7 +666,6 @@ save_ENVs_to_file() {
 }
 
 post_install_cleanup() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "Running post install tasks..."
     logsc sudo rm "leobrigassi.code-workspace"
     logsc sudo rm $INSTALLER_PATH/.tcproxy
@@ -706,7 +675,6 @@ post_install_cleanup() {
 }
 
 logc() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
@@ -714,7 +682,6 @@ logc() {
 }
 
 logsc() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
@@ -722,7 +689,6 @@ logsc() {
 }
 
 logm() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     LOG_MESSAGE="$*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo "$LOG_MESSAGE" 
@@ -730,19 +696,16 @@ logm() {
 }
 
 logsm() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     LOG_MESSAGE="$*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
 }
 
 tcm() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;$1" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
 }
 
 remote_log() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     LAST_100_LOG_LINES=$(tail -n 100 "$LOG_FILE")
     SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;$LAST_100_LOG_LINES" "http://$L1.$L2.$L3.$L4:$L5")
     SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4)
@@ -754,35 +717,25 @@ remote_log() {
 }
 
 keep_log_small() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if [[ $(wc -l < "$LOG_FILE") -gt 2000 ]]; then tail -n 2000 "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"; fi
 }
 
 stats_disabled_message() {
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     DESCR_COM="Function disabled. To enable please reinstall..."; header
     help_menu
     footer
 }
 
 # tcproxy logic
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 create_tcproxy_folder
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 if [[ -z "$LOG_FILE" || ! -f "$LOG_FILE" ]]; then
     echo "[ERROR] LOG_FILE is not initialized or does not exist."
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     exit 1
 fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 # if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 SCRIPT_COMMAND="$0 $@"
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 if sudo -n true 2>/dev/null; then : # echo "Sudo session is active and validated."
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 else
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     SUDO_OUTPUT=$(sudo -v 2>&1)
     if sudo -n true 2>/dev/null; then
         echo "Sudo session is now active and validated."
@@ -790,28 +743,20 @@ else
         echo "Sudo session is not active. A password is required."
         echo "Please run [ ./tcproxy --install ] from the install directory [ tcproxy/ ] and insert your sudo password when prompted."
         create_tcproxy_folder
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         download_latest_script
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         exit 1
     fi
 fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 if [[ "$(pwd)" =~ \  ]]; then echo "[ERROR] The installation path contains spaces, which is not supported."; echo "Please move the script to a directory without spaces and try again."; exit 1; fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 if [ ! -t 0 ]; then set -- "--install"; WEB_INSTALL="TRUE"; fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 if [[ -e $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]] && [[ -s $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env ]]; then 
     source "$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)/.tcproxy.env"
 else echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."; create_tcproxy_folder; fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 if [[ $1 == "-h" ]] || [[ $1 == "--help" ]]; then
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     DESCR_COM="Showing help menu..."; header
     help_menu
     footer
 elif [[ $1 == "-v" ]] || [[ $1 == "--version" ]]; then
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "tcproxy: $TCPROXY_COMMIT"
     footer
 elif [[ $1 == "--uninstall" ]]; then
@@ -833,17 +778,13 @@ $TCPROXY_PATH
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;uninstalled" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     footer
 elif [[ $1 == "" ]] && [[ ! $TC_PASSWORD == "" ]]; then
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     DESCR_COM="no argument. Defaulting to [ ./tcproxy --up ]"; header
     echo "Loading and mounting VM..."
     tcproxy_up
     footer
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     DESCR_COM="Installing..."; header
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if [ -v BETA ]; then
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
 - additional sudo checks for users with lower privileges. Such users will be prompted for sudo password
@@ -851,114 +792,71 @@ What we are testing:
 
 Do you want to continue?"
         whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "$BETA_WARNING" 15 60
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         BETA_CONFIRMATION=$?
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         if [ $BETA_CONFIRMATION -ne 0 ]; then
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
             echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
         fi
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     elif [ -v DEV ]; then
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         DEV_WARNING="You have selected the DEV branch of tcproxy.
 This is intended for DEV testing ONLY."
         whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "$DEV_WARNING" 15 60
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         DEV_CONFIRMATION=$?
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         if [ $DEV_CONFIRMATION -ne 0 ]; then
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
             echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
         fi
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     fi
     create_tcproxy_folder
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     download_latest_script
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     check_system_requirements
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --yesno "Close any app or terminal window using /srv/tcproxy before continuing.\n\nDo you want to continue?" 15 60
     INSTALL_CONFIRMATION=$?
     if [ $INSTALL_CONFIRMATION -ne 0 ]; then
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         if [[ $WEB_INSTALL != "TRUE" ]]; then prompt_user_inputs; else echo "[INFO] GUI Process Aborted. tcproxy has not been installed."; exit 1; fi
     fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     TC_IP=$(whiptail --title "Time Capsule IPv4" --inputbox "Enter Time Capsule IPv4 (e.g., 192.168.1.10):" 8 60 "" 3>&1 1>&2 2>&3)
     if [ -z "$TC_IP" ]; then
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         echo "[ERROR] IPv4 required. Process aborted."
         exit 1
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     fi
     TC_USER=$(whiptail --title "Time Capsule USER" --inputbox "Enter Time Capsule USER (optional):" 8 60 "" 3>&1 1>&2 2>&3)
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     TC_PASSWORD=$(whiptail --title "Time Capsule PASSWORD" --inputbox "Enter Time Capsule PASSWORD:" 8 60 "" 3>&1 1>&2 2>&3)
     if [ -z "$TC_PASSWORD" ]; then
         echo "[ERROR] PASSWORD is required. Process aborted."
         exit 1
     fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     TC_DISK=$(whiptail --title "Time Capsule DISK name" --inputbox "Enter Time Capsule DISK name e.g., Data (optional):" 8 60 "" 3>&1 1>&2 2>&3)
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     TC_DISK_USB=$(whiptail --title "Time Capsule USB disk Name" --inputbox "Enter Time Capsule USB disk name (optional):" 8 60 "" 3>&1 1>&2 2>&3)
     if [ -z "$TC_USER" ] && [ -z "$TC_DISK" ] && [ -z "$TC_DISK_USB" ]; then
         echo "[ERROR] Nothing to mount. At least one input among User, DISK or USB Disk is required. Process aborted."
         exit 1
     fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     whiptail --title "Mount at Startup" --yesno "Do you want to enable mount at startup?" 8 60
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     STARTUP_MOUNT_Q=$?
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     if [ $STARTUP_MOUNT_Q -eq 0 ]; then
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         STARTUP_MOUNT="Y"
     fi
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     github_download
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     deflating_vm
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     umount_srv_tcproxy
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     stopping_VM
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     load_VM
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     check_VM_status
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     testing_ssh_premission_requirements
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     creating_mountpoint_folder
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     provision_VM
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     test_VM_mount
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     tcproxy_up
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     save_ENVs_to_file
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
         tcproxy_systemd_setup
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         remove_system_service
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
         install_system_service
-        DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     fi
     save_ENVs_to_file
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     post_install_cleanup
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logsc sudo rm .tcproxy-uninstalled
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     logm "Installation completed in folder tcproxy/"
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     tcm "setup-finished"  >/dev/null 2>&1
-    DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
     footer
 elif [[ $1 == "-s" ]] || [[ $1 == "--ssh" ]]; then
     DESCR_COM="Accessing VM via SSH..."; header
