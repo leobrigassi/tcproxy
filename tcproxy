@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-d0
+TCPROXY_COMMIT=v2.1.2-d1
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -669,9 +669,9 @@ save_ENVs_to_file() {
 
 post_install_cleanup() {
     logm "Running post install tasks..."
-    logsc sudo rm "leobrigassi.code-workspace"
-    logsc sudo rm $INSTALLER_PATH/.tcproxy
-    logsc sudo rm $TCPROXY_PATH/.tcproxy
+    # logsc sudo rm "leobrigassi.code-workspace"
+    # logsc sudo rm $INSTALLER_PATH/.tcproxy
+    # logsc sudo rm $TCPROXY_PATH/.tcproxy
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.service
     logsc sudo rm $TCPROXY_PATH/.tcproxy-boot-load.timer
 }
