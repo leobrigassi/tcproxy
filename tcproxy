@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-c7b3
+TCPROXY_COMMIT=v2.1.2-c8
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -732,8 +732,14 @@ if [[ -z "$LOG_FILE" || ! -f "$LOG_FILE" ]]; then
     echo "[ERROR] LOG_FILE is not initialized or does not exist."
     exit 1
 fi
-# if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
 SCRIPT_COMMAND="$0 $@"
+if [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
+    DESCR_COM="Loading and mounting VM..."; header
+    tcproxy_up
+    footer
+    exit 0
+fi
+#if [ -n "$INVOCATION_ID" ]; then logsc tcproxy_up; exit 0; fi
 if sudo -n true 2>/dev/null; then : # echo "Sudo session is active and validated."
 else
     SUDO_OUTPUT=$(sudo -v 2>&1)
