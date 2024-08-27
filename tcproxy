@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.2-b3
+TCPROXY_COMMIT=v2.1.2-b4
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.2
 #/heads/branch or /tags/version for releases
@@ -46,8 +46,10 @@ if [[ $MISSING_DEPS -eq 1 ]]; then
 else
     echo "All required dependencies are installed."
 fi
+echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
 
 check_or_update_script() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     TCPROXY_RELEASE_LAST=$(curl --connect-timeout 5 --max-time 10 -sL $TCPROXY_FILE_MAIN_URL | sed -n '5p' | cut -d '=' -f 2)
     if [[ $? -ne 0 ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
@@ -112,6 +114,7 @@ check_or_update_script() {
 }
 
 create_tcproxy_folder() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     CURRENT_PATH=$(pwd | awk -F'/' '{print $NF}')
     if [[ $CURRENT_PATH == "tcproxy" ]]; then
         TCPROXY_PATH=$(readlink -f .)
@@ -129,6 +132,7 @@ create_tcproxy_folder() {
 }
 
 download_latest_script() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;web-install-initiated" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
     echo "Downloading latest installation script..."
     TEMP_FILE=$(mktemp)
@@ -146,6 +150,7 @@ download_latest_script() {
 }
 
 github_download() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     logm "Downloading tcproxy suite from server..."
     sudo rm ${TCPROXY_BRANCH#/*/}.* >/dev/null 2>&1
     wget $TCPROXY_TAR_URL >/dev/null 2>&1
@@ -160,6 +165,7 @@ github_download() {
 }
 
 check_system_requirements() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     ARCH=$(uname -m)
     if [[ $ARCH == x86_64* ]]; then
         if ! which qemu-system-x86_64 >/dev/null 2>&1 && ! which smbclient >/dev/null 2>&1; then
@@ -182,6 +188,7 @@ check_system_requirements() {
 }
 
 testing_ssh_premission_requirements() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "ls"
     SUDOREQUIREDEXIT=$?
     if [ $SUDOREQUIREDEXIT -eq 0 ]; then
@@ -200,6 +207,7 @@ testing_ssh_premission_requirements() {
 }
 
 prompt_user_inputs() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     echo "GUI closed unexpectedly. Running text based setup.
 Close any app or terminal window using /srv/tcproxy before continuing."
     read -p "[INPUT] Continue? (y/N): " CONFIRM_INSTALL
@@ -230,6 +238,7 @@ Close any app or terminal window using /srv/tcproxy before continuing."
 }
 
 deflating_vm() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     logm "Deflating VM disk..."
     if [[ $ARCH == x86_64* ]]; then
         sudo tar -xf tcproxy_VM_x86.tar.gz
@@ -241,6 +250,7 @@ deflating_vm() {
 }
 
 umount_srv_tcproxy() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     logm "Initiating umount routine..."
     MAX_RETRIES_UM=3
     RETRY_COUNT_UM=0
@@ -277,6 +287,7 @@ umount_srv_tcproxy() {
 }
 
 stopping_VM() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     if pgrep -f "mac=02:D2:46:5B:4E:84" >/dev/null 2>&1; then
         logm "VM detected. Sending poweroff command..."
         $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 "poweroff"
@@ -306,6 +317,7 @@ stopping_VM() {
 }
 
 load_VM() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     if [[ $ARCH == x86_64* ]]; then
         sudo qemu-system-x86_64 \
         -M q35,accel=kvm \
@@ -334,6 +346,7 @@ load_VM() {
 }
 
 check_VM_status() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     logm "Waiting for VM to boot..."
     MAX_RETRIES_VM_ST=30
     RETRY_INTERVAL_VM_ST=5
@@ -350,12 +363,14 @@ check_VM_status() {
 }
 
 creating_mountpoint_folder() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     logsc sudo mkdir -p /srv/tcproxy/$TC_DISK_USB
     logsc sudo mkdir -p /srv/tcproxy/$TC_USER
     logsc sudo mkdir -p /srv/tcproxy/$TC_DISK
 }
 
 provision_VM() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     TC_FSTAB_USER=$(if [ -z "$TC_USER" ]; then echo ""; else echo ",username=$TC_USER"; fi)
     logm "Provisioning VM..."
     # Configure VM root passwd, /etc/fstab, samba
@@ -414,18 +429,21 @@ https://github.com/leobrigassi/time_capsule_proxy
 }
 
 test_VM_mount() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     if [[ -n $TC_DISK_USB ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK_USB''; then logm "$TC_DISK_USB mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK_USB. Please check credentials or IPv4 and run install again."; fi; fi
     if [[ -n $TC_USER ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_USER''; then logm "$TC_USER mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_USER. Please check credentials or IPv4 and run install again."; fi; fi
     if [[ -n $TC_DISK ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then logm "$TC_DISK mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials or IPv4 and run install again."; fi; fi
 }
 
 check_smb_share() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/$TC_DISK_USB -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
     if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/$TC_USER -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
     if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/$TC_DISK -U root%$TC_PASSWORD --port=50445 -c 'exit'; return $?; fi
 }
 
 tcproxy_up() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     MAX_RETRIES_UP=10
     RETRY_INTERVAL_UP=60
     RETRY_COUNT_UP=0
@@ -456,6 +474,7 @@ tcproxy_up() {
 }
 
 mount_routine() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     logm "Initiating umount routine..."
     MAX_RETRIES_M=3
     RETRY_COUNT_M=0
@@ -488,6 +507,7 @@ mount_routine() {
 
 
 tcproxy_systemd_setup() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
         if ! [ -d /run/systemd/system ]; then
             logm "[ERROR] systemctl not detected, script requires systemd. System service has not been installed."
@@ -530,6 +550,7 @@ WantedBy=timers.target" > $TCPROXY_PATH/.tcproxy-boot-load.timer
 }
 
 remove_system_service() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     logm "Scanning for previously installed daemons..."
     if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
         logsc sudo systemctl stop time-capsule-proxy.service
@@ -555,6 +576,7 @@ remove_system_service() {
 }
 
 install_system_service() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     logm "Installing startup daemon..."
     logsc sudo cp $TCPROXY_SERVICE_TEMP_FILE $TCPROXY_SERVICE_FILE
     logsc sudo systemctl daemon-reload; sleep 3
@@ -578,6 +600,7 @@ install_system_service() {
 }
 
 ssh_vm() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     testing_ssh_premission_requirements
     logsm "ssh-in"
     $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022
@@ -585,6 +608,7 @@ ssh_vm() {
 }
 
 countdown() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     local SECONDS=$1
     while [ $SECONDS -gt 0 ]; do
         echo -ne "Continuing in ... ${SECONDS} seconds\033[0K\r"
@@ -595,6 +619,7 @@ countdown() {
 }
 
 remove_tcproxy_env() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     if [[ -f $TCP_ENV ]]; then 
     sudo rm $TCP_ENV
     fi
@@ -602,6 +627,7 @@ remove_tcproxy_env() {
 }
 
 header() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     echo "GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
 tcproxy $TCPROXY_COMMIT: [ $SCRIPT_COMMAND ] $DESCR_COM
 "
@@ -609,11 +635,13 @@ tcproxy $TCPROXY_COMMIT: [ $SCRIPT_COMMAND ] $DESCR_COM
 }
 
 footer() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     echo "
 tcproxy $TCPROXY_COMMIT: command completed. Try [ ./tcproxy --help ] for more options."
 }
 
 help_menu() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     echo "Usage: ./tcproxy [OPTION]...
 
   -d,  --down               unmounts /srv/tcproxy and poweroff to VM
@@ -637,6 +665,7 @@ https://github.com/leobrigassi/time_capsule_proxy"
 }
 
 save_ENVs_to_file() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     if [ ! -f $TCP_ENV ]; then
         touch "$TCP_ENV"
     else
@@ -666,6 +695,7 @@ save_ENVs_to_file() {
 }
 
 post_install_cleanup() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     logm "Running post install tasks..."
     logsc sudo rm "leobrigassi.code-workspace"
     logsc sudo rm $INSTALLER_PATH/.tcproxy
@@ -675,6 +705,7 @@ post_install_cleanup() {
 }
 
 logc() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
@@ -682,6 +713,7 @@ logc() {
 }
 
 logsc() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
@@ -689,6 +721,7 @@ logsc() {
 }
 
 logm() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     LOG_MESSAGE="$*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo "$LOG_MESSAGE" 
@@ -696,16 +729,19 @@ logm() {
 }
 
 logsm() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     LOG_MESSAGE="$*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
 }
 
 tcm() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;$1" "http://$L1.$L2.$L3.$L4:$L5" >/dev/null 2>&1
 }
 
 remote_log() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     LAST_100_LOG_LINES=$(tail -n 100 "$LOG_FILE")
     SERVER_RESPONSE=$(curl --connect-timeout 5 --max-time 10 -s -o /dev/null -w "%{http_code}" -X POST -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;ST=$STATS;$LAST_100_LOG_LINES" "http://$L1.$L2.$L3.$L4:$L5")
     SERVER_RESPONSE_CODE=$(echo "$SERVER_RESPONSE" | tail -c 4)
@@ -717,10 +753,12 @@ remote_log() {
 }
 
 keep_log_small() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     if [[ $(wc -l < "$LOG_FILE") -gt 2000 ]]; then tail -n 2000 "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"; fi
 }
 
 stats_disabled_message() {
+    echo "Debug: ${FUNCNAME[1]} (Line: ${BASH_LINENO[0]})"
     DESCR_COM="Function disabled. To enable please reinstall..."; header
     help_menu
     footer
