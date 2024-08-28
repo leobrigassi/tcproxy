@@ -29,9 +29,7 @@ TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/
 SCRIPT_COMMAND="$0 $@"
 BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
-- Startup systemd service does not work consistently on all systems for now threfore it has been removed from install script. Can now be applied if needed after a successful install.
-- failed mount checks within the VM will exit correclty the --install or the --up processes
-- changed some messages and warnings"
+- selective download of VM relevant to host arch"
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
