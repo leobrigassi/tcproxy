@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.3_b7
+TCPROXY_COMMIT=v2.1.3_b8
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.3
 #/heads/branch or /tags/version for releases
@@ -481,7 +481,7 @@ tcproxy_up() {
 }
 
 mount_routine() {
-    logm "Initiating mount routine..."
+    logsm "Initiating mount routine..."
     MAX_RETRIES_M=3
     RETRY_COUNT_M=0
     MOUNT_POINTS_M=()
