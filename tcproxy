@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_a3
+TCPROXY_COMMIT=v2.1.4_a4
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -30,6 +30,7 @@ SCRIPT_COMMAND="$0 $@"
 BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
 - selective download of VM relevant to host arch"
+DEBUG_FUNCNAME=${FUNCNAME[1]};if [ "${DEV:-}" -eq 3 ]; then echo "Debug:$LINENO;$DEBUG_FUNCNAME;${BASH_LINENO[0]}";fi
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -868,7 +869,7 @@ This is intended for DEV testing ONLY."
         exit 1
     fi
     github_download
-    deflating_vm
+    # deflating_vm
     umount_srv_tcproxy
     stopping_VM
     load_VM
