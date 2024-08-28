@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.3_a8
+TCPROXY_COMMIT=v2.1.3_b0
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.3
 #/heads/branch or /tags/version for releases
@@ -816,20 +816,12 @@ $TCPROXY_PATH
     footer
 elif [[ $1 == "-i" ]] || [[ $1 == "--install" ]]; then
     DESCR_COM="Installing..."; header
-    if [ -v BETA ]; then
+    if [[ $TCPROXY_BRANCH == "/heads/beta" ]]; then
         whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --msgbox "$BETA_WARNING" 15 60
-        BETA_CONFIRMATION=$?
-        if [ $BETA_CONFIRMATION -ne 0 ]; then
-            echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
-        fi
-    elif [ -v DEV ]; then
+    elif [[ $TCPROXY_BRANCH == "/heads/dev" ]]; then
         DEV_WARNING="You have selected the DEV branch of tcproxy.
 This is intended for DEV testing ONLY."
         whiptail --title "tcproxy $TCPROXY_COMMIT installation GUI" --msgbox "$DEV_WARNING" 15 60
-        DEV_CONFIRMATION=$?
-        if [ $DEV_CONFIRMATION -ne 0 ]; then
-            echo "GUI Process Aborted. tcproxy has not been installed."; exit 1
-        fi
     fi
     create_tcproxy_folder
     download_latest_script
