@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_a7
+TCPROXY_COMMIT=v2.1.4_a8
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -185,7 +185,6 @@ github_download() {
     fi
     tar -xf ${TCPROXY_BRANCH#/*/}.tar.gz --strip-components=1 && sudo rm ${TCPROXY_BRANCH#/*/}.tar.gz >/dev/null 2>&1
     chmod +x tcproxy
-sleep 5
     ARCH=$(uname -m)
     sudo rm tcproxy_VM*.tar.gz >/dev/null 2>&1
     if [[ $ARCH == x86_64* ]]; then
@@ -196,8 +195,6 @@ sleep 5
             logm "tcproxy: Update server currenlty unavailable. $TCPROXY_TAR_URL/tcproxy_VM_x86.tar.gz"
             exit 1
         fi
-
-sleep 5
     elif [[ $ARCH == aarch64* ]]; then
         wget $TCPROXY_VM_VERSION_URL/tcproxy_VM_aarch64.tar.gz >/dev/null 2>&1
         if [[ $? -eq 0 ]]; then
@@ -737,12 +734,12 @@ logsc() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
-    # "$@" >> "$LOG_FILE" 2>&1
-    # return $?
-    LOGSC_COMMAND=$("$@" 2>&1)
-    LOGSC_OUTPUT=$?
-    echo "$LOGSC_COMMAND" >> "$LOG_FILE"
-    return $LOGSC_OUTPUT
+    "$@" >> "$LOG_FILE" 2>&1
+    return $?
+    # LOGSC_COMMAND=$("$@" 2>&1)
+    # LOGSC_OUTPUT=$?
+    # # echo "$LOGSC_COMMAND" >> "$LOG_FILE"
+    # return $LOGSC_OUTPUT
 }
 
 logm() {
