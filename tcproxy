@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_a8
+TCPROXY_COMMIT=v2.1.4_a9
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -732,14 +732,14 @@ logc() {
 
 logsc() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $@"
+    LOGSC_COMMAND=$("$@" 2>&1)
+    LOGSC_OUTPUT=$?
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo $LOG_MESSAGE_TIMESTAMP >> "$LOG_FILE"
-    "$@" >> "$LOG_FILE" 2>&1
-    return $?
-    # LOGSC_COMMAND=$("$@" 2>&1)
-    # LOGSC_OUTPUT=$?
-    # # echo "$LOGSC_COMMAND" >> "$LOG_FILE"
-    # return $LOGSC_OUTPUT
+    # "$@" >> "$LOG_FILE" 2>&1
+    # return $?
+    echo "$LOGSC_COMMAND" >> "$LOG_FILE"
+    return $LOGSC_OUTPUT
 }
 
 logm() {
