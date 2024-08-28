@@ -16,6 +16,10 @@ Features being tested are listed in first prompt.
 
 
 
+**How it works:**
+* The project runs a virtual machine (VM) using QEMU with Alpine Linux 3.13, a kernel version that supports mounting Time Capsules.
+* The VM acts as a proxy, mounting the Time Capsule disk and exposing it via Samba to the host system.
+* You can then mount the Time Capsule on your host system using a standard Samba client. This part is also automated via systemd after user confirmation.
 
 The project includes a script `tcproxy` that automates the following steps:
 
@@ -32,11 +36,6 @@ Access your files in /srv/tcproxy
 
 To access program options type: `./tcproxy --help`
 
-**How it works:**
-
-* The project runs a virtual machine (VM) using QEMU with Alpine Linux 3.13, a kernel version that supports mounting Time Capsules.
-* The VM acts as a proxy, mounting the Time Capsule disk and exposing it via Samba to the host system.
-* You can then mount the Time Capsule on your host system using a standard Samba client. This part is also automated via systemd after user confirmation.
 
 **Requirements:**
 
