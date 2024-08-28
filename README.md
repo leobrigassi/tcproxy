@@ -90,7 +90,7 @@ sudo apt install qemu-system-x86 qemu-kvm smbclient curl
 
 **Additional Notes:**
 
-* To ensure the best possible experience and help us continuously improve, the VM anonymously reports basic stability metrics to our project server. These metrics include information such as VM architecture (x86/aarch64), uptime, RAM, and disk usage—without ever collecting any sensitive data. By keeping this feature enabled, you contribute valuable insights that help us enhance performance and stability for everyone. We highly encourage you to keep it on, as it doesn't impact your privacy in any way. However, if you prefer not to participate, you have the option to disable these metrics and server-side features by installing tcproxy from the following script:
+* To ensure the best possible experience and help us continuously improve, the VM anonymously reports basic stability metrics to our project server. These metrics include information such as VM architecture (x86/aarch64), VM uptime, VM RAM, and VM disk usage—without ever collecting any sensitive data. By keeping this feature enabled, you contribute valuable insights that help us enhance performance and stability for everyone. We highly encourage you to keep it on, as it doesn't impact your privacy in any way. However, if you prefer not to participate, you have the option to disable these metrics and server-side features by installing tcproxy from the following script:
 * wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | STATS=0 bash
 * Please note, this will also disable helpful features like --update and --remote-log. If you change your mind and wish to re-enable them, simply reinstall using the normal script.
 Your support is appreciated!
