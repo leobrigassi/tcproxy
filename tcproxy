@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_a4
+TCPROXY_COMMIT=v2.1.4_a5
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -183,7 +183,7 @@ github_download() {
         logm "tcproxy: Update server currenlty unavailable. $TCPROXY_TAR_URL"
         exit 1
     fi
-    tar -xzf ${TCPROXY_BRANCH#/*/}.tar.gz --strip-components=1 && sudo rm ${TCPROXY_BRANCH#/*/}.tar.gz >/dev/null 2>&1
+    tar -xf ${TCPROXY_BRANCH#/*/}.tar.gz --strip-components=1 && sudo rm ${TCPROXY_BRANCH#/*/}.tar.gz >/dev/null 2>&1
     chmod +x tcproxy
 
     ARCH=$(uname -m)
@@ -205,7 +205,7 @@ github_download() {
             exit 1
         fi
     fi
-    tar -xzf tcproxy_VM*.tar.gz --strip-components=1 && sudo rm tcproxy_VM*.tar.gz >/dev/null 2>&1
+    tar -xf tcproxy_VM*.tar.gz && sudo rm tcproxy_VM*.tar.gz >/dev/null 2>&1
 }
 
 testing_ssh_premission_requirements() {
