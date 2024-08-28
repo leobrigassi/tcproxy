@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.3_b0
+TCPROXY_COMMIT=v2.1.3_c0
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.3
 #/heads/branch or /tags/version for releases
@@ -22,15 +22,14 @@ TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/rele
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
 # Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.1.3/tcproxy 2>/dev/null | bash
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash
-# BETA link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/beta/tcproxy 2>/dev/null | BETA= bash
-# DEV link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy?$(date +%s) 2>/dev/null | DEV= bash
+# BETA link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/beta/tcproxy 2>/dev/null | bash
+# DEV link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy?$(date +%s) 2>/dev/null | bash
 SCRIPT_COMMAND="$0 $@"
 BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
 - Startup systemd service does not work consistently on all systems for now threfore it has been removed from install script. Can now be applied if needed after a successful install.
 - failed mount checks within the VM will exit correclty the --install or the --up processes
-
-Do you want to continue?"
+- changed some messages and warnings"
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -260,27 +259,27 @@ umount_srv_tcproxy() {
         while [ $RETRY_COUNT_UM -lt $MAX_RETRIES_UM ]; do
             RESPONSE_UM=$(sudo umount "$MOUNT_POINT_UM" 2>&1)
             if [ $? -eq 0 ] || [ $? -eq 32 ] || echo "$RESPONSE_UM" | grep -q "not mounted"; then
-                logm "umount of $MOUNT_POINT_UM successful..."
+                logm "Host umount of [$MOUNT_POINT_UM] successful..."
                 break
             else
-                if ! mountpoint -q /srv/tcproxy/$MOUNT_POINT_M; then logsm "/srv/tcproxy/$MOUNT_POINT_M not a mountpoint"; break; fi
-                logm "Failed to unmount $MOUNT_POINT_UM . $RESPONSE_UM. Forcing umount..."
+                if ! mountpoint -q /srv/tcproxy/$MOUNT_POINT_M; then logsm "Host folder [/srv/tcproxy/$MOUNT_POINT_M] is not a mountpoint"; break; fi
+                logm "Host failed to unmount [$MOUNT_POINT_UM]. $RESPONSE_UM. Forcing umount..."
                 sleep 5
                 RESPONSE_F_UM=$(sudo umount -f "$MOUNT_POINT_UM" 2>&1)
                 if [[ $? -eq 0 ]]; then
-                    logm "[INFO] Forced unmount of $MOUNT_POINT_UM successful..."
+                    logm "[INFO] Forced unmount of [$MOUNT_POINT_UM] successful..."
                     break
                 elif [[ $RESPONSE_F_UM == *"Stale file handle"* ]]; then
                     logm "[ERROR $RESPONSE_F_UM] Please reboot and retry. Process aborted."
                 else
-                    logm "[ERROR $RESPONSE_F_UM] Cannot unmount $MOUNT_POINT_UM . Is the mount in use?"
+                    logm "[ERROR $RESPONSE_F_UM] Cannot unmount [$MOUNT_POINT_UM] . Is the mount in use?"
                 fi
             fi
             RETRY_COUNT_UM=$((RETRY_COUNT_UM + 1))
-            logm "Retrying unmount for $MOUNT_POINT_UM ... attempt $RETRY_COUNT_UM"
+            logm "Host retrying unmount for [$MOUNT_POINT_UM] ... attempt $RETRY_COUNT_UM"
         done
     done
-    logm "umount routine of all specified mount points completed."
+    logm "Host umount routine of all specified mount points completed."
 }
 
 stopping_VM() {
@@ -322,7 +321,7 @@ load_VM() {
             logm "[ERROR] Max retries for load_VM reached. Exiting..."
             exit 1
         fi
-        logm "VM down... attempting to boot..."
+        logm "VM down... attempting to load..."
         if [[ $ARCH == x86_64* ]]; then
             sudo qemu-system-x86_64 \
             -M q35,accel=kvm \
@@ -434,16 +433,16 @@ https://github.com/leobrigassi/time_capsule_proxy
 }
 
 test_VM_mount() {
-    if [[ -n $TC_DISK_USB ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK_USB''; then logm "$TC_DISK_USB mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK_USB. Please check credentials, IPv4 or connectivity and run again."; exit 1; fi; fi
-    if [[ -n $TC_USER ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_USER''; then logm "$TC_USER mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_USER. Please check credentials, IPv4 or connectivity and run again."; exit 1; fi; fi
-    if [[ -n $TC_DISK ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then logm "$TC_DISK mounted in VM..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials, IPv4 or connectivity and run again."; exit 1; fi; fi
+    if [[ -n $TC_DISK_USB ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK_USB''; then logm "VM mount [$TC_DISK_USB] OK..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK_USB. Please check credentials, IPv4 or connectivity and run again."; exit 1; fi; fi
+    if [[ -n $TC_USER ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_USER''; then logm "VM mount [$TC_USER] OK..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_USER. Please check credentials, IPv4 or connectivity and run again."; exit 1; fi; fi
+    if [[ -n $TC_DISK ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p50022 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then logm "VM mount [$TC_DISK] OK..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials, IPv4 or connectivity and run again."; exit 1; fi; fi
 }
 
 check_smb_share() {
     VM_SMB_CHECK=0
-    if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/$TC_DISK_USB -U root%$TC_PASSWORD --port=50445 -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK_USB"; else echo "Mount [$TC_DISK_USB] in VM OK"; fi ; fi
-    if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/$TC_USER -U root%$TC_PASSWORD --port=50445 -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_USER"; else echo "Mount [$TC_USER] in VM OK"; fi ; fi
-    if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/$TC_DISK -U root%$TC_PASSWORD --port=50445 -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK"; else echo "Mount [$TC_DISK] in VM OK"; fi ; fi
+    if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/$TC_DISK_USB -U root%$TC_PASSWORD --port=50445 -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK_USB"; else echo "VM samba share [$TC_DISK_USB] OK..."; fi ; fi
+    if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/$TC_USER -U root%$TC_PASSWORD --port=50445 -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_USER"; else echo "VM samba share [$TC_USER] OK..."; fi ; fi
+    if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/$TC_DISK -U root%$TC_PASSWORD --port=50445 -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK"; else echo "VM samba share [$TC_DISK] OK..."; fi ; fi
     return $VM_SMB_CHECK
 }
 
@@ -475,13 +474,13 @@ tcproxy_up() {
         logm "[INFO] Failed to access VM samba share. Waiting 180 seconds before next attempt. Attempt $RETRY_COUNT_UP/$MAX_RETRIES_UP."
         sleep $RETRY_INTERVAL_UP
     done
-    logm "VM samba share is accessible."
+    logm "VM samba share routine completed..."
     # umount_srv_tcproxy
     mount_routine
 }
 
 mount_routine() {
-    logm "Initiating mount routine..."
+    logsm "Initiating mount routine..."
     MAX_RETRIES_M=3
     RETRY_COUNT_M=0
     MOUNT_POINTS_M=()
@@ -493,12 +492,12 @@ mount_routine() {
         while [ $RETRY_COUNT_M -lt $MAX_RETRIES_M ]; do
             # echo "mountpoint selected: $MOUNT_POINT_M"
             if mountpoint /srv/tcproxy/$MOUNT_POINT_M >/dev/null 2>&1; then 
-                logm "/srv/tcproxy/$MOUNT_POINT_M mounted and accessible"
+                logm "Host mount [/srv/tcproxy/$MOUNT_POINT_M] OK..."
                 break
             else
                 logsc sudo mount -t cifs //127.0.0.1/$MOUNT_POINT_M /srv/tcproxy/$MOUNT_POINT_M -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID 2>&1
                 if [ $LOGSC_OUTPUT -eq 0 ]; then
-                    logm "/srv/tcproxy/$MOUNT_POINT_M mounted and accessible"
+                    logm "Host mount [/srv/tcproxy/$MOUNT_POINT_M] OK..."
                     break
                 else
                     logm "[ERROR: $LOGSC_OUTPUT] failed to mount [$MOUNT_POINT_M]: $LOGSC_COMMAND. Check system and retry."
@@ -509,7 +508,7 @@ mount_routine() {
             logm "Retrying mount for $MOUNT_POINT_M... attempt $RETRY_COUNT_M"
         done
     done
-    logm "mount routine of all specified mount points completed."
+    logm "Host mount routine of all specified mount points completed..."
 }
 
 
@@ -862,7 +861,7 @@ This is intended for DEV testing ONLY."
     save_ENVs_to_file
     post_install_cleanup
     logsc sudo rm .tcproxy-uninstalled
-    logm "Installation completed in folder tcproxy/"
+    logm "Installation completed in folder $(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
     tcm "setup-finished"  >/dev/null 2>&1
     footer
 elif [[ $1 == "-u" ]] || [[ $1 == "--up" ]]; then
