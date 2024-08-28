@@ -30,7 +30,7 @@ TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/
 SCRIPT_COMMAND="$0 $@"
 BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
-- selective download of VM relevant to host arch"
+- selective download of VM relevant to host arch reducing install download by 50%"
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
