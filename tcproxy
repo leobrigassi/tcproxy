@@ -1,7 +1,7 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.3_c1
-TCPROXY_BRANCH=/heads/beta
+TCPROXY_COMMIT=v2.1.3_c1b
+TCPROXY_BRANCH=/heads/main
 TCPROXY_RELEASE=v2.1.3
 #/heads/branch or /tags/version for releases
 USER=$(whoami)
