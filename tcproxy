@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.3_b9
+TCPROXY_COMMIT=v2.1.3_c0
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.3
 #/heads/branch or /tags/version for releases
@@ -29,8 +29,7 @@ BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
 - Startup systemd service does not work consistently on all systems for now threfore it has been removed from install script. Can now be applied if needed after a successful install.
 - failed mount checks within the VM will exit correclty the --install or the --up processes
-
-Do you want to continue?"
+- changed some messages and warnings"
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
