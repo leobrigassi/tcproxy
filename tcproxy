@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.3_c0
+TCPROXY_COMMIT=v2.1.3_c1
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.3
 #/heads/branch or /tags/version for releases
@@ -35,6 +35,7 @@ if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
 else
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_BRANCH_URL
 fi
+# Dependecies check
 MISSING_DEPS=0
 for cmd in bash sudo whoami id uname cat md5sum awk grep head readlink pwd chmod mkdir touch rm ssh whiptail smbclient; do
     if ! command -v $cmd &> /dev/null; then
@@ -49,8 +50,6 @@ fi
 if [[ $MISSING_DEPS -eq 1 ]]; then
     echo "Please install the missing dependencies."
     exit 1
-else
-    echo "All required dependencies are installed."
 fi
 
 check_or_update_script() {
