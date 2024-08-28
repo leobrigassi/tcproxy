@@ -1,8 +1,9 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_a0
+TCPROXY_COMMIT=v2.1.4_a1
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.4
+TCPROXY_VM_VERSION=v2.1.4
 #/heads/branch or /tags/version for releases
 USER=$(whoami)
 GROUP=$(id -gn)
@@ -19,6 +20,7 @@ L1="158"; L2="101"; L3="197"; L4="173"; L5="8000"
 TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
+TCPROXY_VM_VERSION_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/$TCPROXY_VM_VERSION/"
 TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/$TCPROXY_BRANCH.tar.gz"
 # Release link: wget -O - https://github.com/leobrigassi/time-capsule-proxy/releases/download/v2.1.3/tcproxy 2>/dev/null | bash
 # Main link: wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash
@@ -150,20 +152,6 @@ download_latest_script() {
     fi
 }
 
-github_download() {
-    logm "Downloading tcproxy suite from server..."
-    sudo rm ${TCPROXY_BRANCH#/*/}.* >/dev/null 2>&1
-    wget $TCPROXY_TAR_URL >/dev/null 2>&1
-    if [[ $? -eq 0 ]]; then
-        logsm "Download successful"
-    else
-        logm "tcproxy: Update server currenlty unavailable."
-        exit 1
-    fi
-    tar -xzf ${TCPROXY_BRANCH#/*/}.tar.gz --strip-components=1 && sudo rm ${TCPROXY_BRANCH#/*/}.tar.gz >/dev/null 2>&1 &&
-    chmod +x tcproxy
-}
-
 check_system_requirements() {
     ARCH=$(uname -m)
     if [[ $ARCH == x86_64* ]]; then
@@ -184,6 +172,42 @@ check_system_requirements() {
         logm "System not supported. Please run from x86_64 or aarch64 systems."
         exit 1
     fi
+}
+
+github_download() {
+    logm "Downloading tcproxy suite from server..."
+    sudo rm ${TCPROXY_BRANCH#/*/}.* >/dev/null 2>&1
+    wget $TCPROXY_TAR_URL >/dev/null 2>&1
+    if [[ $? -eq 0 ]]; then
+        logsm "Download successful $TCPROXY_TAR_URL"
+    else
+        logm "tcproxy: Update server currenlty unavailable. $TCPROXY_TAR_URL"
+        exit 1
+    fi
+    tar -xzf ${TCPROXY_BRANCH#/*/}.tar.gz --strip-components=1 && sudo rm ${TCPROXY_BRANCH#/*/}.tar.gz >/dev/null 2>&1
+    chmod +x tcproxy
+
+    ARCH=$(uname -m)
+    sudo rm ${tcproxy_VM*}.* >/dev/null 2>&1
+    if [[ $ARCH == x86_64* ]]; then
+        sudo rm ${TCPROXY_BRANCH#/*/}.* >/dev/null 2>&1
+        wget $TCPROXY_VM_VERSION_URL/tcproxy_VM_x86.tar.gz >/dev/null 2>&1
+        if [[ $? -eq 0 ]]; then
+            logsm "Download successful $TCPROXY_TAR_URL/tcproxy_VM_x86.tar.gz"
+        else
+            logm "tcproxy: Update server currenlty unavailable. $TCPROXY_TAR_URL/tcproxy_VM_x86.tar.gz"
+            exit 1
+        fi
+    elif [[ $ARCH == aarch64* ]]; then
+        wget $TCPROXY_VM_VERSION_URL/tcproxy_VM_aarch64.tar.gz >/dev/null 2>&1
+        if [[ $? -eq 0 ]]; then
+            logsm "Download successful $TCPROXY_TAR_URL/tcproxy_VM_aarch64.tar.gz"
+        else
+            logm "tcproxy: Update server currenlty unavailable. $TCPROXY_TAR_URL/tcproxy_VM_aarch64.tar.gz"
+            exit 1
+        fi
+    fi
+    tar -xzf ${tcproxy_VM*}.tar.gz --strip-components=1 && sudo rm ${tcproxy_VM*}.tar.gz >/dev/null 2>&1
 }
 
 testing_ssh_premission_requirements() {
