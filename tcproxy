@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_a2
+TCPROXY_COMMIT=v2.1.4_a3
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -188,7 +188,6 @@ github_download() {
     ARCH=$(uname -m)
     sudo rm tcproxy_VM*.tar.gz >/dev/null 2>&1
     if [[ $ARCH == x86_64* ]]; then
-        sudo rm ${TCPROXY_BRANCH#/*/}.* >/dev/null 2>&1
         wget $TCPROXY_VM_VERSION_URL/tcproxy_VM_x86.tar.gz >/dev/null 2>&1
         if [[ $? -eq 0 ]]; then
             logsm "Download successful $TCPROXY_TAR_URL/tcproxy_VM_x86.tar.gz"
