@@ -36,7 +36,7 @@ if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
 else
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_BRANCH_URL
 fi
-# Dependecies check
+# Dependecies check 
 MISSING_DEPS=0
 for cmd in bash sudo whoami id uname cat md5sum awk grep head readlink pwd chmod mkdir touch rm ssh whiptail smbclient; do
     if ! command -v $cmd &> /dev/null; then
