@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_b0
+TCPROXY_COMMIT=v2.1.4_b1
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -68,7 +68,7 @@ check_or_update_script() {
     if [[ $TCPROXY_RELEASE_LAST != $TCPROXY_RELEASE ]]; then
         if [[ $MAN_UPDATE == 1 ]]; then
             logm "Downloading tcproxy $TCPROXY_RELEASE_LAST ..."
-            BACKUP_FILE="$TCPROXY_COMMIT_${0}_bakup"
+            BACKUP_FILE="bakup_$TCPROXY_COMMIT_${0}_$TCPROXY_COMMIT"
             cp -f "$0" "$BACKUP_FILE"
             TEMP_FILE=$(mktemp)
             curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_MAIN_URL"
@@ -97,7 +97,7 @@ check_or_update_script() {
         if [[ $TCPROXY_COMMIT_LAST != $TCPROXY_COMMIT ]]; then
             if [[ $MAN_UPDATE == 1 ]]; then
                 logm "Downloading tcproxy $TCPROXY_COMMIT_LAST ..."
-                BACKUP_FILE="${0}.bak"
+                BACKUP_FILE="bakup_${0}_$TCPROXY_COMMIT"
                 cp -f "$0" "$BACKUP_FILE"
                 TEMP_FILE=$(mktemp)
                 curl --connect-timeout 5 --max-time 10 -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"
