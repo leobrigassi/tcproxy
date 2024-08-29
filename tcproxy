@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_b6
+TCPROXY_COMMIT=v2.1.4_b7
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -528,7 +528,7 @@ mount_routine() {
             logm "Retrying mount for $MOUNT_POINT_M... attempt $RETRY_COUNT_M"
         done
     done
-    if [[ $STATS != 0 ]]; then tcm "$SCRIPT_COMMAND;"; fi
+    if [[ $STATS != 0 ]]; then tcm "mount_routine;$SCRIPT_COMMAND;"; fi
     logm "Host mount routine of all specified mount points completed..."
 }
 
