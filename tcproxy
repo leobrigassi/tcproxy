@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_c1
+TCPROXY_COMMIT=v2.1.4_c2
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -497,7 +497,7 @@ tcproxy_up() {
     logm "VM samba share routine completed..."
     # umount_srv_tcproxy
     mount_routine
-    if [[ -e $TCPROXY_PATH/after-tcproxy-up.sh ]]; then $TCPROXY_PATH/after-tcproxy-up.sh; fi
+    if [[ -e $TCPROXY_PATH/after_tcproxy_up ]]; then $TCPROXY_PATH/after_tcproxy_up; fi
 }
 
 mount_routine() {
