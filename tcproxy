@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_c5
+TCPROXY_COMMIT=v2.1.4_c6
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -775,7 +775,7 @@ remote_log() {
 
 keep_log_small() {
     if [[ $(wc -l < "$LOG_FILE") -gt 1000 ]]; then cat "$LOG_FILE" >> "$LOG_FILE"archive.txt && echo "" > "$LOG_FILE"; fi
-    if [[ $(wc -l < "$LOG_FILE"archive.txt) -gt 3000 ]]; then tail -n 2000 "$LOG_FILE"archive.txt > "$LOG_FILE"archive.txt.tmp && mv "$LOG_FILE"archive.txt.tmp "$LOG_FILE"archive.txt; fi
+    if [[ -f "$LOG_FILE"archive.txt ]]; then if [[ $(wc -l < "$LOG_FILE"archive.txt) -gt 3000 ]]; then tail -n 2000 "$LOG_FILE"archive.txt > "$LOG_FILE"archive.txt.tmp && mv "$LOG_FILE"archive.txt.tmp "$LOG_FILE"archive.txt; fi; fi
 }
 
 stats_disabled_message() {
