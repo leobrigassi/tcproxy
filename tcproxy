@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_b9
+TCPROXY_COMMIT=v2.1.4_c3
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -30,7 +30,8 @@ TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/
 SCRIPT_COMMAND="$0 $@"
 BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
-- selective download of VM relevant to host arch reducing install download by 50%"
+- selective download of VM relevant to host arch reducing install download by 50%
+- if script named "after_tcproxy_up" exists in tcproxy folder it will be executed after tcproxy mount is successfull. Useful to restart services such as Plex so that new mounts can be crawled."
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
@@ -497,6 +498,7 @@ tcproxy_up() {
     logm "VM samba share routine completed..."
     # umount_srv_tcproxy
     mount_routine
+    if [[ -e $TCPROXY_PATH/after_tcproxy_up ]]; then $TCPROXY_PATH/after_tcproxy_up; fi
 }
 
 mount_routine() {
@@ -772,7 +774,8 @@ remote_log() {
 }
 
 keep_log_small() {
-    if [[ $(wc -l < "$LOG_FILE") -gt 2000 ]]; then tail -n 2000 "$LOG_FILE" > "$LOG_FILE.tmp" && mv "$LOG_FILE.tmp" "$LOG_FILE"; fi
+    if [[ $(wc -l < "$LOG_FILE") -gt 1000 ]]; then cat "$LOG_FILE" >> "$LOG_FILE"archive.txt && echo "" > "$LOG_FILE"; fi
+    if [[ $(wc -l < "$LOG_FILE"archive.txt) -gt 3000 ]]; then tail -n 2000 "$LOG_FILE"archive.txt > "$LOG_FILE"archive.txt.tmp && mv "$LOG_FILE"archive.txt.tmp "$LOG_FILE"archive.txt; fi
 }
 
 stats_disabled_message() {
