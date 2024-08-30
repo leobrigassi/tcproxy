@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.4_c3
+TCPROXY_COMMIT=v2.1.4_c4
 TCPROXY_BRANCH=/heads/beta
 TCPROXY_RELEASE=v2.1.4
 TCPROXY_VM_VERSION=v2.1.4
@@ -31,7 +31,7 @@ SCRIPT_COMMAND="$0 $@"
 BETA_WARNING="You have selected the BETA branch of tcproxy.
 What we are testing:
 - selective download of VM relevant to host arch reducing install download by 50%
-- if script named "after_tcproxy_up" exists in tcproxy folder it will be executed after tcproxy mount is successfull. Useful to restart services such as Plex so that new mounts can be crawled."
+- if script named [ after_tcproxy_up ] exists in tcproxy folder it will be executed after tcproxy mount is successfull. Useful to restart services such as Plex so that new mounts can be crawled."
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then #normal branches have "heads"
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
 else
