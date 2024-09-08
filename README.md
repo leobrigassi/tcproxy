@@ -72,6 +72,8 @@ sudo apt install qemu-system-x86 qemu-kvm smbclient curl
 * `data.img`: volume file of the VM.
 * `uefi.rom`: uefi file required for VM boot (only aarch64).
 * `tcproxy`: Script to control the VM and mounts.
+* `after_tcproxy_up` if script named after_tcproxy_up exists in tcproxy folder it will be executed after tcproxy mount is successfull.
+
 
 **Note:**
 
