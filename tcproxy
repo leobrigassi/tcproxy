@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.5_a0
+TCPROXY_COMMIT=v2.1.5_a1
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.5
 TCPROXY_VM_VERSION=v2.1.4
@@ -533,7 +533,7 @@ mount_routine() {
     done
     if [[ $STATS != 0 ]]; then tcm "mount_routine;$SCRIPT_COMMAND;"; fi
     logm "Host mount routine of all specified mount points completed..."
-    if [[ -e $TCPROXY_PATH/after_tcproxy_up ]]; then if [ $AFTETR_TCPROXY_UP_TRIGGER -eq 1 ]; then $TCPROXY_PATH/after_tcproxy_up; fi; fi
+    [[ -e $TCPROXY_PATH/after_tcproxy_up && $AFTER_TCPROXY_UP_TRIGGER -eq 1 ]] && $TCPROXY_PATH/after_tcproxy_up
 }
 
 
