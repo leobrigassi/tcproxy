@@ -1,6 +1,6 @@
 #!/bin/bash
 #Time Capsule Proxy for SmallMediaHub - Updates and readme on https://github.com/leobrigassi/time-capsule-proxy
-TCPROXY_COMMIT=v2.1.5_a1
+TCPROXY_COMMIT=v2.1.5_a2
 TCPROXY_BRANCH=/heads/dev
 TCPROXY_RELEASE=v2.1.5
 TCPROXY_VM_VERSION=v2.1.4
@@ -502,7 +502,7 @@ tcproxy_up() {
 
 mount_routine() {
     logsm "Initiating mount routine..."
-    AFTETR_TCPROXY_UP_TRIGGER=0
+    AFTER_TCPROXY_UP_TRIGGER=0
     MAX_RETRIES_M=3
     RETRY_COUNT_M=0
     MOUNT_POINTS_M=()
@@ -520,7 +520,7 @@ mount_routine() {
                 logsc sudo mount -t cifs //127.0.0.1/$MOUNT_POINT_M /srv/tcproxy/$MOUNT_POINT_M -o username=root,password="$TC_PASSWORD",rw,iocharset=utf8,vers=3.0,nofail,port=50445,uid=$PUID,gid=$PGID 2>&1
                 if [ $LOGSC_OUTPUT -eq 0 ]; then
                     logm "Host mount [/srv/tcproxy/$MOUNT_POINT_M] OK..."
-                    AFTETR_TCPROXY_UP_TRIGGER=1
+                    AFTER_TCPROXY_UP_TRIGGER=1
                     break
                 else
                     logm "[ERROR: $LOGSC_OUTPUT] failed to mount [$MOUNT_POINT_M]: $LOGSC_COMMAND. Check system and retry."
@@ -531,9 +531,9 @@ mount_routine() {
             logm "Retrying mount for $MOUNT_POINT_M... attempt $RETRY_COUNT_M"
         done
     done
-    if [[ $STATS != 0 ]]; then tcm "mount_routine;$SCRIPT_COMMAND;"; fi
+    # if [[ $STATS != 0 ]]; then tcm "mount_routine;$SCRIPT_COMMAND;"; fi
     logm "Host mount routine of all specified mount points completed..."
-    [[ -e $TCPROXY_PATH/after_tcproxy_up && $AFTER_TCPROXY_UP_TRIGGER -eq 1 ]] && $TCPROXY_PATH/after_tcproxy_up
+    if [[ $AFTER_TCPROXY_UP_TRIGGER -eq 1 && -e $TCPROXY_PATH/after_tcproxy_up ]]; then logsc $TCPROXY_PATH/after_tcproxy_up; fi
 }
 
 
@@ -572,7 +572,7 @@ WantedBy=multi-user.target" > "$TCPROXY_SERVICE_TEMP_FILE"
 Description=tcproxy health check on VM and mount on /srv/tcproxy
 
 [Timer]
-OnCalendar=*:0/15
+OnCalendar=*:0/30
 Persistent=true
 
 [Install]
