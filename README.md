@@ -72,8 +72,38 @@ sudo apt install qemu-system-x86 qemu-kvm smbclient curl
 * `data.img`: volume file of the VM.
 * `uefi.rom`: uefi file required for VM boot (only aarch64).
 * `tcproxy`: Script to control the VM and mounts.
-* `after_tcproxy_up` if script named after_tcproxy_up exists in tcproxy folder it will be executed after tcproxy mount is successfull.
+* `after_tcproxy_up` if script named after_tcproxy_up exists in tcproxy folder it will be executed after tcproxy mount is successful.
 
+**Source layout (v2.2.0+):**
+
+End users run the single `tcproxy` file in the project root — nothing about the distribution has changed. Contributors work on the modular source instead:
+
+```
+lib/              one module per concern, each sourced by bin/tcproxy
+  config.sh       constants (versions, URLs, VM ports, retries)
+  common.sh       identity, paths, logging, env I/O, dep check
+  ui.sh           whiptail prompts + text fallback + help menu
+  server.sh       remote_log — the ONLY outbound HTTP in the code
+  vm.sh           qemu lifecycle (load / stop / boot-wait / ssh)
+  mount.sh        host-side cifs mount onto $TCPROXY_HOST_MOUNT_ROOT
+  provision.sh    one-shot VM provisioning run during --install
+  systemd.sh      boot service + health-check timer install/remove
+  updater.sh      self-update and suite download
+  installer.sh    install / uninstall / tcproxy_up orchestration
+bin/tcproxy       argument dispatcher; sources lib/*.sh at dev time
+install.sh        web-install bootstrap for wget | bash URLs
+scripts/build.sh  concatenates lib/* + bin/tcproxy into ./tcproxy
+```
+
+To produce the release artifact after editing the libs:
+
+```
+./scripts/build.sh
+```
+
+This rewrites the top-level `./tcproxy` file. The script runs `bash -n`
+on the output before overwriting, so a syntactically broken build can
+never land in the repo root.
 
 **Note:**
 
