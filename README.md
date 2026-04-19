@@ -1,19 +1,22 @@
-## README.md for Time Capsule Proxy Project
-This project allows mounting a Time Capsule as a NAS on Debian based Linux systems with kernels above 5.15, which no longer support the `sec=ntlm` mount flag.
+## tcproxy — Time Capsule Proxy for Linux
 
-**Installation via script:**
+Mount Apple Time Capsules as NAS on Debian-based Linux (kernel 5.15+). The `sec=ntlm` mount flag is no longer supported, so tcproxy runs a lightweight QEMU VM (Alpine Linux 3.13) as a proxy that speaks NTLM and exposes the share via Samba to your host.
+
+**Repository:** `leobrigassi/tcproxy` (renamed from `time-capsule-proxy` in v3.1.0)
+
+**Installation:**
 
 Stable (main):
-```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash
+```bash
+wget -O - https://github.com/leobrigassi/tcproxy/raw/main/tcproxy 2>/dev/null | bash
 ```
 
 Development (dev):
-```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash
+```bash
+wget -O - https://github.com/leobrigassi/tcproxy/raw/dev/tcproxy 2>/dev/null | bash
 ```
 
-[Release notes and legacy versions](https://github.com/leobrigassi/tcproxy/releases)
+[Release notes](https://github.com/leobrigassi/tcproxy/releases)
 
 
 
@@ -113,12 +116,16 @@ never land in the repo root.
 
 **Getting Started:**
 
-1. Open a terminal in the project directory.
-2. Clone or download this project to your local machine.
-3. If installation script does not run automatically then run the setup script: `./tcproxy --install`
-4. Follow the on-screen prompts to provide the required information.
-5. Wait for the script to complete the provisioning process.
-6. Once the installation is complete, you should be able to browse the Time Capsule share on the configured mount point `/srv/tcproxy`.
+1. Run the installation script (see above)
+2. Follow the on-screen prompts for Time Capsule credentials
+3. Once complete, access your Time Capsule at `/srv/tcproxy`
+
+Or clone and run locally:
+```bash
+git clone https://github.com/leobrigassi/tcproxy.git
+cd tcproxy
+./tcproxy --install
+```
 
 **Additional Notes:**
 
