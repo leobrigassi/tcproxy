@@ -5,9 +5,8 @@
 # Edit values here to change behavior without touching logic.
 
 # === Version ===
-TCPROXY_COMMIT=v3.1.2
-TCPROXY_RELEASE=v3.1.2
-TCPROXY_VM_VERSION=v2.1.4
+TCPROXY_COMMIT=v3.2.0
+TCPROXY_RELEASE=v3.2.0
 # Format: /heads/<branch> for branch builds, /tags/<version> for releases.
 TCPROXY_BRANCH=/heads/dev
 

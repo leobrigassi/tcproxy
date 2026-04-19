@@ -66,9 +66,9 @@ test_VM_mount() {
 # samba port exposed by the VM. Returns the last smbclient exit code.
 check_smb_share() {
     VM_SMB_CHECK=0
-    if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/"$TC_DISK_USB" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK_USB"; else echo "VM samba share [$TC_DISK_USB] OK..."; fi ; fi
-    if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/"$TC_USER" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_USER"; else echo "VM samba share [$TC_USER] OK..."; fi ; fi
-    if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/"$TC_DISK" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK"; else echo "VM samba share [$TC_DISK] OK..."; fi ; fi
+    if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/"$TC_DISK_USB" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $VM_SMB_CHECK -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK_USB"; else echo "VM samba share [$TC_DISK_USB] OK..."; fi ; fi
+    if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/"$TC_USER" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $VM_SMB_CHECK -ne 0 ]]; then echo "[ERROR] Failed to access $TC_USER"; else echo "VM samba share [$TC_USER] OK..."; fi ; fi
+    if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/"$TC_DISK" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $VM_SMB_CHECK -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK"; else echo "VM samba share [$TC_DISK] OK..."; fi ; fi
     return $VM_SMB_CHECK
 }
 

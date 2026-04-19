@@ -1,7 +1,7 @@
 #!/bin/bash
 # tcproxy — single-file release build.
 # Source: https://github.com/leobrigassi/tcproxy
-# Built: 2026-04-19T13:37:28Z from commit 609fa9f
+# Built: 2026-04-19T21:46:08Z from commit 7cb1f49
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -9,9 +9,8 @@
 # Edit values here to change behavior without touching logic.
 
 # === Version ===
-TCPROXY_COMMIT=v3.1.2
-TCPROXY_RELEASE=v3.1.2
-TCPROXY_VM_VERSION=v2.1.4
+TCPROXY_COMMIT=v3.2.0
+TCPROXY_RELEASE=v3.2.0
 # Format: /heads/<branch> for branch builds, /tags/<version> for releases.
 TCPROXY_BRANCH=/heads/dev
 
@@ -50,8 +49,10 @@ TCPROXY_CURL_MAX_TIME=10
 # Depends on: lib/config.sh (sourced first).
 
 # === Discovered system identity (set on load) ===
-USER=$(whoami)
-GROUP=$(id -gn)
+# TCPROXY_USER/TCPROXY_GROUP instead of USER/GROUP so we don't clobber
+# bash's own $USER, which is exported by the login shell.
+TCPROXY_USER=$(whoami)
+TCPROXY_GROUP=$(id -gn)
 PUID=$(id -u)
 PGID=$(id -g)
 ARCH=$(uname -m)
@@ -94,10 +95,13 @@ create_tcproxy_folder() {
     fi
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env
     [[ ! -e $TCP_ENV ]] && touch "$TCP_ENV"
-    sudo chmod 770 "$TCP_ENV"
+    # 600 — the env file holds TC_PASSWORD in clear text. The boot unit
+    # runs as root (systemd reads EnvironmentFile before dropping privs,
+    # but we run as root anyway), so group/other access is not needed.
+    sudo chmod 600 "$TCP_ENV"
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"
     [[ ! -e $LOG_FILE ]] && touch "$LOG_FILE"
-    sudo chmod 770 "$LOG_FILE"
+    sudo chmod 640 "$LOG_FILE"
     if [[ -z "$LOG_FILE" || ! -f "$LOG_FILE" ]]; then
         echo "[ERROR] LOG_FILE is not initialized or does not exist."
         exit 1
@@ -145,32 +149,34 @@ logsm() {
 # === Env persistence ===
 # Writes current state to TCP_ENV. Sourced by future tcproxy invocations
 # and by the systemd EnvironmentFile.
+#
+# Values are wrapped in double quotes with backslash/quote escaping so
+# the file parses identically under `source` (bash) and
+# EnvironmentFile= (systemd). Without the quoting, a TC_PASSWORD
+# containing a space or `#` breaks the boot service.
+_tcproxy_env_escape() {
+    printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
 save_env() {
-    if [[ ! -f $TCP_ENV ]]; then
-        touch "$TCP_ENV"
-    else
-        echo "# Environment variables for tcproxy. Run ./tcproxy --install to modify." > "$TCP_ENV"
-    fi
+    echo "# Environment variables for tcproxy. Run ./tcproxy --install to modify." > "$TCP_ENV"
     {
-        echo "TCPROXY_PATH=$TCPROXY_PATH"
-        echo "TCP_ENV=$TCP_ENV"
-        echo "USER=$USER"
-        echo "GROUP=$GROUP"
-        echo "PUID=$PUID"
-        echo "PGID=$PGID"
-        echo "TC_IP=$TC_IP"
-        echo "TC_DISK=$TC_DISK"
-        echo "TC_DISK_USB=$TC_DISK_USB"
-        echo "TC_USER=$TC_USER"
-        echo "TC_PASSWORD=$TC_PASSWORD"
-        echo "STARTUP_MOUNT=$STARTUP_MOUNT"
-        echo "TCPROXY_SERVICE_FILE=$TCPROXY_SERVICE_FILE"
-        echo "TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_SERVICE_TEMP_FILE"
-        echo "SUDOREQUIRED=$SUDOREQUIRED"
-        echo "LOG_FILE=$LOG_FILE"
-        echo "ARCH=$ARCH"
-        echo "UNIQUE_ID=$UNIQUE_ID"
+        printf 'TCPROXY_PATH="%s"\n'    "$(_tcproxy_env_escape "$TCPROXY_PATH")"
+        printf 'TCP_ENV="%s"\n'         "$(_tcproxy_env_escape "$TCP_ENV")"
+        printf 'TCPROXY_USER="%s"\n'    "$(_tcproxy_env_escape "$TCPROXY_USER")"
+        printf 'TCPROXY_GROUP="%s"\n'   "$(_tcproxy_env_escape "$TCPROXY_GROUP")"
+        printf 'PUID=%s\n'              "$PUID"
+        printf 'PGID=%s\n'              "$PGID"
+        printf 'TC_IP="%s"\n'           "$(_tcproxy_env_escape "$TC_IP")"
+        printf 'TC_DISK="%s"\n'         "$(_tcproxy_env_escape "$TC_DISK")"
+        printf 'TC_DISK_USB="%s"\n'     "$(_tcproxy_env_escape "$TC_DISK_USB")"
+        printf 'TC_USER="%s"\n'         "$(_tcproxy_env_escape "$TC_USER")"
+        printf 'TC_PASSWORD="%s"\n'     "$(_tcproxy_env_escape "$TC_PASSWORD")"
+        printf 'STARTUP_MOUNT="%s"\n'   "$(_tcproxy_env_escape "$STARTUP_MOUNT")"
+        printf 'SUDOREQUIRED="%s"\n'    "$(_tcproxy_env_escape "$SUDOREQUIRED")"
+        printf 'ARCH="%s"\n'            "$(_tcproxy_env_escape "$ARCH")"
+        printf 'UNIQUE_ID="%s"\n'       "$(_tcproxy_env_escape "$UNIQUE_ID")"
     } >> "$TCP_ENV"
+    sudo chmod 600 "$TCP_ENV"
     logsm "tcproxy: environment variables updated"
 }
 
@@ -210,7 +216,6 @@ header() {
     echo "GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
 tcproxy $TCPROXY_COMMIT: [ $SCRIPT_COMMAND ] $DESCR_COM
 "
-    sleep 1
 }
 
 footer() {
@@ -312,7 +317,7 @@ help_menu() {
   --uninstall               unmounts $TCPROXY_HOST_MOUNT_ROOT and poweroff to VM and stops and removes system service
 
 For bug reports, questions, discussions and/or open issues visit:
-https://github.com/leobrigassi/time_capsule_proxy"
+https://github.com/leobrigassi/tcproxy"
 }
 
 # === lib/vm.sh ===
@@ -505,9 +510,9 @@ test_VM_mount() {
 # samba port exposed by the VM. Returns the last smbclient exit code.
 check_smb_share() {
     VM_SMB_CHECK=0
-    if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/"$TC_DISK_USB" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK_USB"; else echo "VM samba share [$TC_DISK_USB] OK..."; fi ; fi
-    if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/"$TC_USER" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_USER"; else echo "VM samba share [$TC_USER] OK..."; fi ; fi
-    if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/"$TC_DISK" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $? -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK"; else echo "VM samba share [$TC_DISK] OK..."; fi ; fi
+    if [[ -n $TC_DISK_USB ]]; then smbclient //127.0.0.1/"$TC_DISK_USB" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $VM_SMB_CHECK -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK_USB"; else echo "VM samba share [$TC_DISK_USB] OK..."; fi ; fi
+    if [[ -n $TC_USER ]]; then smbclient //127.0.0.1/"$TC_USER" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $VM_SMB_CHECK -ne 0 ]]; then echo "[ERROR] Failed to access $TC_USER"; else echo "VM samba share [$TC_USER] OK..."; fi ; fi
+    if [[ -n $TC_DISK ]]; then smbclient //127.0.0.1/"$TC_DISK" -U root%"$TC_PASSWORD" --port="$TCPROXY_VM_SMB_PORT" -c 'exit'; VM_SMB_CHECK=$?; if [[ $VM_SMB_CHECK -ne 0 ]]; then echo "[ERROR] Failed to access $TC_DISK"; else echo "VM samba share [$TC_DISK] OK..."; fi ; fi
     return $VM_SMB_CHECK
 }
 
@@ -603,7 +608,7 @@ tcproxy: To configure the VM please [ exit ] the VM and run [ ./tcproxy -i ] fro
 
 GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
 For bug reports, questions, discussions and/or open issues visit:
-https://github.com/leobrigassi/time_capsule_proxy
+https://github.com/leobrigassi/tcproxy
 ----------------------" | base64)' | base64 -d > /etc/motd"
 }
 
@@ -611,12 +616,18 @@ https://github.com/leobrigassi/time_capsule_proxy
 # tcproxy — systemd service + timer install/remove.
 # Depends on: lib/config.sh (TCPROXY_SERVICE_NAME, TCPROXY_SERVICE_FILE,
 #             TCPROXY_TIMER_NAME, TCPROXY_TIMER_FILE, TCPROXY_HOST_MOUNT_ROOT),
-#             lib/common.sh (logm, logsc, TCPROXY_PATH, TCP_ENV, USER, GROUP).
+#             lib/common.sh (logm, logsc, TCPROXY_PATH, TCP_ENV).
 
 # Writes the tcproxy boot-load .service and .timer unit files to the
 # tcproxy folder as staging files. The actual install (cp to
 # /etc/systemd/system + enable) happens in install_system_service.
 # Gated on STARTUP_MOUNT being yes.
+#
+# The unit runs as root. tcproxy_up calls `sudo mount`, `sudo systemctl`,
+# etc. — at boot there is no tty for a password prompt, so running the
+# unit as a non-root user with sudo was the root cause of issue #55.
+# Running as root makes sudo a no-op and works on every stock systemd
+# distro without extra sudoers configuration.
 tcproxy_systemd_setup() {
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
         if ! [ -d /run/systemd/system ]; then
@@ -635,11 +646,10 @@ Type=oneshot
 EnvironmentFile=$TCP_ENV
 ExecStart=$TCPROXY_PATH/tcproxy --startup-boot
 WorkingDirectory=$TCPROXY_PATH
-ExecStartPost=/bin/sleep 1
 RemainAfterExit=yes
-KillMode=none
-User=$USER
-Group=$GROUP
+Restart=on-failure
+RestartSec=30
+User=root
 
 [Install]
 WantedBy=multi-user.target" > "$TCPROXY_SERVICE_TEMP_FILE"
@@ -662,26 +672,29 @@ WantedBy=timers.target" > "$TCPROXY_PATH/.tcproxy-boot-load.timer"
 # plus the health-check timer. Idempotent: missing files are ignored.
 remove_system_service() {
     logm "Scanning for previously installed daemons..."
+    local reload=0
     if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
         logsc sudo systemctl stop time-capsule-proxy.service
         logsc sudo systemctl disable time-capsule-proxy.service
         logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
+        reload=1
         logm "Found and removed boot service v1"
     fi
     if [[ -f $TCPROXY_SERVICE_FILE ]]; then
         logsc sudo systemctl stop "$TCPROXY_SERVICE_NAME"; sleep 5
         logsc sudo systemctl disable "$TCPROXY_SERVICE_NAME"; sleep 5
         logsc sudo rm "$TCPROXY_SERVICE_FILE"
-        logsc sudo systemctl daemon-reload
+        reload=1
         logm "Found and removed boot service v2"
     fi
     if [[ -f $TCPROXY_TIMER_FILE ]]; then
         logsc sudo systemctl stop "$TCPROXY_TIMER_NAME"; sleep 5
         logsc sudo systemctl disable "$TCPROXY_TIMER_NAME"; sleep 5
         logsc sudo rm "$TCPROXY_TIMER_FILE"
-        logsc sudo systemctl daemon-reload
+        reload=1
         logm "Found and removed health-check service v2"
     fi
+    [[ $reload -eq 1 ]] && logsc sudo systemctl daemon-reload
     logm "Startup daemon disabled and removed..."
 }
 
@@ -690,23 +703,28 @@ remove_system_service() {
 install_system_service() {
     logm "Installing startup daemon..."
     logsc sudo cp "$TCPROXY_SERVICE_TEMP_FILE" "$TCPROXY_SERVICE_FILE"
-    logsc sudo systemctl daemon-reload; sleep 3
-    logsc sudo systemctl enable --now "$TCPROXY_SERVICE_NAME"; sleep 5
-    logsc sudo systemctl is-active --quiet "$TCPROXY_SERVICE_NAME"; sleep 3
-    if [ $? -eq 0 ]; then
-        logm "Service enabled at boot."
-    else
-        logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE - Error code $?"
-    fi
-    logm "Installing health-check daemon..."
     logsc sudo cp "$TCPROXY_PATH/.tcproxy-boot-load.timer" "$TCPROXY_TIMER_FILE"
     logsc sudo systemctl daemon-reload; sleep 3
+
+    logsc sudo systemctl enable --now "$TCPROXY_SERVICE_NAME"; sleep 5
+    logsc sudo systemctl is-active --quiet "$TCPROXY_SERVICE_NAME"
+    local svc_rc=$?
+    sleep 3
+    if [ $svc_rc -eq 0 ]; then
+        logm "Service enabled at boot."
+    else
+        logm "[ERROR] Failed to start $TCPROXY_SERVICE_NAME - Error code $svc_rc"
+    fi
+
+    logm "Installing health-check daemon..."
     logsc sudo systemctl enable --now "$TCPROXY_TIMER_NAME"; sleep 5
-    logsc sudo systemctl is-active --quiet "$TCPROXY_TIMER_NAME"; sleep 3
-    if [ $? -eq 0 ]; then
+    logsc sudo systemctl is-active --quiet "$TCPROXY_TIMER_NAME"
+    local tmr_rc=$?
+    sleep 3
+    if [ $tmr_rc -eq 0 ]; then
         logm "Health check enabled in systemd"
     else
-        logm "[ERROR] Failed to start $TCPROXY_TIMER_NAME - Error code $?"
+        logm "[ERROR] Failed to start $TCPROXY_TIMER_NAME - Error code $tmr_rc"
     fi
 }
 
@@ -1036,6 +1054,12 @@ case "$1" in
         ;;
     --enable-service)
         DESCR_COM="Enabling startup service..."; header
+        if [[ -z "$TCPROXY_PATH" || -z "$TC_IP" || -z "$TC_PASSWORD" ]]; then
+            echo "[ERROR] tcproxy has not been installed yet. Run [./tcproxy --install] first."
+            echo "        --enable-service needs a working configuration (env file) to boot from."
+            footer
+            exit 1
+        fi
         STARTUP_MOUNT=Y
         tcproxy_systemd_setup
         install_system_service

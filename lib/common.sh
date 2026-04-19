@@ -4,8 +4,10 @@
 # Depends on: lib/config.sh (sourced first).
 
 # === Discovered system identity (set on load) ===
-USER=$(whoami)
-GROUP=$(id -gn)
+# TCPROXY_USER/TCPROXY_GROUP instead of USER/GROUP so we don't clobber
+# bash's own $USER, which is exported by the login shell.
+TCPROXY_USER=$(whoami)
+TCPROXY_GROUP=$(id -gn)
 PUID=$(id -u)
 PGID=$(id -g)
 ARCH=$(uname -m)
@@ -48,10 +50,13 @@ create_tcproxy_folder() {
     fi
     TCP_ENV=$TCPROXY_PATH/.tcproxy.env
     [[ ! -e $TCP_ENV ]] && touch "$TCP_ENV"
-    sudo chmod 770 "$TCP_ENV"
+    # 600 — the env file holds TC_PASSWORD in clear text. The boot unit
+    # runs as root (systemd reads EnvironmentFile before dropping privs,
+    # but we run as root anyway), so group/other access is not needed.
+    sudo chmod 600 "$TCP_ENV"
     LOG_FILE="$TCPROXY_PATH/log-tcproxy.txt"
     [[ ! -e $LOG_FILE ]] && touch "$LOG_FILE"
-    sudo chmod 770 "$LOG_FILE"
+    sudo chmod 640 "$LOG_FILE"
     if [[ -z "$LOG_FILE" || ! -f "$LOG_FILE" ]]; then
         echo "[ERROR] LOG_FILE is not initialized or does not exist."
         exit 1
@@ -99,32 +104,34 @@ logsm() {
 # === Env persistence ===
 # Writes current state to TCP_ENV. Sourced by future tcproxy invocations
 # and by the systemd EnvironmentFile.
+#
+# Values are wrapped in double quotes with backslash/quote escaping so
+# the file parses identically under `source` (bash) and
+# EnvironmentFile= (systemd). Without the quoting, a TC_PASSWORD
+# containing a space or `#` breaks the boot service.
+_tcproxy_env_escape() {
+    printf '%s' "$1" | sed -e 's/\\/\\\\/g' -e 's/"/\\"/g'
+}
 save_env() {
-    if [[ ! -f $TCP_ENV ]]; then
-        touch "$TCP_ENV"
-    else
-        echo "# Environment variables for tcproxy. Run ./tcproxy --install to modify." > "$TCP_ENV"
-    fi
+    echo "# Environment variables for tcproxy. Run ./tcproxy --install to modify." > "$TCP_ENV"
     {
-        echo "TCPROXY_PATH=$TCPROXY_PATH"
-        echo "TCP_ENV=$TCP_ENV"
-        echo "USER=$USER"
-        echo "GROUP=$GROUP"
-        echo "PUID=$PUID"
-        echo "PGID=$PGID"
-        echo "TC_IP=$TC_IP"
-        echo "TC_DISK=$TC_DISK"
-        echo "TC_DISK_USB=$TC_DISK_USB"
-        echo "TC_USER=$TC_USER"
-        echo "TC_PASSWORD=$TC_PASSWORD"
-        echo "STARTUP_MOUNT=$STARTUP_MOUNT"
-        echo "TCPROXY_SERVICE_FILE=$TCPROXY_SERVICE_FILE"
-        echo "TCPROXY_SERVICE_TEMP_FILE=$TCPROXY_SERVICE_TEMP_FILE"
-        echo "SUDOREQUIRED=$SUDOREQUIRED"
-        echo "LOG_FILE=$LOG_FILE"
-        echo "ARCH=$ARCH"
-        echo "UNIQUE_ID=$UNIQUE_ID"
+        printf 'TCPROXY_PATH="%s"\n'    "$(_tcproxy_env_escape "$TCPROXY_PATH")"
+        printf 'TCP_ENV="%s"\n'         "$(_tcproxy_env_escape "$TCP_ENV")"
+        printf 'TCPROXY_USER="%s"\n'    "$(_tcproxy_env_escape "$TCPROXY_USER")"
+        printf 'TCPROXY_GROUP="%s"\n'   "$(_tcproxy_env_escape "$TCPROXY_GROUP")"
+        printf 'PUID=%s\n'              "$PUID"
+        printf 'PGID=%s\n'              "$PGID"
+        printf 'TC_IP="%s"\n'           "$(_tcproxy_env_escape "$TC_IP")"
+        printf 'TC_DISK="%s"\n'         "$(_tcproxy_env_escape "$TC_DISK")"
+        printf 'TC_DISK_USB="%s"\n'     "$(_tcproxy_env_escape "$TC_DISK_USB")"
+        printf 'TC_USER="%s"\n'         "$(_tcproxy_env_escape "$TC_USER")"
+        printf 'TC_PASSWORD="%s"\n'     "$(_tcproxy_env_escape "$TC_PASSWORD")"
+        printf 'STARTUP_MOUNT="%s"\n'   "$(_tcproxy_env_escape "$STARTUP_MOUNT")"
+        printf 'SUDOREQUIRED="%s"\n'    "$(_tcproxy_env_escape "$SUDOREQUIRED")"
+        printf 'ARCH="%s"\n'            "$(_tcproxy_env_escape "$ARCH")"
+        printf 'UNIQUE_ID="%s"\n'       "$(_tcproxy_env_escape "$UNIQUE_ID")"
     } >> "$TCP_ENV"
+    sudo chmod 600 "$TCP_ENV"
     logsm "tcproxy: environment variables updated"
 }
 
@@ -164,7 +171,6 @@ header() {
     echo "GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
 tcproxy $TCPROXY_COMMIT: [ $SCRIPT_COMMAND ] $DESCR_COM
 "
-    sleep 1
 }
 
 footer() {
