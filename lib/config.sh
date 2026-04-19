@@ -5,11 +5,11 @@
 # Edit values here to change behavior without touching logic.
 
 # === Version ===
-TCPROXY_COMMIT=v3.0.0_a0
+TCPROXY_COMMIT=v3.0.0
 TCPROXY_RELEASE=v3.0.0
 TCPROXY_VM_VERSION=v2.1.4
 # Format: /heads/<branch> for branch builds, /tags/<version> for releases.
-TCPROXY_BRANCH=/heads/dev
+TCPROXY_BRANCH=/heads/refactor/v3.0.0
 
 # === Project server (--remote-log endpoint) ===
 TCPROXY_SERVER_HOST="tcproxy.nobusolutions.com"
