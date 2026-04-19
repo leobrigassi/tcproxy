@@ -38,17 +38,28 @@ github_download() {
     fi
     if [[ ! -f $vm_file ]]; then
         branch_name="${TCPROXY_BRANCH#/*/}"
-        local vm_url="https://github.com/leobrigassi/tcproxy/raw/${branch_name}/${vm_file}"
+        local vm_url="https://github.com/leobrigassi/tcproxy/raw/${branch_name}/${vm_file}?t=$(date +%s)"
         logm "Downloading VM image from repo..."
-        if ! wget -q "$vm_url" -O "$vm_file"; then
+        if ! wget -q --timeout=30 "$vm_url" -O "$vm_file"; then
             logm "[ERROR] Failed to download $vm_file from $vm_url"
+            rm -f "$vm_file"
             exit 1
         fi
-        logsm "Downloaded $vm_file"
+        if [[ ! -s "$vm_file" ]]; then
+            logm "[ERROR] Downloaded file is empty or corrupt"
+            rm -f "$vm_file"
+            exit 1
+        fi
+        logsm "Downloaded $vm_file ($(du -h "$vm_file" | cut -f1))"
     else
         logsm "Using local $vm_file"
     fi
     logm "Extracting VM image..."
-    tar -xJ -f "$vm_file" && rm -f "$vm_file"
+    if ! tar -xJ -f "$vm_file"; then
+        logm "[ERROR] Failed to extract $vm_file"
+        rm -f "$vm_file"
+        exit 1
+    fi
+    rm -f "$vm_file"
     logsm "VM image ready."
 }
