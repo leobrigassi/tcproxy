@@ -1,7 +1,7 @@
 #!/bin/bash
-# Time Capsule Proxy (tcproxy) — single-file release build.
-# Source: https://github.com/leobrigassi/time-capsule-proxy
-# Built: 2026-04-19T13:06:52Z from commit c55c422
+# tcproxy — single-file release build.
+# Source: https://github.com/leobrigassi/tcproxy
+# Built: 2026-04-19T13:16:54Z from commit 7c39960
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -9,11 +9,11 @@
 # Edit values here to change behavior without touching logic.
 
 # === Version ===
-TCPROXY_COMMIT=v3.1.1
-TCPROXY_RELEASE=v3.1.1
+TCPROXY_COMMIT=v3.1.2
+TCPROXY_RELEASE=v3.1.2
 TCPROXY_VM_VERSION=v2.1.4
 # Format: /heads/<branch> for branch builds, /tags/<version> for releases.
-TCPROXY_BRANCH=/tags/v3.1.1
+TCPROXY_BRANCH=/tags/v3.1.2
 
 # === Distribution URLs ===
 TCPROXY_FILE_DEFINED_URL="https://raw.githubusercontent.com/leobrigassi/tcproxy/${TCPROXY_BRANCH#/*/}/tcproxy"
