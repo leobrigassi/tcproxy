@@ -124,7 +124,7 @@ github_download() {
         logsm "Using local $vm_file"
     fi
     logm "Extracting VM image..."
-    tar -xf "$vm_file" && rm -f "$vm_file"
+    tar -xJ -f "$vm_file" && rm -f "$vm_file"
     logsm "VM image ready."
 }
 
