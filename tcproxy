@@ -1,7 +1,7 @@
 #!/bin/bash
 # Time Capsule Proxy (tcproxy) — single-file release build.
 # Source: https://github.com/leobrigassi/time-capsule-proxy
-# Built: 2026-04-19T10:23:50Z from commit e1e6c9c
+# Built: 2026-04-19T11:14:30Z from commit 3d5bd0a
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -24,7 +24,6 @@ TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsul
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_VM_VERSION_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_VM_VERSION}/"
-TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/${TCPROXY_BRANCH}.tar.gz"
 
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
@@ -854,20 +853,12 @@ download_latest_script() {
     fi
 }
 
-# Downloads the full suite (source tarball + arch-matched VM image)
-# from the configured branch release. Used by the --install flow.
+# Downloads the arch-matched VM image. The monolith (./tcproxy) is
+# already in the repo and committed at each version, so we skip the
+# source tarball entirely. This keeps installs lightweight and avoids
+# redundant tarball churn in git history.
 github_download() {
-    logm "Downloading tcproxy suite from server..."
-    sudo rm "${TCPROXY_BRANCH#/*/}".* >/dev/null 2>&1
-    wget "$TCPROXY_TAR_URL" >/dev/null 2>&1
-    if [[ $? -eq 0 ]]; then
-        logsm "Download successful $TCPROXY_TAR_URL"
-    else
-        logm "tcproxy: Update server currently unavailable. $TCPROXY_TAR_URL"
-        exit 1
-    fi
-    tar -xf "${TCPROXY_BRANCH#/*/}.tar.gz" --strip-components=1 && sudo rm "${TCPROXY_BRANCH#/*/}.tar.gz" >/dev/null 2>&1
-    chmod +x tcproxy
+    logm "Downloading tcproxy VM image from server..."
     sudo rm tcproxy_VM*.tar.gz >/dev/null 2>&1
     if [[ $ARCH == x86_64* ]]; then
         wget "$TCPROXY_VM_VERSION_URL/tcproxy_VM_x86.tar.gz" >/dev/null 2>&1

@@ -20,7 +20,6 @@ TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsul
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_VM_VERSION_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_VM_VERSION}/"
-TCPROXY_TAR_URL="https://github.com/leobrigassi/Time_Capsule_Proxy/archive/refs/${TCPROXY_BRANCH}.tar.gz"
 
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then
     TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL

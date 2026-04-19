@@ -97,20 +97,12 @@ download_latest_script() {
     fi
 }
 
-# Downloads the full suite (source tarball + arch-matched VM image)
-# from the configured branch release. Used by the --install flow.
+# Downloads the arch-matched VM image. The monolith (./tcproxy) is
+# already in the repo and committed at each version, so we skip the
+# source tarball entirely. This keeps installs lightweight and avoids
+# redundant tarball churn in git history.
 github_download() {
-    logm "Downloading tcproxy suite from server..."
-    sudo rm "${TCPROXY_BRANCH#/*/}".* >/dev/null 2>&1
-    wget "$TCPROXY_TAR_URL" >/dev/null 2>&1
-    if [[ $? -eq 0 ]]; then
-        logsm "Download successful $TCPROXY_TAR_URL"
-    else
-        logm "tcproxy: Update server currently unavailable. $TCPROXY_TAR_URL"
-        exit 1
-    fi
-    tar -xf "${TCPROXY_BRANCH#/*/}.tar.gz" --strip-components=1 && sudo rm "${TCPROXY_BRANCH#/*/}.tar.gz" >/dev/null 2>&1
-    chmod +x tcproxy
+    logm "Downloading tcproxy VM image from server..."
     sudo rm tcproxy_VM*.tar.gz >/dev/null 2>&1
     if [[ $ARCH == x86_64* ]]; then
         wget "$TCPROXY_VM_VERSION_URL/tcproxy_VM_x86.tar.gz" >/dev/null 2>&1
