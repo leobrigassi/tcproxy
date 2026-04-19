@@ -1,7 +1,7 @@
 #!/bin/bash
 # Time Capsule Proxy (tcproxy) — single-file release build.
 # Source: https://github.com/leobrigassi/time-capsule-proxy
-# Built: 2026-04-19T12:29:37Z from commit c4870bf
+# Built: 2026-04-19T12:42:20Z from commit 5055926
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
