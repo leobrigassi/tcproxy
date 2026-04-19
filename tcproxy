@@ -1,7 +1,7 @@
 #!/bin/bash
 # Time Capsule Proxy (tcproxy) — single-file release build.
 # Source: https://github.com/leobrigassi/time-capsule-proxy
-# Built: 2026-04-19T11:39:53Z from commit 39e6fd5
+# Built: 2026-04-19T11:46:19Z from commit 3f0c5d5
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -9,18 +9,13 @@
 # Edit values here to change behavior without touching logic.
 
 # === Version ===
-TCPROXY_COMMIT=v3.0.0
-TCPROXY_RELEASE=v3.0.0
+TCPROXY_COMMIT=v3.0.1
+TCPROXY_RELEASE=v3.0.1
 TCPROXY_VM_VERSION=v2.1.4
 # Format: /heads/<branch> for branch builds, /tags/<version> for releases.
 TCPROXY_BRANCH=/heads/refactor/v3.0.0
 
-# === Project server (--remote-log endpoint) ===
-TCPROXY_SERVER_HOST="tcproxy.nobusolutions.com"
-TCPROXY_SERVER_URL="https://${TCPROXY_SERVER_HOST}"
-
 # === Distribution URLs ===
-TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_VM_VERSION_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_VM_VERSION}/"
@@ -320,44 +315,12 @@ help_menu() {
   -s,  --ssh                connects to the VM via ssh
   -u,  --up                 [default arg.], loads VM and initiates mount $TCPROXY_HOST_MOUNT_ROOT on host
   -v,  --version            Shows current version of tcproxy installed
-  --update-check            check for updates from project server
-  --update                  requests update from project server and attempts local upgrade
-  --remote-log              Sends last 100 log lines to debug server
   --enable-service          (beta) installs systemd startup service
   --disable-service         stops and removes systemd startup service
   --uninstall               unmounts $TCPROXY_HOST_MOUNT_ROOT and poweroff to VM and stops and removes system service
 
 For bug reports, questions, discussions and/or open issues visit:
 https://github.com/leobrigassi/time_capsule_proxy"
-}
-
-# === lib/server.sh ===
-# tcproxy — server I/O.
-# ALL outbound HTTP to the project server goes through this file.
-# Only one caller exists: --remote-log (user-initiated).
-# Depends on: lib/config.sh (TCPROXY_SERVER_URL, curl tunables),
-#             lib/common.sh (logm, UNIQUE_ID, ARCH, LOG_FILE).
-
-# Post the last 100 log lines to the project server.
-# Returns 0 on HTTP 200, non-zero otherwise.
-remote_log() {
-    local last_lines response response_code
-    last_lines=$(tail -n 100 "$LOG_FILE")
-    response=$(curl \
-        --connect-timeout "$TCPROXY_CURL_CONNECT_TIMEOUT" \
-        --max-time "$TCPROXY_CURL_MAX_TIME" \
-        -s -o /dev/null -w "%{http_code}" \
-        -X POST \
-        -d "$UNIQUE_ID;$ARCH;$TCPROXY_COMMIT;$last_lines" \
-        "$TCPROXY_SERVER_URL")
-    response_code=$(echo "$response" | tail -c 4)
-    if [[ "$response_code" == "200" ]]; then
-        logm "Remote log sent correctly."
-        return 0
-    else
-        logm "[ERROR $response] Log server down. Try again later."
-        return 1
-    fi
 }
 
 # === lib/vm.sh ===
@@ -756,88 +719,13 @@ install_system_service() {
 }
 
 # === lib/updater.sh ===
-# tcproxy — self-update + VM asset download.
-# Handles both the --update-check / --update flow and the one-shot
-# install-time download of the suite (script + arch-specific VM image).
-# Depends on: lib/config.sh (TCPROXY_FILE_*_URL, TCPROXY_TAR_URL,
-#             TCPROXY_VM_VERSION_URL, TCPROXY_BRANCH, TCPROXY_RELEASE,
-#             TCPROXY_COMMIT, TCPROXY_CURL_*),
-#             lib/common.sh (logm, logsm, footer, ARCH).
+# tcproxy — VM asset download and install-time script fetch.
+# Depends on: lib/config.sh (TCPROXY_FILE_DEFINED_URL, TCPROXY_BRANCH,
+#             TCPROXY_CURL_*), lib/common.sh (logm, logsm, footer, ARCH).
 
-# Checks for a newer tcproxy script upstream. In --update mode
-# (MAN_UPDATE=1) it downloads and replaces the script in place; in
-# --update-check mode it only reports.
-#
-# Logic:
-# 1. Read the main branch's TCPROXY_RELEASE; if ours is older, prefer
-#    that (releases take priority over branch builds).
-# 2. Otherwise check the active branch's TCPROXY_COMMIT for a newer
-#    commit marker.
-check_or_update_script() {
-    TCPROXY_RELEASE_LAST=$(curl --connect-timeout "$TCPROXY_CURL_CONNECT_TIMEOUT" --max-time "$TCPROXY_CURL_MAX_TIME" -sL "$TCPROXY_FILE_MAIN_URL" | sed -n '5p' | cut -d '=' -f 2)
-    if [[ $? -ne 0 ]]; then
-        if [[ $MAN_UPDATE == 1 ]]; then
-            echo "tcproxy: Update server currently unavailable."
-            echo "Visit the project page for more information:"
-            echo "https://github.com/leobrigassi/time-capsule-proxy"
-        else
-            echo "tcproxy: Update server currently unavailable."
-            return 1
-        fi
-    fi
-    if [[ $TCPROXY_RELEASE_LAST != "$TCPROXY_RELEASE" ]]; then
-        if [[ $MAN_UPDATE == 1 ]]; then
-            logm "Downloading tcproxy $TCPROXY_RELEASE_LAST ..."
-            BACKUP_FILE="backup_tcproxy_$TCPROXY_COMMIT"
-            cp -f "$0" "$BACKUP_FILE"
-            TEMP_FILE=$(mktemp)
-            curl --connect-timeout "$TCPROXY_CURL_CONNECT_TIMEOUT" --max-time "$TCPROXY_CURL_MAX_TIME" -sL -o "$TEMP_FILE" "$TCPROXY_FILE_MAIN_URL"
-            TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_MAIN_URL
-            mv "$TEMP_FILE" "$0"
-            chmod +x "$0"
-            logm "tcproxy: Script updated from $TCPROXY_COMMIT to $TCPROXY_RELEASE_LAST"
-        else
-            echo "tcproxy: New update available $TCPROXY_RELEASE_LAST. (Current $TCPROXY_RELEASE)"
-            echo "To update run:  [ ./tcproxy --update ]"
-            echo ""
-            return 0
-        fi
-    else
-        TCPROXY_COMMIT_LAST=$(curl --connect-timeout "$TCPROXY_CURL_CONNECT_TIMEOUT" --max-time "$TCPROXY_CURL_MAX_TIME" -sL "$TCPROXY_FILE_DEFINED_URL" | sed -n '3p' | cut -d '=' -f 2)
-        if [[ $? -ne 0 ]]; then
-            if [[ $MAN_UPDATE == 1 ]]; then
-                echo "tcproxy: Update server currently unavailable."
-                echo "Visit the project page for more information:"
-                echo "https://github.com/leobrigassi/time-capsule-proxy"
-            else
-                echo "tcproxy: Update server currently unavailable."
-                return 1
-            fi
-        fi
-        if [[ $TCPROXY_COMMIT_LAST != "$TCPROXY_COMMIT" ]]; then
-            if [[ $MAN_UPDATE == 1 ]]; then
-                logm "Downloading tcproxy $TCPROXY_COMMIT_LAST ..."
-                BACKUP_FILE="backup_tcproxy_$TCPROXY_COMMIT"
-                cp -f "$0" "$BACKUP_FILE"
-                TEMP_FILE=$(mktemp)
-                curl --connect-timeout "$TCPROXY_CURL_CONNECT_TIMEOUT" --max-time "$TCPROXY_CURL_MAX_TIME" -sL -o "$TEMP_FILE" "$TCPROXY_FILE_DEFINED_URL"
-                mv "$TEMP_FILE" "$0"
-                chmod +x "$0"
-                logm "tcproxy: Script updated from $TCPROXY_COMMIT to $TCPROXY_COMMIT_LAST"
-            else
-                echo "tcproxy: New update available $TCPROXY_COMMIT_LAST. (Current $TCPROXY_COMMIT)"
-                echo "To update run:  [ ./tcproxy --update ]"
-                return 0
-            fi
-        else
-            logm "tcproxy: Script $TCPROXY_COMMIT is already on latest version."
-            return 0
-        fi
-    fi
-}
-
-# Fetches the latest script for the active branch into $TCPROXY_PATH/tcproxy
-# and makes it executable. Used by the web-install bootstrap.
+# Fetches the latest tcproxy script into $TCPROXY_PATH/tcproxy.
+# Used by the web-install bootstrap (wget | bash) to persist the script
+# locally so future runs don't need to re-download.
 download_latest_script() {
     echo "Downloading latest installation script..."
     TEMP_FILE=$(mktemp)
@@ -882,11 +770,6 @@ github_download() {
     logm "Extracting VM image..."
     tar -xJ -f "$vm_file" && rm -f "$vm_file"
     logsm "VM image ready."
-}
-
-# Alias for compatibility; github_download now handles extraction.
-deflating_vm() {
-    :
 }
 
 # === lib/installer.sh ===
@@ -1114,26 +997,6 @@ case "$1" in
     -s|--ssh)
         DESCR_COM="Accessing VM via SSH..."; header
         ssh_vm
-        footer
-        ;;
-    --update)
-        if ! load_env_if_exists; then create_tcproxy_folder; fi
-        DESCR_COM="Updating script..."; header
-        MAN_UPDATE=1
-        check_or_update_script
-        save_env
-        footer
-        ;;
-    --update-check)
-        DESCR_COM="Checking for updates..."; header
-        MAN_UPDATE=0
-        check_or_update_script
-        save_env
-        footer
-        ;;
-    --remote-log)
-        DESCR_COM="Sending last 100 log lines to debug server..."; header
-        remote_log
         footer
         ;;
     -l|--log)

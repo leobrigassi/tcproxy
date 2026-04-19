@@ -78,9 +78,6 @@ help_menu() {
   -s,  --ssh                connects to the VM via ssh
   -u,  --up                 [default arg.], loads VM and initiates mount $TCPROXY_HOST_MOUNT_ROOT on host
   -v,  --version            Shows current version of tcproxy installed
-  --update-check            check for updates from project server
-  --update                  requests update from project server and attempts local upgrade
-  --remote-log              Sends last 100 log lines to debug server
   --enable-service          (beta) installs systemd startup service
   --disable-service         stops and removes systemd startup service
   --uninstall               unmounts $TCPROXY_HOST_MOUNT_ROOT and poweroff to VM and stops and removes system service

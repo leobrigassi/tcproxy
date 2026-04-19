@@ -22,7 +22,6 @@ LIBS=(
     config.sh
     common.sh
     ui.sh
-    server.sh
     vm.sh
     mount.sh
     provision.sh

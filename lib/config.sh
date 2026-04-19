@@ -5,18 +5,13 @@
 # Edit values here to change behavior without touching logic.
 
 # === Version ===
-TCPROXY_COMMIT=v3.0.0
-TCPROXY_RELEASE=v3.0.0
+TCPROXY_COMMIT=v3.0.1
+TCPROXY_RELEASE=v3.0.1
 TCPROXY_VM_VERSION=v2.1.4
 # Format: /heads/<branch> for branch builds, /tags/<version> for releases.
 TCPROXY_BRANCH=/heads/refactor/v3.0.0
 
-# === Project server (--remote-log endpoint) ===
-TCPROXY_SERVER_HOST="tcproxy.nobusolutions.com"
-TCPROXY_SERVER_URL="https://${TCPROXY_SERVER_HOST}"
-
 # === Distribution URLs ===
-TCPROXY_FILE_MAIN_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/main/tcproxy"
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/time_capsule_proxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_VM_VERSION_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_VM_VERSION}/"

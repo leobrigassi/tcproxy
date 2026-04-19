@@ -12,7 +12,6 @@ TCPROXY_LIB_DIR="$(cd "$TCPROXY_BIN_DIR/../lib" && pwd)"
 source "$TCPROXY_LIB_DIR/config.sh"
 source "$TCPROXY_LIB_DIR/common.sh"
 source "$TCPROXY_LIB_DIR/ui.sh"
-source "$TCPROXY_LIB_DIR/server.sh"
 source "$TCPROXY_LIB_DIR/vm.sh"
 source "$TCPROXY_LIB_DIR/mount.sh"
 source "$TCPROXY_LIB_DIR/provision.sh"
@@ -99,26 +98,6 @@ case "$1" in
     -s|--ssh)
         DESCR_COM="Accessing VM via SSH..."; header
         ssh_vm
-        footer
-        ;;
-    --update)
-        if ! load_env_if_exists; then create_tcproxy_folder; fi
-        DESCR_COM="Updating script..."; header
-        MAN_UPDATE=1
-        check_or_update_script
-        save_env
-        footer
-        ;;
-    --update-check)
-        DESCR_COM="Checking for updates..."; header
-        MAN_UPDATE=0
-        check_or_update_script
-        save_env
-        footer
-        ;;
-    --remote-log)
-        DESCR_COM="Sending last 100 log lines to debug server..."; header
-        remote_log
         footer
         ;;
     -l|--log)
