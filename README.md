@@ -6,9 +6,14 @@ Mount Apple Time Capsules as NAS on Debian-based Linux (kernel 5.15+). The `sec=
 
 **Installation:**
 
-Stable (main):
+Latest stable:
 ```bash
 wget -O - https://github.com/leobrigassi/tcproxy/raw/main/tcproxy 2>/dev/null | bash
+```
+
+Specific version (e.g. v3.1.2):
+```bash
+wget -O - "https://github.com/leobrigassi/tcproxy/releases/download/v3.1.2/tcproxy" 2>/dev/null | bash
 ```
 
 Development (dev):
