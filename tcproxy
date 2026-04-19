@@ -1,7 +1,7 @@
 #!/bin/bash
 # Time Capsule Proxy (tcproxy) — single-file release build.
 # Source: https://github.com/leobrigassi/time-capsule-proxy
-# Built: 2026-04-19T11:29:04Z from commit 3a83e33
+# Built: 2026-04-19T11:33:00Z from commit 7d47917
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -853,28 +853,35 @@ download_latest_script() {
     fi
 }
 
-# Extracts the bundled VM image tarball into the tcproxy folder.
-# The compressed tarballs are committed to the repo to keep git history
-# manageable (42MB compressed vs 207MB uncompressed).
+# Ensures the arch-matched VM image tarball is present, then extracts it.
+# If the tarball is already in TCPROXY_PATH (local clone), it is used as-is.
+# If not (wget | bash install), it is downloaded from the repo's raw URL.
 github_download() {
-    logm "Extracting bundled VM image..."
+    logm "Preparing VM image..."
+    local vm_file branch_name
     if [[ $ARCH == x86_64* ]]; then
-        if [[ -f tcproxy_VM_x86.tar.gz ]]; then
-            tar -xf tcproxy_VM_x86.tar.gz
-            logsm "Extracted tcproxy_VM_x86.tar.gz"
-        else
-            logm "[ERROR] tcproxy_VM_x86.tar.gz not found in $TCPROXY_PATH"
-            exit 1
-        fi
+        vm_file="tcproxy_VM_x86.tar.gz"
     elif [[ $ARCH == aarch64* ]]; then
-        if [[ -f tcproxy_VM_aarch64.tar.gz ]]; then
-            tar -xf tcproxy_VM_aarch64.tar.gz
-            logsm "Extracted tcproxy_VM_aarch64.tar.gz"
-        else
-            logm "[ERROR] tcproxy_VM_aarch64.tar.gz not found in $TCPROXY_PATH"
+        vm_file="tcproxy_VM_aarch64.tar.gz"
+    else
+        logm "[ERROR] Unsupported architecture: $ARCH"
+        exit 1
+    fi
+    if [[ ! -f $vm_file ]]; then
+        branch_name="${TCPROXY_BRANCH#/*/}"
+        local vm_url="https://github.com/leobrigassi/time_capsule_proxy/raw/${branch_name}/${vm_file}"
+        logm "Downloading VM image from repo..."
+        if ! wget -q "$vm_url" -O "$vm_file"; then
+            logm "[ERROR] Failed to download $vm_file from $vm_url"
             exit 1
         fi
+        logsm "Downloaded $vm_file"
+    else
+        logsm "Using local $vm_file"
     fi
+    logm "Extracting VM image..."
+    tar -xf "$vm_file" && rm -f "$vm_file"
+    logsm "VM image ready."
 }
 
 # Alias for compatibility; github_download now handles extraction.
