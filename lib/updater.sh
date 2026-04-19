@@ -40,7 +40,7 @@ github_download() {
         branch_name="${TCPROXY_BRANCH#/*/}"
         local vm_url="https://github.com/leobrigassi/tcproxy/raw/${branch_name}/${vm_file}?t=$(date +%s)"
         logm "Downloading VM image from repo..."
-        if ! wget -q --timeout=30 --no-compress "$vm_url" -O "$vm_file"; then
+        if ! curl -sL --connect-timeout 30 --max-time 120 -o "$vm_file" "$vm_url"; then
             logm "[ERROR] Failed to download $vm_file from $vm_url"
             rm -f "$vm_file"
             exit 1
