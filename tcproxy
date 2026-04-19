@@ -1,7 +1,7 @@
 #!/bin/bash
 # Time Capsule Proxy (tcproxy) — single-file release build.
 # Source: https://github.com/leobrigassi/time-capsule-proxy
-# Built: 2026-04-19T12:53:14Z from commit c248926
+# Built: 2026-04-19T13:00:05Z from commit 66c673f
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -17,7 +17,7 @@ TCPROXY_BRANCH=/heads/dev
 
 # === Distribution URLs ===
 TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/tcproxy/${TCPROXY_BRANCH#/*/}/tcproxy"
-TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
+TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/tcproxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
 TCPROXY_VM_VERSION_URL="https://github.com/leobrigassi/time-capsule-proxy/releases/download/${TCPROXY_VM_VERSION}/"
 
 if [[ $TCPROXY_BRANCH == *"tags"* ]]; then
@@ -759,7 +759,7 @@ github_download() {
         branch_name="${TCPROXY_BRANCH#/*/}"
         local vm_url="https://github.com/leobrigassi/tcproxy/raw/${branch_name}/${vm_file}?t=$(date +%s)"
         logm "Downloading VM image from repo..."
-        if ! wget -q --timeout=30 --no-compress "$vm_url" -O "$vm_file"; then
+        if ! curl -sL --connect-timeout 30 --max-time 120 -o "$vm_file" "$vm_url"; then
             logm "[ERROR] Failed to download $vm_file from $vm_url"
             rm -f "$vm_file"
             exit 1
