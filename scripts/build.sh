@@ -41,8 +41,8 @@ trap 'rm -f "$TMP"' EXIT
 # 1. Emit the shebang + a provenance header.
 {
     echo "#!/bin/bash"
-    echo "# Time Capsule Proxy (tcproxy) — single-file release build."
-    echo "# Source: https://github.com/leobrigassi/time-capsule-proxy"
+    echo "# tcproxy — single-file release build."
+    echo "# Source: https://github.com/leobrigassi/tcproxy"
     echo "# Built: $(date -u +%Y-%m-%dT%H:%M:%SZ) from commit $(cd "$REPO_ROOT" && git rev-parse --short HEAD 2>/dev/null || echo unknown)"
     echo ""
 } > "$TMP"
