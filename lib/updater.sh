@@ -97,41 +97,31 @@ download_latest_script() {
     fi
 }
 
-# Downloads the arch-matched VM image. The monolith (./tcproxy) is
-# already in the repo and committed at each version, so we skip the
-# source tarball entirely. This keeps installs lightweight and avoids
-# redundant tarball churn in git history.
+# Extracts the bundled VM image tarball into the tcproxy folder.
+# The compressed tarballs are committed to the repo to keep git history
+# manageable (42MB compressed vs 207MB uncompressed).
 github_download() {
-    logm "Downloading tcproxy VM image from server..."
-    sudo rm tcproxy_VM*.tar.gz >/dev/null 2>&1
+    logm "Extracting bundled VM image..."
     if [[ $ARCH == x86_64* ]]; then
-        wget "$TCPROXY_VM_VERSION_URL/tcproxy_VM_x86.tar.gz" >/dev/null 2>&1
-        if [[ $? -eq 0 ]]; then
-            logsm "Download successful $TCPROXY_VM_VERSION_URL/tcproxy_VM_x86.tar.gz"
+        if [[ -f tcproxy_VM_x86.tar.gz ]]; then
+            tar -xf tcproxy_VM_x86.tar.gz
+            logsm "Extracted tcproxy_VM_x86.tar.gz"
         else
-            logm "tcproxy: Update server currently unavailable. $TCPROXY_VM_VERSION_URL/tcproxy_VM_x86.tar.gz"
+            logm "[ERROR] tcproxy_VM_x86.tar.gz not found in $TCPROXY_PATH"
             exit 1
         fi
     elif [[ $ARCH == aarch64* ]]; then
-        wget "$TCPROXY_VM_VERSION_URL/tcproxy_VM_aarch64.tar.gz" >/dev/null 2>&1
-        if [[ $? -eq 0 ]]; then
-            logsm "Download successful $TCPROXY_VM_VERSION_URL/tcproxy_VM_aarch64.tar.gz"
+        if [[ -f tcproxy_VM_aarch64.tar.gz ]]; then
+            tar -xf tcproxy_VM_aarch64.tar.gz
+            logsm "Extracted tcproxy_VM_aarch64.tar.gz"
         else
-            logm "tcproxy: Update server currently unavailable. $TCPROXY_VM_VERSION_URL/tcproxy_VM_aarch64.tar.gz"
+            logm "[ERROR] tcproxy_VM_aarch64.tar.gz not found in $TCPROXY_PATH"
             exit 1
         fi
     fi
-    tar -xf tcproxy_VM*.tar.gz && sudo rm tcproxy_VM*.tar.gz >/dev/null 2>&1
 }
 
-# Extracts the arch-matched VM image tarball after github_download.
+# Alias for compatibility; github_download now handles extraction.
 deflating_vm() {
-    logm "Deflating VM disk..."
-    if [[ $ARCH == x86_64* ]]; then
-        sudo tar -xf tcproxy_VM_x86.tar.gz
-    elif [[ $ARCH == aarch64* ]]; then
-        sudo tar -xf tcproxy_VM_aarch64.tar.gz
-    fi
-    sudo rm tcproxy_VM_aarch64.tar.gz 2>/dev/null
-    sudo rm tcproxy_VM_x86.tar.gz 2>/dev/null
+    :
 }
