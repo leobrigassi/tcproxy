@@ -1,7 +1,7 @@
 #!/bin/bash
 # Time Capsule Proxy (tcproxy) — single-file release build.
 # Source: https://github.com/leobrigassi/time-capsule-proxy
-# Built: 2026-04-19T13:00:51Z from commit 3153b93
+# Built: 2026-04-19T13:06:52Z from commit c55c422
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -16,15 +16,7 @@ TCPROXY_VM_VERSION=v2.1.4
 TCPROXY_BRANCH=/tags/v3.1.1
 
 # === Distribution URLs ===
-TCPROXY_FILE_BRANCH_URL="https://raw.githubusercontent.com/leobrigassi/tcproxy/${TCPROXY_BRANCH#/*/}/tcproxy"
-TCPROXY_FILE_RELEASE_URL="https://github.com/leobrigassi/tcproxy/releases/download/${TCPROXY_BRANCH#/*/}/tcproxy"
-TCPROXY_VM_VERSION_URL="https://github.com/leobrigassi/tcproxy/releases/download/${TCPROXY_VM_VERSION}/"
-
-if [[ $TCPROXY_BRANCH == *"tags"* ]]; then
-    TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_RELEASE_URL
-else
-    TCPROXY_FILE_DEFINED_URL=$TCPROXY_FILE_BRANCH_URL
-fi
+TCPROXY_FILE_DEFINED_URL="https://raw.githubusercontent.com/leobrigassi/tcproxy/${TCPROXY_BRANCH#/*/}/tcproxy"
 
 # === VM ===
 TCPROXY_VM_MAC="02:D2:46:5B:4E:84"
