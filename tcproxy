@@ -1,7 +1,7 @@
 #!/bin/bash
 # Time Capsule Proxy (tcproxy) — single-file release build.
 # Source: https://github.com/leobrigassi/time-capsule-proxy
-# Built: 2026-04-19T12:50:21Z from commit 6b532a2
+# Built: 2026-04-19T12:53:16Z from commit 09a5715
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -759,7 +759,7 @@ github_download() {
         branch_name="${TCPROXY_BRANCH#/*/}"
         local vm_url="https://github.com/leobrigassi/tcproxy/raw/${branch_name}/${vm_file}?t=$(date +%s)"
         logm "Downloading VM image from repo..."
-        if ! wget -q --timeout=30 "$vm_url" -O "$vm_file"; then
+        if ! wget -q --timeout=30 --no-compress "$vm_url" -O "$vm_file"; then
             logm "[ERROR] Failed to download $vm_file from $vm_url"
             rm -f "$vm_file"
             exit 1
