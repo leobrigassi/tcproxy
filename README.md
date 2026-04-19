@@ -1,18 +1,22 @@
-## README.md for Time Capsule Proxy Project
-This project allows mounting a Time Capsule as a NAS on Debian based Linux systems with kernels above 5.15, which no longer support the `sec=ntlm` mount flag.
+## tcproxy — Time Capsule Proxy for Linux
 
-**Installation via script (from a standard terminal):**
-```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | bash
-```
-[Release notes and legacy versions](https://github.com/leobrigassi/time-capsule-proxy/releases)
+Mount Apple Time Capsules as NAS on Debian-based Linux (kernel 5.15+). The `sec=ntlm` mount flag is no longer supported, so tcproxy runs a lightweight QEMU VM (Alpine Linux 3.13) as a proxy that speaks NTLM and exposes the share via Samba to your host.
 
+**Repository:** `leobrigassi/tcproxy` (renamed from `time-capsule-proxy` in v3.1.0)
 
-**Test BETA version:**
+**Installation:**
+
+Stable (main):
+```bash
+wget -O - https://github.com/leobrigassi/tcproxy/raw/main/tcproxy 2>/dev/null | bash
 ```
-wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/beta/tcproxy 2>/dev/null | BETA= bash
+
+Development (dev):
+```bash
+wget -O - https://github.com/leobrigassi/tcproxy/raw/dev/tcproxy 2>/dev/null | bash
 ```
-Features being tested are listed in first prompt.
+
+[Release notes](https://github.com/leobrigassi/tcproxy/releases)
 
 
 
@@ -72,8 +76,38 @@ sudo apt install qemu-system-x86 qemu-kvm smbclient curl
 * `data.img`: volume file of the VM.
 * `uefi.rom`: uefi file required for VM boot (only aarch64).
 * `tcproxy`: Script to control the VM and mounts.
-* `after_tcproxy_up` if script named after_tcproxy_up exists in tcproxy folder it will be executed after tcproxy mount is successfull.
+* `after_tcproxy_up` if script named after_tcproxy_up exists in tcproxy folder it will be executed after tcproxy mount is successful.
 
+**Source layout (v2.2.0+):**
+
+End users run the single `tcproxy` file in the project root — nothing about the distribution has changed. Contributors work on the modular source instead:
+
+```
+lib/              one module per concern, each sourced by bin/tcproxy
+  config.sh       constants (versions, URLs, VM ports, retries)
+  common.sh       identity, paths, logging, env I/O, dep check
+  ui.sh           whiptail prompts + text fallback + help menu
+  server.sh       remote_log — the ONLY outbound HTTP in the code
+  vm.sh           qemu lifecycle (load / stop / boot-wait / ssh)
+  mount.sh        host-side cifs mount onto $TCPROXY_HOST_MOUNT_ROOT
+  provision.sh    one-shot VM provisioning run during --install
+  systemd.sh      boot service + health-check timer install/remove
+  updater.sh      self-update and suite download
+  installer.sh    install / uninstall / tcproxy_up orchestration
+bin/tcproxy       argument dispatcher; sources lib/*.sh at dev time
+install.sh        web-install bootstrap for wget | bash URLs
+scripts/build.sh  concatenates lib/* + bin/tcproxy into ./tcproxy
+```
+
+To produce the release artifact after editing the libs:
+
+```
+./scripts/build.sh
+```
+
+This rewrites the top-level `./tcproxy` file. The script runs `bash -n`
+on the output before overwriting, so a syntactically broken build can
+never land in the repo root.
 
 **Note:**
 
@@ -82,19 +116,21 @@ sudo apt install qemu-system-x86 qemu-kvm smbclient curl
 
 **Getting Started:**
 
-1. Open a terminal in the project directory.
-2. Clone or download this project to your local machine.
-3. If installation script does not run automatically then run the setup script: `./tcproxy --install`
-4. Follow the on-screen prompts to provide the required information.
-5. Wait for the script to complete the provisioning process.
-6. Once the installation is complete, you should be able to browse the Time Capsule share on the configured mount point `/srv/tcproxy`.
+1. Run the installation script (see above)
+2. Follow the on-screen prompts for Time Capsule credentials
+3. Once complete, access your Time Capsule at `/srv/tcproxy`
+
+Or clone and run locally:
+```bash
+git clone https://github.com/leobrigassi/tcproxy.git
+cd tcproxy
+./tcproxy --install
+```
 
 **Additional Notes:**
 
-* To ensure the best possible experience and help us continuously improve, the VM anonymously reports basic stability metrics to our project server. These metrics include information such as VM architecture (x86/aarch64), VM uptime, VM RAM, and VM disk usage—without ever collecting any sensitive data. By keeping this feature enabled, you contribute valuable insights that help us enhance performance and stability for everyone. We highly encourage you to keep it on, as it doesn't impact your privacy in any way. However, if you prefer not to participate, you have the option to disable these metrics and server-side features by installing tcproxy from the following script:
-* wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/main/tcproxy 2>/dev/null | STATS=0 bash
-* Please note, this will also disable helpful features like --update and --remote-log. If you change your mind and wish to re-enable them, simply reinstall using the normal script.
-Your support is appreciated!
+* tcproxy does not phone home. No data is sent to any server during install, use, or uninstall.
+* The only outbound call to our server happens when **you** run `./tcproxy --remote-log`, which uploads the last 100 log lines to help diagnose an issue you report. Nothing is sent otherwise.
 * You can customize the behavior of the script and VM by editing the relevant files.
 * Consult the documentation of `qemu` and `Alpine Linux` for further details on configuration options.
 
