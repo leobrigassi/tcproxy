@@ -1,7 +1,7 @@
 #!/bin/bash
 # tcproxy — single-file release build.
 # Source: https://github.com/leobrigassi/tcproxy
-# Built: 2026-04-19T13:16:56Z from commit 76d3621
+# Built: 2026-04-19T13:37:28Z from commit 609fa9f
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
