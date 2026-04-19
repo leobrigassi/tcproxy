@@ -13,7 +13,7 @@ Development (dev):
 wget -O - https://github.com/leobrigassi/time_capsule_proxy/raw/dev/tcproxy 2>/dev/null | bash
 ```
 
-[Release notes and legacy versions](https://github.com/leobrigassi/time-capsule-proxy/releases)
+[Release notes and legacy versions](https://github.com/leobrigassi/tcproxy/releases)
 
 
 

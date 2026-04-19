@@ -38,7 +38,7 @@ github_download() {
     fi
     if [[ ! -f $vm_file ]]; then
         branch_name="${TCPROXY_BRANCH#/*/}"
-        local vm_url="https://github.com/leobrigassi/time_capsule_proxy/raw/${branch_name}/${vm_file}"
+        local vm_url="https://github.com/leobrigassi/tcproxy/raw/${branch_name}/${vm_file}"
         logm "Downloading VM image from repo..."
         if ! wget -q "$vm_url" -O "$vm_file"; then
             logm "[ERROR] Failed to download $vm_file from $vm_url"
