@@ -8,7 +8,7 @@
 TCPROXY_COMMIT=v3.2.2
 TCPROXY_RELEASE=v3.2.2
 # Format: /heads/<branch> for branch builds, /tags/<version> for releases.
-TCPROXY_BRANCH=/heads/dev
+TCPROXY_BRANCH=/tags/v3.2.2
 
 # === Distribution URLs ===
 TCPROXY_FILE_DEFINED_URL="https://raw.githubusercontent.com/leobrigassi/tcproxy/${TCPROXY_BRANCH#/*/}/tcproxy"
