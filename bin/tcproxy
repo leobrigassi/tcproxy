@@ -67,6 +67,26 @@ if [ ! -t 0 ] && [ $# -eq 0 ]; then
     WEB_INSTALL="TRUE"
 fi
 
+# v3.2.2: if the uninstalled marker is present, refuse any operational
+# command centrally. Only help/version/install/uninstall are allowed
+# through. This prevents `-u`/`-s`/etc. from entering QEMU load loops
+# against deleted assets (BUG-2) and stops `create_tcproxy_folder` from
+# silently writing an empty .tcproxy.env on uninstalled systems.
+if [[ -f "$(pwd)/.tcproxy-uninstalled" ]]; then
+    case "$1" in
+        -h|--help|-v|--version|-i|--install|--uninstall|"")
+            : ;;
+        *)
+            echo "GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+."
+            echo "tcproxy: [WARNING] file .tcproxy-uninstalled detected."
+            echo "Uninstalled status detected. Run [./tcproxy --install] to setup your system."
+            echo ""
+            echo "tcproxy: command refused. Try [ ./tcproxy --help ] for more options."
+            exit 1
+            ;;
+    esac
+fi
+
 if ! load_env_if_exists; then
     echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."
     create_tcproxy_folder
@@ -102,23 +122,17 @@ case "$1" in
         do_install
         footer
         ;;
-    -u|--up)
-        DESCR_COM="Loading and mounting VM..."; header
-        tcproxy_up
-        footer
-        ;;
-    -s|--ssh)
-        DESCR_COM="Accessing VM via SSH..."; header
-        ssh_vm
-        footer
-        ;;
     -l|--log)
         DESCR_COM="Printing last 100 lines from log..."; header
         tail -n 100 "$LOG_FILE"
         footer
         ;;
     -d|--down)
-        if [[ -f "$(pwd)/.tcproxy-uninstalled" ]] || [[ -z "$TC_PASSWORD" ]]; then
+        # Uninstalled-marker case already handled by central guard above.
+        # This check catches the "env file exists but never completed
+        # install" edge case — TC_PASSWORD is required for umount logging
+        # / stop flow sanity.
+        if [[ -z "$TC_PASSWORD" ]]; then
             DESCR_COM="[WARNING]"; header
             echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."
             footer
@@ -130,8 +144,34 @@ case "$1" in
         stopping_VM
         footer
         ;;
+    -u|--up)
+        # v3.2.2: added TC_PASSWORD sanity check to match -d/-r. The
+        # uninstalled-marker case is already handled by the central guard.
+        if [[ -z "$TC_PASSWORD" ]]; then
+            DESCR_COM="[WARNING]"; header
+            echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."
+            footer
+            exit 1
+        fi
+        DESCR_COM="Loading and mounting VM..."; header
+        tcproxy_up
+        footer
+        ;;
+    -s|--ssh)
+        # v3.2.2: added TC_PASSWORD sanity check (SSH into a non-existent
+        # VM was the same failure class as BUG-2).
+        if [[ -z "$TC_PASSWORD" ]]; then
+            DESCR_COM="[WARNING]"; header
+            echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."
+            footer
+            exit 1
+        fi
+        DESCR_COM="Accessing VM via SSH..."; header
+        ssh_vm
+        footer
+        ;;
     -r|--restart)
-        if [[ -f "$(pwd)/.tcproxy-uninstalled" ]] || [[ -z "$TC_PASSWORD" ]]; then
+        if [[ -z "$TC_PASSWORD" ]]; then
             DESCR_COM="[WARNING]"; header
             echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."
             footer
@@ -162,8 +202,10 @@ case "$1" in
     --disable-service)
         DESCR_COM="Disabling startup service..."; header
         remove_system_service
-        logsc sudo rm "$TCPROXY_PATH/.tcproxy-boot-load.service"
-        logsc sudo rm "$TCPROXY_PATH/.tcproxy-boot-load.timer"
+        # -f: staging files may already be gone if --enable-service was
+        # never run or post_install_cleanup already removed them.
+        logsc sudo rm -f "$TCPROXY_PATH/.tcproxy-boot-load.service"
+        logsc sudo rm -f "$TCPROXY_PATH/.tcproxy-boot-load.timer"
         footer
         ;;
     "")

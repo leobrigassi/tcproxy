@@ -31,10 +31,11 @@ check_system_requirements() {
 }
 
 # Removes staging files after --install or --enable-service succeeds.
+# -f: staging files may not exist if --enable-service was skipped.
 post_install_cleanup() {
     logm "Running post install tasks..."
-    logsc sudo rm "$TCPROXY_PATH/.tcproxy-boot-load.service"
-    logsc sudo rm "$TCPROXY_PATH/.tcproxy-boot-load.timer"
+    logsc sudo rm -f "$TCPROXY_PATH/.tcproxy-boot-load.service"
+    logsc sudo rm -f "$TCPROXY_PATH/.tcproxy-boot-load.timer"
 }
 
 # Bring up the full VM+mount stack.
@@ -53,7 +54,12 @@ tcproxy_up() {
         load_VM
         check_VM_status
     fi
-    test_VM_mount
+    # v3.2.2: probe the VM's samba port before attempting host cifs mount.
+    # Shrinks the transient "Server abruptly closed the connection" window.
+    wait_smb_ready || true
+    # v3.2.2: test_VM_mount now returns (not exits) on failure so the
+    # check_smb_share retry loop below can actually retry.
+    test_VM_mount || logm "[INFO] Initial VM mount probe failed; entering retry loop."
     while ! check_smb_share; do
         RETRY_COUNT_UP=$((RETRY_COUNT_UP + 1))
         if [ $RETRY_COUNT_UP -ge $MAX_RETRIES_UP ]; then
@@ -115,11 +121,17 @@ do_install() {
     testing_ssh_permission_requirements
     creating_mountpoint_folder
     provision_VM
-    test_VM_mount
+    # v3.2.2: test_VM_mount no longer exits on failure; enforce hard
+    # stop here — the install wizard must not declare success on a VM
+    # that can't mount the Time Capsule.
+    if ! test_VM_mount; then
+        logm "[ERROR] VM unable to mount Time Capsule. Please check credentials, IPv4 and connectivity, then run --install again."
+        exit 1
+    fi
     tcproxy_up
     save_env
     post_install_cleanup
-    logsc sudo rm .tcproxy-uninstalled
+    logsc sudo rm -f .tcproxy-uninstalled
     logm "Installation completed in folder $TCPROXY_PATH"
 }
 
@@ -130,7 +142,7 @@ do_uninstall() {
     stopping_VM
     remove_system_service
     remove_env
-    logsc sudo rm "$TCPROXY_PATH/data.img" "$TCPROXY_PATH/id_rsa_vm" "$TCPROXY_PATH/id_rsa_vm.pub" "$TCPROXY_PATH/qemu.mac" "$TCPROXY_PATH/uefi.rom" "$TCPROXY_PATH/.vm-serial-file"
+    logsc sudo rm -f "$TCPROXY_PATH/data.img" "$TCPROXY_PATH/id_rsa_vm" "$TCPROXY_PATH/id_rsa_vm.pub" "$TCPROXY_PATH/qemu.mac" "$TCPROXY_PATH/uefi.rom" "$TCPROXY_PATH/.vm-serial-file"
     touch .tcproxy-uninstalled
     logm "tcproxy uninstalled. You may now remove the folder:
 $TCPROXY_PATH

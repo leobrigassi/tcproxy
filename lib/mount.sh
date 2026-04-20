@@ -55,11 +55,45 @@ umount_srv_tcproxy() {
 }
 
 # Triggers mount -a inside the VM and checks each share is visible.
-# Exits 1 if any configured share fails to mount in the VM.
+# Returns 1 if any configured share fails to mount in the VM.
+#
+# v3.2.2: changed from `exit 1` to `return 1` so that callers in the
+# normal run flow (tcproxy_up's check_smb_share retry loop, systemd
+# health-check timer) can recover from transient boot-time races. The
+# install wizard, which genuinely wants a hard stop on mount failure,
+# enforces that at the call site in do_install.
 test_VM_mount() {
-    if [[ -n $TC_DISK_USB ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p"$TCPROXY_VM_SSH_PORT" 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK_USB''; then logm "VM mount [$TC_DISK_USB] OK..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK_USB. Please check credentials, IPv4 or connectivity and run again."; exit 1; fi; fi
-    if [[ -n $TC_USER ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p"$TCPROXY_VM_SSH_PORT" 'mount -a && mount | grep -q //'$TC_IP'/'$TC_USER''; then logm "VM mount [$TC_USER] OK..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_USER. Please check credentials, IPv4 or connectivity and run again."; exit 1; fi; fi
-    if [[ -n $TC_DISK ]]; then if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p"$TCPROXY_VM_SSH_PORT" 'mount -a && mount | grep -q //'$TC_IP'/'$TC_DISK''; then logm "VM mount [$TC_DISK] OK..."; else logm "[ERROR] VM unable to mount to Time Capsule folder $TC_IP/$TC_DISK. Please check credentials, IPv4 or connectivity and run again."; exit 1; fi; fi
+    local rc=0 share
+    for share in "$TC_DISK_USB" "$TC_USER" "$TC_DISK"; do
+        [[ -z $share ]] && continue
+        if $SUDOREQUIRED ssh root@localhost -i ./id_rsa_vm -o StrictHostKeyChecking=no -p"$TCPROXY_VM_SSH_PORT" \
+                "mount -a && mount | grep -q //$TC_IP/$share"; then
+            logm "VM mount [$share] OK..."
+        else
+            logm "[WARN] VM could not mount $TC_IP/$share yet; will retry. If this persists, check credentials, IPv4 and connectivity."
+            rc=1
+        fi
+    done
+    return $rc
+}
+
+# Waits for the VM's loopback samba to accept anonymous LIST before the
+# host attempts a cifs mount. Probes for up to max_wait seconds. Shrinks
+# the SSH-up-but-smbd-not-ready window that used to surface as the scary
+# "Server abruptly closed the connection" / "Host is down" message on
+# -r / -u. Does not fail hard — if smbd isn't ready after max_wait, the
+# downstream check_smb_share + mount_routine retry loops still cover it.
+wait_smb_ready() {
+    local max_wait=10 i
+    for ((i=0; i<max_wait; i++)); do
+        if smbclient -L 127.0.0.1 --port="$TCPROXY_VM_SMB_PORT" -N &>/dev/null; then
+            [[ $i -gt 0 ]] && logsm "VM samba became ready after ${i}s"
+            return 0
+        fi
+        sleep 1
+    done
+    logsm "VM samba not ready after ${max_wait}s; proceeding (downstream retry will cover)"
+    return 1
 }
 
 # Verifies each configured share is reachable via smbclient on the loopback
