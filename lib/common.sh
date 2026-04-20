@@ -68,13 +68,24 @@ create_tcproxy_folder() {
 # logsc: run cmd silently, output to log file only
 # logm:  print message to screen AND log file
 # logsm: write message to log file only
+#
+# All sink writes go through _log_redact so that cifs/mount/smbclient
+# invocations don't leak TC_PASSWORD into log-tcproxy.txt. Applied at the
+# log boundary (not the caller) so every future call site is covered.
+_log_redact() {
+    # Matches:  password=VALUE,   password=VALUE<space>   -U user%VALUE   -U user%VALUE<space/eol>
+    sed -E \
+        -e 's/(password=)[^[:space:],"]*/\1<redacted>/g' \
+        -e 's/(-U[[:space:]]+[^%[:space:]]+%)[^[:space:]"]*/\1<redacted>/g'
+}
 logc() {
     LOG_MESSAGE="$(date +"%Y%m%d_%H:%M:%S"): $0 $*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
-    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
+    echo "$LOG_MESSAGE_TIMESTAMP" | _log_redact >> "$LOG_FILE"
     LOGC_COMMAND=$("$@" 2>&1)
     LOGC_OUTPUT=$?
-    echo "$LOGC_COMMAND" | tee -a "$LOG_FILE"
+    echo "$LOGC_COMMAND"
+    echo "$LOGC_COMMAND" | _log_redact >> "$LOG_FILE"
     return $LOGC_OUTPUT
 }
 
@@ -83,8 +94,8 @@ logsc() {
     LOGSC_COMMAND=$("$@" 2>&1)
     LOGSC_OUTPUT=$?
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
-    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
-    echo "$LOGSC_COMMAND" >> "$LOG_FILE"
+    echo "$LOG_MESSAGE_TIMESTAMP" | _log_redact >> "$LOG_FILE"
+    echo "$LOGSC_COMMAND" | _log_redact >> "$LOG_FILE"
     return $LOGSC_OUTPUT
 }
 
@@ -92,13 +103,13 @@ logm() {
     LOG_MESSAGE="$*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
     echo "$LOG_MESSAGE"
-    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
+    echo "$LOG_MESSAGE_TIMESTAMP" | _log_redact >> "$LOG_FILE"
 }
 
 logsm() {
     LOG_MESSAGE="$*"
     LOG_MESSAGE_TIMESTAMP="$(date +"%Y%m%d_%H:%M:%S"): $LOG_MESSAGE"
-    echo "$LOG_MESSAGE_TIMESTAMP" >> "$LOG_FILE"
+    echo "$LOG_MESSAGE_TIMESTAMP" | _log_redact >> "$LOG_FILE"
 }
 
 # === Env persistence ===
