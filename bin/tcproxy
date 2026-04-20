@@ -28,6 +28,9 @@ check_dependencies
 # creation, cwd, or env loading because the unit sets WorkingDirectory
 # and EnvironmentFile for us.
 if [[ $1 == "--startup-boot" ]]; then
+    # LOG_FILE is derived from TCPROXY_PATH (provided by EnvironmentFile)
+    # in case an older env file written by v3.2.0 omitted it.
+    LOG_FILE="${LOG_FILE:-$TCPROXY_PATH/log-tcproxy.txt}"
     tcproxy_up
     exit 0
 fi
@@ -68,6 +71,11 @@ if ! load_env_if_exists; then
     echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."
     create_tcproxy_folder
 fi
+# Heal env files written by v3.2.0, which stopped persisting LOG_FILE.
+# Without this, every log* redirect (>> "$LOG_FILE") errors on existing
+# installs.  TCPROXY_PATH is always present — either from the env file
+# (healthy install) or set by create_tcproxy_folder above.
+LOG_FILE="${LOG_FILE:-$TCPROXY_PATH/log-tcproxy.txt}"
 
 case "$1" in
     -h|--help)

@@ -1,7 +1,7 @@
 #!/bin/bash
 # tcproxy — single-file release build.
 # Source: https://github.com/leobrigassi/tcproxy
-# Built: 2026-04-20T07:36:49Z from commit e44f888
+# Built: 2026-04-20T07:43:36Z from commit aa12892
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -173,6 +173,7 @@ save_env() {
         printf 'TC_PASSWORD="%s"\n'     "$(_tcproxy_env_escape "$TC_PASSWORD")"
         printf 'STARTUP_MOUNT="%s"\n'   "$(_tcproxy_env_escape "$STARTUP_MOUNT")"
         printf 'SUDOREQUIRED="%s"\n'    "$(_tcproxy_env_escape "$SUDOREQUIRED")"
+        printf 'LOG_FILE="%s"\n'        "$(_tcproxy_env_escape "$LOG_FILE")"
         printf 'ARCH="%s"\n'            "$(_tcproxy_env_escape "$ARCH")"
         printf 'UNIQUE_ID="%s"\n'       "$(_tcproxy_env_escape "$UNIQUE_ID")"
     } >> "$TCP_ENV"
@@ -948,6 +949,9 @@ check_dependencies
 # creation, cwd, or env loading because the unit sets WorkingDirectory
 # and EnvironmentFile for us.
 if [[ $1 == "--startup-boot" ]]; then
+    # LOG_FILE is derived from TCPROXY_PATH (provided by EnvironmentFile)
+    # in case an older env file written by v3.2.0 omitted it.
+    LOG_FILE="${LOG_FILE:-$TCPROXY_PATH/log-tcproxy.txt}"
     tcproxy_up
     exit 0
 fi
@@ -988,6 +992,11 @@ if ! load_env_if_exists; then
     echo "[INFO] Installation not detected. Run [./tcproxy --install] to setup your system."
     create_tcproxy_folder
 fi
+# Heal env files written by v3.2.0, which stopped persisting LOG_FILE.
+# Without this, every log* redirect (>> "$LOG_FILE") errors on existing
+# installs.  TCPROXY_PATH is always present — either from the env file
+# (healthy install) or set by create_tcproxy_folder above.
+LOG_FILE="${LOG_FILE:-$TCPROXY_PATH/log-tcproxy.txt}"
 
 case "$1" in
     -h|--help)

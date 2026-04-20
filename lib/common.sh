@@ -128,6 +128,7 @@ save_env() {
         printf 'TC_PASSWORD="%s"\n'     "$(_tcproxy_env_escape "$TC_PASSWORD")"
         printf 'STARTUP_MOUNT="%s"\n'   "$(_tcproxy_env_escape "$STARTUP_MOUNT")"
         printf 'SUDOREQUIRED="%s"\n'    "$(_tcproxy_env_escape "$SUDOREQUIRED")"
+        printf 'LOG_FILE="%s"\n'        "$(_tcproxy_env_escape "$LOG_FILE")"
         printf 'ARCH="%s"\n'            "$(_tcproxy_env_escape "$ARCH")"
         printf 'UNIQUE_ID="%s"\n'       "$(_tcproxy_env_escape "$UNIQUE_ID")"
     } >> "$TCP_ENV"
