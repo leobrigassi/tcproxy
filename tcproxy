@@ -1,7 +1,7 @@
 #!/bin/bash
 # tcproxy — single-file release build.
 # Source: https://github.com/leobrigassi/tcproxy
-# Built: 2026-04-20T07:30:02Z from commit afd1fa0
+# Built: 2026-04-20T07:36:49Z from commit e44f888
 
 # === lib/config.sh ===
 # tcproxy — configuration constants.
@@ -9,8 +9,8 @@
 # Edit values here to change behavior without touching logic.
 
 # === Version ===
-TCPROXY_COMMIT=v3.2.0
-TCPROXY_RELEASE=v3.2.0
+TCPROXY_COMMIT=v3.2.1
+TCPROXY_RELEASE=v3.2.1
 # Format: /heads/<branch> for branch builds, /tags/<version> for releases.
 TCPROXY_BRANCH=/heads/dev
 
@@ -974,8 +974,12 @@ if [[ "$(pwd)" =~ \  ]]; then
     exit 1
 fi
 
-# Piped `wget | bash` has no tty: force --install.
-if [ ! -t 0 ]; then
+# Piped `wget | bash` has no tty AND no argument: force --install.
+# The `$# -eq 0` guard is what lets agents / cron / systemd run
+# `tcproxy -d`, `-u`, `-r`, `--disable-service`, etc. without a tty —
+# without it, every non-interactive invocation was silently rewritten
+# to `--install` and hit the whiptail install wizard.
+if [ ! -t 0 ] && [ $# -eq 0 ]; then
     set -- "--install"
     WEB_INSTALL="TRUE"
 fi

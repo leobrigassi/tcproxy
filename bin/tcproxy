@@ -54,8 +54,12 @@ if [[ "$(pwd)" =~ \  ]]; then
     exit 1
 fi
 
-# Piped `wget | bash` has no tty: force --install.
-if [ ! -t 0 ]; then
+# Piped `wget | bash` has no tty AND no argument: force --install.
+# The `$# -eq 0` guard is what lets agents / cron / systemd run
+# `tcproxy -d`, `-u`, `-r`, `--disable-service`, etc. without a tty —
+# without it, every non-interactive invocation was silently rewritten
+# to `--install` and hit the whiptail install wizard.
+if [ ! -t 0 ] && [ $# -eq 0 ]; then
     set -- "--install"
     WEB_INSTALL="TRUE"
 fi
