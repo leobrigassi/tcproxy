@@ -5,10 +5,10 @@
 # Edit values here to change behavior without touching logic.
 
 # === Version ===
-TCPROXY_COMMIT=v3.2.0
-TCPROXY_RELEASE=v3.2.0
+TCPROXY_COMMIT=v3.2.1
+TCPROXY_RELEASE=v3.2.1
 # Format: /heads/<branch> for branch builds, /tags/<version> for releases.
-TCPROXY_BRANCH=/tags/v3.2.0
+TCPROXY_BRANCH=/heads/dev
 
 # === Distribution URLs ===
 TCPROXY_FILE_DEFINED_URL="https://raw.githubusercontent.com/leobrigassi/tcproxy/${TCPROXY_BRANCH#/*/}/tcproxy"
