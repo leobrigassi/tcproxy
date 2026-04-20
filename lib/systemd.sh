@@ -3,12 +3,18 @@
 # tcproxy — systemd service + timer install/remove.
 # Depends on: lib/config.sh (TCPROXY_SERVICE_NAME, TCPROXY_SERVICE_FILE,
 #             TCPROXY_TIMER_NAME, TCPROXY_TIMER_FILE, TCPROXY_HOST_MOUNT_ROOT),
-#             lib/common.sh (logm, logsc, TCPROXY_PATH, TCP_ENV, USER, GROUP).
+#             lib/common.sh (logm, logsc, TCPROXY_PATH, TCP_ENV).
 
 # Writes the tcproxy boot-load .service and .timer unit files to the
 # tcproxy folder as staging files. The actual install (cp to
 # /etc/systemd/system + enable) happens in install_system_service.
 # Gated on STARTUP_MOUNT being yes.
+#
+# The unit runs as root. tcproxy_up calls `sudo mount`, `sudo systemctl`,
+# etc. — at boot there is no tty for a password prompt, so running the
+# unit as a non-root user with sudo was the root cause of issue #55.
+# Running as root makes sudo a no-op and works on every stock systemd
+# distro without extra sudoers configuration.
 tcproxy_systemd_setup() {
     if [[ "$STARTUP_MOUNT" =~ ^[Yy]$ ]]; then
         if ! [ -d /run/systemd/system ]; then
@@ -27,11 +33,10 @@ Type=oneshot
 EnvironmentFile=$TCP_ENV
 ExecStart=$TCPROXY_PATH/tcproxy --startup-boot
 WorkingDirectory=$TCPROXY_PATH
-ExecStartPost=/bin/sleep 1
 RemainAfterExit=yes
-KillMode=none
-User=$USER
-Group=$GROUP
+Restart=on-failure
+RestartSec=30
+User=root
 
 [Install]
 WantedBy=multi-user.target" > "$TCPROXY_SERVICE_TEMP_FILE"
@@ -54,26 +59,29 @@ WantedBy=timers.target" > "$TCPROXY_PATH/.tcproxy-boot-load.timer"
 # plus the health-check timer. Idempotent: missing files are ignored.
 remove_system_service() {
     logm "Scanning for previously installed daemons..."
+    local reload=0
     if [[ -f /etc/systemd/system/time-capsule-proxy.service ]]; then
         logsc sudo systemctl stop time-capsule-proxy.service
         logsc sudo systemctl disable time-capsule-proxy.service
         logsc sudo rm /etc/systemd/system/time-capsule-proxy.service
+        reload=1
         logm "Found and removed boot service v1"
     fi
     if [[ -f $TCPROXY_SERVICE_FILE ]]; then
         logsc sudo systemctl stop "$TCPROXY_SERVICE_NAME"; sleep 5
         logsc sudo systemctl disable "$TCPROXY_SERVICE_NAME"; sleep 5
         logsc sudo rm "$TCPROXY_SERVICE_FILE"
-        logsc sudo systemctl daemon-reload
+        reload=1
         logm "Found and removed boot service v2"
     fi
     if [[ -f $TCPROXY_TIMER_FILE ]]; then
         logsc sudo systemctl stop "$TCPROXY_TIMER_NAME"; sleep 5
         logsc sudo systemctl disable "$TCPROXY_TIMER_NAME"; sleep 5
         logsc sudo rm "$TCPROXY_TIMER_FILE"
-        logsc sudo systemctl daemon-reload
+        reload=1
         logm "Found and removed health-check service v2"
     fi
+    [[ $reload -eq 1 ]] && logsc sudo systemctl daemon-reload
     logm "Startup daemon disabled and removed..."
 }
 
@@ -82,22 +90,27 @@ remove_system_service() {
 install_system_service() {
     logm "Installing startup daemon..."
     logsc sudo cp "$TCPROXY_SERVICE_TEMP_FILE" "$TCPROXY_SERVICE_FILE"
-    logsc sudo systemctl daemon-reload; sleep 3
-    logsc sudo systemctl enable --now "$TCPROXY_SERVICE_NAME"; sleep 5
-    logsc sudo systemctl is-active --quiet "$TCPROXY_SERVICE_NAME"; sleep 3
-    if [ $? -eq 0 ]; then
-        logm "Service enabled at boot."
-    else
-        logm "[ERROR] Failed to start $TCPROXY_SERVICE_FILE - Error code $?"
-    fi
-    logm "Installing health-check daemon..."
     logsc sudo cp "$TCPROXY_PATH/.tcproxy-boot-load.timer" "$TCPROXY_TIMER_FILE"
     logsc sudo systemctl daemon-reload; sleep 3
+
+    logsc sudo systemctl enable --now "$TCPROXY_SERVICE_NAME"; sleep 5
+    logsc sudo systemctl is-active --quiet "$TCPROXY_SERVICE_NAME"
+    local svc_rc=$?
+    sleep 3
+    if [ $svc_rc -eq 0 ]; then
+        logm "Service enabled at boot."
+    else
+        logm "[ERROR] Failed to start $TCPROXY_SERVICE_NAME - Error code $svc_rc"
+    fi
+
+    logm "Installing health-check daemon..."
     logsc sudo systemctl enable --now "$TCPROXY_TIMER_NAME"; sleep 5
-    logsc sudo systemctl is-active --quiet "$TCPROXY_TIMER_NAME"; sleep 3
-    if [ $? -eq 0 ]; then
+    logsc sudo systemctl is-active --quiet "$TCPROXY_TIMER_NAME"
+    local tmr_rc=$?
+    sleep 3
+    if [ $tmr_rc -eq 0 ]; then
         logm "Health check enabled in systemd"
     else
-        logm "[ERROR] Failed to start $TCPROXY_TIMER_NAME - Error code $?"
+        logm "[ERROR] Failed to start $TCPROXY_TIMER_NAME - Error code $tmr_rc"
     fi
 }

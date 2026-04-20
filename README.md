@@ -92,15 +92,13 @@ lib/              one module per concern, each sourced by bin/tcproxy
   config.sh       constants (versions, URLs, VM ports, retries)
   common.sh       identity, paths, logging, env I/O, dep check
   ui.sh           whiptail prompts + text fallback + help menu
-  server.sh       remote_log — the ONLY outbound HTTP in the code
   vm.sh           qemu lifecycle (load / stop / boot-wait / ssh)
   mount.sh        host-side cifs mount onto $TCPROXY_HOST_MOUNT_ROOT
   provision.sh    one-shot VM provisioning run during --install
   systemd.sh      boot service + health-check timer install/remove
-  updater.sh      self-update and suite download
+  updater.sh      VM image download + self-update helper
   installer.sh    install / uninstall / tcproxy_up orchestration
 bin/tcproxy       argument dispatcher; sources lib/*.sh at dev time
-install.sh        web-install bootstrap for wget | bash URLs
 scripts/build.sh  concatenates lib/* + bin/tcproxy into ./tcproxy
 ```
 
@@ -135,7 +133,6 @@ cd tcproxy
 **Additional Notes:**
 
 * tcproxy does not phone home. No data is sent to any server during install, use, or uninstall.
-* The only outbound call to our server happens when **you** run `./tcproxy --remote-log`, which uploads the last 100 log lines to help diagnose an issue you report. Nothing is sent otherwise.
 * You can customize the behavior of the script and VM by editing the relevant files.
 * Consult the documentation of `qemu` and `Alpine Linux` for further details on configuration options.
 

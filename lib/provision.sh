@@ -53,6 +53,6 @@ tcproxy: To configure the VM please [ exit ] the VM and run [ ./tcproxy -i ] fro
 
 GNU tcproxy: mount Time Capsule / AirPort Extreme on debian kernels 5.15+.
 For bug reports, questions, discussions and/or open issues visit:
-https://github.com/leobrigassi/time_capsule_proxy
+https://github.com/leobrigassi/tcproxy
 ----------------------" | base64)' | base64 -d > /etc/motd"
 }

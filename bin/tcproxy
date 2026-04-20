@@ -134,6 +134,12 @@ case "$1" in
         ;;
     --enable-service)
         DESCR_COM="Enabling startup service..."; header
+        if [[ -z "$TCPROXY_PATH" || -z "$TC_IP" || -z "$TC_PASSWORD" ]]; then
+            echo "[ERROR] tcproxy has not been installed yet. Run [./tcproxy --install] first."
+            echo "        --enable-service needs a working configuration (env file) to boot from."
+            footer
+            exit 1
+        fi
         STARTUP_MOUNT=Y
         tcproxy_systemd_setup
         install_system_service

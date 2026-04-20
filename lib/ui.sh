@@ -83,5 +83,5 @@ help_menu() {
   --uninstall               unmounts $TCPROXY_HOST_MOUNT_ROOT and poweroff to VM and stops and removes system service
 
 For bug reports, questions, discussions and/or open issues visit:
-https://github.com/leobrigassi/time_capsule_proxy"
+https://github.com/leobrigassi/tcproxy"
 }
